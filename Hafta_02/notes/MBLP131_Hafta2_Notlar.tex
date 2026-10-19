@@ -1,0 +1,725 @@
+% =====================================================================
+%  MBLP131 -- İşletim Sistemleri Temelleri
+%  Hafta 2 Ders Notları: Tanımlar, Hedefler, Bileşenler ve İşletim Sistemi Yapıları
+%  XeLaTeX ile iki kez derleyin:  xelatex MBLP131_Hafta2_Notlar.tex
+%  ./figures/ ve ../code/ klasörlerine ihtiyaç duyar.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\newcommand{\weeknum}{2}
+% ---------- Page & fonts ---------------------------------------------
+\usepackage[a4paper,margin=2.3cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{turkish}
+\IfFontExistsTF{Calibri}{\setmainfont{Calibri}}{\setmainfont{Carlito}}
+\IfFontExistsTF{Cambria}{\newfontfamily\headfont{Cambria}}{\newfontfamily\headfont{Caladea}}
+\IfFontExistsTF{Consolas}{\setmonofont[Scale=0.95]{Consolas}}{\setmonofont[Scale=0.88]{DejaVu Sans Mono}}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\linespread{1.12}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+% ---------- Colours (course design system) ----------------------------
+\usepackage{xcolor}
+\definecolor{dark}{HTML}{212121}
+\definecolor{charcoal}{HTML}{36454F}
+\definecolor{slate}{HTML}{50808E}
+\definecolor{mint}{HTML}{02C39A}
+\definecolor{mintdeep}{HTML}{028090}
+\definecolor{light}{HTML}{F2F2F2}
+\definecolor{muted}{HTML}{6B7679}
+
+% ---------- Packages ---------------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{needspace}
+\graphicspath{{figures/}}
+\usepackage[font=small,labelfont={bf,color=mintdeep},justification=centering]{caption}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\setlist{itemsep=0.25em,topsep=0.3em}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=mintdeep,urlcolor=mintdeep,citecolor=mintdeep]{hyperref}
+
+% ---------- Headings ----------------------------------------------------
+\titleformat{\section}{\headfont\Large\bfseries\color{charcoal}}{\color{mint}\thesection}{0.7em}{}
+\titleformat{\subsection}{\headfont\large\bfseries\color{charcoal}}{\color{mintdeep}\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\headfont\normalsize\bfseries\color{mintdeep}}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+
+% ---------- Header / footer -----------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}MBLP131 --- İşletim Sistemleri Temelleri}
+\fancyhead[R]{\small\color{muted}Hafta \weeknum{} Ders Notları}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% ---------- Boxes ---------------------------------------------------------
+\newtcolorbox{keyidea}[1][Key idea]{enhanced,breakable,colback=charcoal,colframe=charcoal,
+  coltext=white,fonttitle=\headfont\bfseries\color{mint},title={#1},
+  attach title to upper={\par\smallskip},boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{example}[1][Worked example]{enhanced,colback=light,colframe=light,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{tryit}[1][Try it yourself]{enhanced,breakable,colback=white,colframe=mint,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.8pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{histnote}[1][Historical note]{enhanced,breakable,colback=white,colframe=slate!40,
+  fonttitle=\headfont\bfseries\color{slate},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.5pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt,fontupper=\small}
+
+% Photo helper: fits image inside a box, never distorted (keepaspectratio)
+\newcommand{\photo}[3]{\includegraphics[width=#1,height=#2,keepaspectratio]{#3}}
+
+\newcommand{\term}[1]{\textbf{\color{mintdeep}#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+
+% ---------- Code listings ----------------------------------------------------
+\usepackage{listings}
+\lstdefinestyle{course}{
+  basicstyle=\ttfamily\small, columns=fullflexible, keepspaces=true,
+  backgroundcolor=\color{dark}, rulecolor=\color{dark}, frame=single, framesep=6pt,
+  xleftmargin=8pt, xrightmargin=8pt, aboveskip=0.8em, belowskip=0.6em,
+  basicstyle=\ttfamily\small\color{light},
+  keywordstyle=\color{mint}\bfseries, commentstyle=\color{white!60}\itshape,
+  stringstyle=\color{orange!70!yellow}, numberstyle=\tiny\color{muted},
+  numbers=left, numbersep=10pt, showstringspaces=false, breaklines=true,
+  tabsize=4, upquote=true}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}}
+\lstset{style=course,language=C}
+\usepackage{textcomp}
+
+% listings 1.9 + XeLaTeX: Turkish letters above U+00FF (ı İ ğ Ğ ş Ş) must be declared as letters
+\makeatletter
+\lst@CCPut \lst@ProcessLetter {"130}{"131}{"11E}{"11F}{"15E}{"15F}\z@
+\lst@AddToHook{SelectCharTable}{\catcode"130=13 \catcode"131=13 \catcode"11E=13
+  \catcode"11F=13 \catcode"15E=13 \catcode"15F=13 }
+\makeatother
+
+\begin{document}
+% ============================ Hafta 2 gövdesi ============================
+% listings 1.9, U+00FF üstü harfleri (ı İ ğ Ğ ş Ş) XeLaTeX altında sözcük tamponuna almaz ve
+% yanlış sıraya koyar; bu harfleri listings için "harf" olarak tanımlıyoruz (yalnızca bu belge).
+\makeatletter
+\lst@CCPut \lst@ProcessLetter {"130}{"131}{"11E}{"11F}{"15E}{"15F}\z@
+\lst@AddToHook{SelectCharTable}{\catcode"130=13 \catcode"131=13 \catcode"11E=13
+  \catcode"11F=13 \catcode"15E=13 \catcode"15F=13 }
+\makeatother
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 2 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Tanımlar, Hedefler, Bileşenler ve İşletim Sistemi Yapıları}\par\smallskip
+{\small\itshape\color{white!70} İşletim sistemi tam olarak nedir, ne işe yarar ve nasıl inşa edilir?}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi\\[0.3em]
+\textbf{Ders Telegram kanalı:} \texttt{[ders grubu bağlantısı]}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.22\linewidth}
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item İşletim sisteminin ve \emph{çekirdeğin} (kernel) kesin bir tanımını vermek.
+  \item İşletim sistemine iki klasik bakışı açıklamak: \emph{genişletilmiş makine} ve \emph{kaynak yöneticisi}.
+  \item İşletim sisteminin üç tasarım hedefini saymak ve bu hedeflerin neden çatıştığını açıklamak.
+  \item Bir bilgisayar sisteminin dört bileşenini, kesmelerin rolünü, bellek hiyerarşisini ve ikili mod çalışmasını anlatmak.
+  \item Basit, monolitik, katmanlı, mikroçekirdek, modüler ve hibrit işletim sistemi yapılarını her birine bir örnek vererek karşılaştırmak.
+  \item Sistem çağrısı yapan küçük C programlarını okuyup çalıştırmak ve bir sistem çağrısının maliyetini ölçmek.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{2}
+\tableofcontents
+
+% =====================================================================
+\section{İşletim Sistemi Tam Olarak Nedir?}
+
+Geçen hafta gayriresmî bir tanım kullandık: \emph{işletim sistemi, ilk başlayan ve geri kalan her şeyi yöneten programdır}. Ders kitapları, işletim sistemine her biri farklı bir açıdan bakan daha kesin tanımlar verir.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Bakış açısı} & \textbf{Tanım} \\
+\midrule
+Konum & Bilgisayarın kullanıcısı ile bilgisayar donanımı arasında \emph{aracılık eden} (intermediary) bir program. \\
+Süreklilik & Bilgisayarda her an çalışan tek program; genellikle \term{çekirdek} (kernel) olarak adlandırılır. Geri kalan her şey ya bir sistem programı ya da bir uygulama programıdır. \\
+İşlev & Programların yürütülmesini denetleyen ve bilgisayarın kaynaklarını (işlemci, bellek, dosyalar ve aygıtlar) yöneten yazılım. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{keyidea}[Bu dersin çalışma tanımı]
+\textbf{İşletim sistemi}, donanımı yöneten ve programlara üzerinde çalışabilecekleri daha basit, daha güvenli bir makine sunan yazılım katmanıdır. Bellekte sürekli bulunan özüne \textbf{çekirdek} (kernel) denir.
+\end{keyidea}
+
+\subsection{İki klasik bakış}
+
+Andrew Tanenbaum işletim sistemini birbirine zıt iki yönden anlatır.
+
+\paragraph{Yukarıdan aşağıya: genişletilmiş makine olarak işletim sistemi.} Gerçek donanım karmaşık ve kullanışsızdır. Bir disk, sektörlere bölünmüş manyetik plakalardan ya da flaş hücrelerinden oluşur; kendi komutları, hata kodları ve zamanlama kuralları vardır. Neredeyse hiçbir programcı bunlarla uğraşmak istemez. İşletim sistemi bu ayrıntıları temiz \term{soyutlamaların} (abstraction) arkasına gizler: sektörler yerine \emph{dosyaları}, yazmaçlar ve kesme hatları yerine \emph{süreçleri} (process), video belleği yerine \emph{pencereleri} görürsünüz. Bu açıdan bakıldığında işletim sistemi, gerçek makineyi programlaması kolay, daha hoş, ``genişletilmiş'' bir makineye dönüştürür.
+
+\paragraph{Aşağıdan yukarıya: kaynak yöneticisi olarak işletim sistemi.} Birçok program ve kullanıcı aynı donanım için yarışır. Kimin neyi ne zaman alacağına işletim sistemi karar verir. Bunu kaynakları iki biçimde \term{çoğullayarak} (multiplexing), yani paylaştırarak yapar:
+\begin{itemize}
+  \item \textbf{Zaman çoğullama (time multiplexing):} programlar sırayla kullanır. İşlemci bir programı birkaç milisaniye çalıştırır, sonra bir başkasını; yazıcı bir belgeyi basar, sonra bir sonrakini.
+  \item \textbf{Alan çoğullama (space multiplexing):} kaynak parçalara bölünür. Ana bellek aynı anda birkaç programı tutar; bir disk, birçok kullanıcıya ait dosyaları barındırır.
+\end{itemize}
+
+İki bakış da aynı yazılımı anlatır. Bu dersin büyük kısmı (süreçler, işlemci zamanlaması, bellek, dosyalar) işletim sistemini bir kaynak yöneticisi olarak inceler.
+
+\subsection{Çekirdek, sistem programları ve uygulama programları}
+
+İşletim sistemiyle birlikte gelen her şey çekirdek değildir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[layer/.style={rectangle,minimum width=10.5cm,minimum height=0.85cm,align=center,font=\small}]
+\node[layer,fill=light] (a) {\textbf{Uygulama programları} \quad {\color{muted}tarayıcı, kelime işlemci, oyun, kendi C programınız}};
+\node[layer,fill=mint!25,below=2pt of a] (s) {\textbf{Sistem programları} \quad {\color{muted}kabuk, dosya yöneticisi, derleyici, \texttt{ls}, \texttt{cp}, Görev Yöneticisi}};
+\node[layer,fill=mint,below=2pt of s] (k) {\textbf{Çekirdek} \quad süreç, bellek, dosya ve aygıt yönetimi};
+\node[layer,fill=charcoal,text=white,below=2pt of k] (h) {\textbf{Donanım} \quad {\color{white!75}işlemci, bellek, diskler, ağ kartı, ekran}};
+\end{tikzpicture}
+\caption{Tipik bir bilgisayardaki yazılım katmanları.}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Çekirdek} her zaman bellektedir, işlemcinin ayrıcalıklı bir modunda çalışır (bkz.\ Bölüm~\ref{sec:dualmode}) ve donanımla doğrudan konuşur.
+  \item \textbf{Sistem programları} işletim sistemiyle birlikte gelir, ama sıradan programlar olarak çalışır. Sistemi kullanılabilir kılarlar.
+  \item \textbf{Uygulama programları}, asıl işinizi yapmak için kurduğunuz her şeydir.
+\end{itemize}
+
+Tam anlamıyla ``Linux'' yalnızca bir çekirdektir. Ubuntu ya da Fedora gibi bir \emph{Linux dağıtımı}, buna çoğu GNU Projesi'nden gelen binlerce sistem programı ekler.
+
+\begin{histnote}[Web tarayıcısı işletim sisteminin parçası mı?]
+1998'de Amerika Birleşik Devletleri hükümeti Microsoft'a dava açtı; davanın bir kısmı şirketin Internet Explorer'ın Windows'un ayrılmaz bir parçası olduğu iddiasıyla ilgiliydi. Mahkemeler Microsoft'un tekelini yasa dışı yollarla sürdürdüğüne hükmetti ve ``işletim sistemine ne dahildir?'' sorusu teknik olduğu kadar hukuki bir soru hâline geldi. Kullanışlı bir pratik kural: çekirdek kesinlikle işletim sistemidir; çekirdeğin ötesinde ``işletim sistemi'', üreticinin standart sistem olarak sunduğu her şeydir.
+\end{histnote}
+
+% =====================================================================
+\section{İşletim Sisteminin Tasarım Hedefleri}
+
+William Stallings bir işletim sisteminin amaçlarını üç kelimeyle özetler.
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Kullanım kolaylığı (convenience).} İşletim sistemi bilgisayarı kullanmayı ve programlamayı kolaylaştırır: dosyalar, pencereler, bir kabuk, basit sistem çağrıları. Kullanıcıların donanımı bilmesi gerekmez.
+  \item \textbf{Verimlilik (efficiency).} İşletim sistemi donanımı iyi kullanır: işlemci yararlı işle meşgul, bellek yararlı veriyle dolu, aygıtlar paralel çalışır. İşletim sisteminin kendi \term{ek yükü} (overhead) düşük olmalı, yani kendisi az kaynak tüketmelidir.
+  \item \textbf{Gelişebilirlik (ability to evolve).} Yeni donanım (SSD'ler, GPU'lar, 5G modemler) ve yeni hizmetler, mevcut programları bozmadan eklenebilmelidir. İşletim sistemi \emph{yapısının} seçimini her şeyden çok bu hedef belirler (bkz.\ Bölüm~\ref{sec:structures}).
+\end{enumerate}
+
+\subsection{Hedefler çatışır}
+
+Üç hedef farklı yönlere çeker ve farklı bilgisayar türleri bu hedeflere farklı ağırlık verir.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.3cm} >{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Sistem türü} & \textbf{Ana öncelik} & \textbf{Neden} \\
+\midrule
+Kişisel bilgisayar & Kullanım kolaylığı & Her şeyin ``öylece çalışmasını'' isteyen tek bir kullanıcı; işlemci zaten çoğu zaman boştadır. \\
+Sunucu / bulut & Verimlilik & Binlerce kullanıcı; \%1 daha fazla iş hacmi, yüzlerce makine daha az demek olabilir. \\
+Akıllı telefon & Verimlilik (enerji) & Pil ömrü: işletim sistemi uygulamaları ve işlemciyi agresif biçimde uyutur. \\
+Gömülü / IoT & Verimlilik (boyut, maliyet) & Bir çamaşır makinesi denetleyicisinin birkaç kilobaytlık belleği olabilir; hiç işletim sistemi olmayabilir. \\
+Gerçek zamanlı (frenler, dronlar) & Öngörülebilirlik & Geç gelen yanıt yanlış yanıttır: son tarihler (deadline) her zaman karşılanmalıdır. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{example}[Kolaylık ve verimlilik]
+Bir program bir dosyadan $10^{6}$ sayı okumalıdır. Her sistem çağrısının (çekirdeğe yapılan bir istek; bkz.\ Bölüm~\ref{sec:syscall}) saf ek yükünün $t_{s} \approx 0.1\ \mu\text{s}$ olduğunu varsayalım.
+\begin{itemize}
+  \item \emph{Kolay yol:} işletim sisteminden her seferinde bir sayı istemek: $10^{6}$ çağrı, ek yük $10^{6} \times 0.1\ \mu\text{s} = 0.1\ \text{s} = 100\ \text{ms}$.
+  \item \emph{Verimli yol:} her biri yaklaşık $10^{3}$ sayı içeren $4096$ baytlık bloklar istemek: $10^{3}$ çağrı, ek yük $10^{3} \times 0.1\ \mu\text{s} = 0.1\ \text{ms}$.
+\end{itemize}
+Verimli yolun ek yükü $1000$ kat daha azdır. C standart kütüphanesi ikisini birden sunar: \cmd{fgetc()} fonksiyonunu karakter karakter çağırırsınız, ama kütüphane arka planda büyük bloklar okur. Bu tekniğe \term{tamponlama} (buffering) denir.
+\end{example}
+
+% =====================================================================
+\section{Bilgisayar Sisteminin Bileşenleri}
+
+Bir bilgisayar sistemi dört bileşene ayrılabilir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  u/.style={rectangle,rounded corners=2pt,minimum width=2.4cm,minimum height=0.7cm,font=\small,fill=light},
+  a/.style={rectangle,rounded corners=2pt,minimum width=2.4cm,minimum height=0.8cm,font=\small,fill=mint!25},
+  big/.style={rectangle,rounded corners=2pt,minimum width=10.8cm,minimum height=0.9cm,font=\small\bfseries},
+  arr/.style={-{Stealth[length=2.5mm]},color=slate,thick}]
+\foreach \i/\t in {0/Kullanıcı 1,1/Kullanıcı 2,2/Kullanıcı 3,3/\dots} {
+  \node[u] (u\i) at (\i*2.8,0) {\t};
+  \node[a] (a\i) at (\i*2.8,-1.3) {};
+  \draw[arr] (u\i) -- (a\i);
+}
+\node at (a0) {\small Derleyici}; \node at (a1) {\small Tarayıcı}; \node at (a2) {\small Metin düzenleyici}; \node at (a3) {\small Veritabanı};
+\node[big,fill=mint] (os) at (4.2,-2.7) {İşletim sistemi};
+\node[big,fill=charcoal,text=white] (hw) at (4.2,-4.0) {Bilgisayar donanımı: işlemci, bellek, G/Ç aygıtları};
+\foreach \i in {0,1,2,3} \draw[arr] (a\i) -- (a\i |- os.north);
+\draw[arr,{Stealth[length=2.5mm]}-{Stealth[length=2.5mm]}] (os) -- (hw);
+\end{tikzpicture}
+\caption{Bir bilgisayar sisteminin dört bileşeni.}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Donanım} temel hesaplama kaynaklarını sağlar: işlemci, bellek, girdi/çıktı (G/Ç; input/output, I/O) aygıtları.
+  \item \textbf{Uygulama programları} bu kaynakları kullanıcıların sorunlarını çözmek için kullanır.
+  \item \textbf{Kullanıcılar} insanlardır, ama aynı zamanda başka makineler ve programlar da olabilir (ör.\ bir web sunucusunun ``kullanıcıları'' başka bilgisayarlardır).
+  \item \textbf{İşletim sistemi} donanımı denetler ve onun uygulamalar ile kullanıcılar arasında kullanımını eşgüdümler.
+\end{itemize}
+
+\subsection{Donanımın düzeni}
+
+Modern bir bilgisayarda bir ya da daha fazla işlemci ve birkaç \term{aygıt denetleyicisi} (device controller) bulunur; hepsi ortak bir \term{yol} (bus) üzerinden paylaşılan ana belleğe bağlıdır.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  b/.style={rectangle,rounded corners=2pt,minimum width=2.1cm,minimum height=0.9cm,align=center,font=\footnotesize},
+  arr/.style={{Stealth[length=2mm]}-{Stealth[length=2mm]},color=slate,thick}]
+\fill[slate] (-0.3,0) rectangle (14.0,0.18);
+\node[font=\footnotesize\itshape,text=slate,anchor=west] at (-0.3,0.42) {sistem yolu};
+\node[b,fill=mint] (cpu) at (0.8,-1.1) {\textbf{İşlemci}};
+\node[b,fill=charcoal,text=white] (mem) at (3.3,-1.1) {\textbf{Bellek}\\RAM};
+\foreach \x/\t/\d in {6.0/Disk\\denetleyicisi/SSD, 8.4/USB\\denetleyicisi/klavye, 10.8/Grafik\\bağdaştırıcısı/monitör, 13.2/Ağ\\kartı/Wi-Fi} {
+  \node[b,fill=light,minimum width=2.0cm] (c) at (\x-0.4,-1.1) {\t};
+  \node[b,draw=slate,minimum width=2.0cm,minimum height=0.7cm] (dv) at (\x-0.4,-2.6) {\d};
+  \draw[arr] (\x-0.4,0) -- (c.north);
+  \draw[arr] (c.south) -- (dv.north);
+}
+\draw[arr] (0.8,0) -- (cpu.north);
+\draw[arr] (3.3,0) -- (mem.north);
+\end{tikzpicture}
+\caption{İşlemci, bellek ve aygıt denetleyicileri sistem yolunu paylaşır.}
+\end{figure}
+
+Her aygıt denetleyicisinin küçük bir yerel tamponu vardır ve işlemciyle \emph{paralel} çalışır. İşletim sistemi her denetleyici için bir \term{aygıt sürücüsü} (device driver) içerir: denetleyicinin komutlarını anlayan ve işletim sisteminin geri kalanına tek tip bir arayüz sunan bir yazılım parçası.
+
+\subsection{Kesmeler}
+
+İşlemci bir aygıtın işini bitirdiğini nasıl anlar? Sürekli sorabilir (``yeni bir şey var mı?''); bu tekniğe \term{yoklama} (polling) denir, ama işlemci zamanını boşa harcar. Bunun yerine aygıt, bir \term{kesme} (interrupt) üreterek işlemciye \emph{haber verir}:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item Aygıt denetleyicisi bir işlemi bitirir (ör.\ diskten gelen veri artık kendi tamponundadır).
+  \item İşlemciye bir kesme hattı üzerinden sinyal gönderir.
+  \item İşlemci çalıştırmakta olduğu programın durumunu kaydeder ve adresi \term{kesme vektöründe} (interrupt vector) saklanan \term{kesme işleyicisine} (interrupt handler) atlar. Kesme vektörü, aygıt numarasına göre sıralanmış bir tablodur.
+  \item İşleyici (işletim sisteminin içindeki aygıt sürücüsünün bir parçası) olayı işler.
+  \item Kaydedilen durum geri yüklenir ve kesilen program hiçbir şey olmamış gibi devam eder.
+\end{enumerate}
+
+Modern işletim sistemleri \textbf{kesme güdümlüdür} (interrupt-driven): hiçbir program çalışmak istemiyorsa ve hiçbir aygıt ilgi beklemiyorsa işletim sistemi yalnızca bekler. Her tuş vuruşu, fare hareketi, ağ paketi ve biten her disk okuması bir kesme olarak gelir; çoğu zaman saniyede binlerce kez.
+
+\begin{example}[Neden yalnızca yoklama yapmıyoruz?]
+Bir klavye saniyede en fazla yaklaşık $10$ tuş vuruşu üretir. Klavyeyi bir kez kontrol etmenin $t_{\text{check}} = 1\ \mu\text{s}$ sürdüğünü ve tepkili hissettirmek için saniyede $f = 1000$ kez yokladığımızı varsayalım. Yoklamaya harcanan işlemci zamanı oranı
+\[
+f \cdot t_{\text{check}} = 1000\ \text{s}^{-1} \times 10^{-6}\ \text{s} = 10^{-3} = 0.1\%
+\]
+olur. Bu küçük görünür; ama kontrollerin $\%99$'u hiçbir şey bulmaz ve bir bilgisayarda düzinelerce aygıt vardır. Kesmelerle işlemci klavyeye yalnızca gerçekten bir tuşa basıldığında, yani saniyede yaklaşık $10$ kez zaman ayırır.
+\end{example}
+
+\subsection{Bellek hiyerarşisi}
+
+Depolama birimleri hız, boyut, maliyet ve \emph{uçuculuk} (volatility; içeriğin güç kesildiğinde korunup korunmadığı) bakımından farklılaşan birçok türde gelir.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Düzey} & \textbf{Tipik boyut} & \textbf{Erişim süresi} & \textbf{Yazmaç erişimi 1 s sürseydi\dots} \\
+\midrule
+İşlemci yazmaçları & $< 1$ KB & $\approx 0.3$ ns & 1 saniye \\
+Önbellek (L1--L3) & birkaç MB & $1$--$40$ ns & 3 saniye ile 2 dakika arası \\
+Ana bellek (RAM) & $8$--$64$ GB & $\approx 100$ ns & $\approx 5$ dakika \\
+Katı hâl sürücüsü (SSD) & $0.5$--$4$ TB & $\approx 50\ \mu$s & $\approx 2$ gün \\
+Sabit disk sürücüsü (HDD) & $1$--$20$ TB & $\approx 5$ ms & $\approx 6$ ay \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Son sütun, her erişim süresini aynı $1/(0.3\ \text{ns}) \approx 3.3\times10^{9}$ çarpanıyla çarpar; örneğin bir sabit disk için $5\ \text{ms} \times 3.3\times10^{9} \approx 1.7\times10^{7}\ \text{s} \approx 190$ gün. Yazmaçlar, önbellek ve RAM \textbf{uçucudur} (volatile); SSD'ler ve diskler \textbf{kalıcıdır} (non-volatile). İşletim sisteminin işinin büyük kısmı, bir programın ihtiyaç duyduğu veri gerektiği anda hızlı bellekte olsun diye veriyi düzeyler arasında taşımaktır. Bu konuya 6. ve 7.\ haftalarda döneceğiz.
+
+\subsection{İkili mod çalışması}
+\label{sec:dualmode}
+
+Her program her şeyi yapabilseydi, hatalı ya da kötü niyetli tek bir program diğer bütün programları yok edebilirdi. Bu yüzden koruma \emph{donanım} desteği gerektirir. İşlemcinin bir \term{mod biti} (mode bit) vardır:
+
+\begin{itemize}
+  \item \textbf{Çekirdek modu} (kernel mode; gözetmen, sistem ya da ayrıcalıklı mod da denir; mod biti $=0$): her komut serbesttir. Bu modda yalnızca işletim sistemi çekirdeği çalışır.
+  \item \textbf{Kullanıcı modu} (user mode; mod biti $=1$): doğrudan G/Ç, bellek korumasını değiştirmek ya da işlemciyi durdurmak gibi \term{ayrıcalıklı komutlar} (privileged instructions) yasaktır.
+\end{itemize}
+
+Bir kullanıcı programı ayrıcalıklı bir komut denerse donanım bu komutu yürütmez; bunun yerine işletim sistemine bir \emph{tuzak} (trap) üretir ve işletim sistemi genellikle programı sonlandırır. Bir programın ayrıcalıklı bir hizmete ihtiyacı olduğunda bir \term{sistem çağrısı} (system call) yapar: bu, çekirdek moduna geçen ve çekirdekteki sabit bir giriş noktasına atlayan özel bir komuttur. Çekirdek işini bitirince kullanıcı moduna geri geçer ve programa döner.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  m/.style={rectangle,rounded corners=3pt,minimum width=9cm,minimum height=1.0cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=3mm]},very thick,color=mintdeep}]
+\node[m,fill=light] (u) at (0,2.2) {\textbf{Kullanıcı modu} (mod biti $= 1$): kullanıcı programları};
+\node[m,fill=charcoal,text=white] (k) at (0,0) {\textbf{Çekirdek modu} (mod biti $= 0$): işletim sistemi çekirdeği};
+\draw[arr] (-2.5,1.7) -- node[left,font=\footnotesize,text=mintdeep]{sistem çağrısı / kesme (tuzak)} (-2.5,0.5);
+\draw[arr] (2.5,0.5) -- node[right,font=\footnotesize,text=mintdeep]{kullanıcıya dönüş} (2.5,1.7);
+\end{tikzpicture}
+\caption{Kullanıcı modu ile çekirdek modu arasında geçiş.}
+\end{figure}
+
+x86 işlemcilerde bu modlara \emph{halka} (ring) denir ve $0$ (en ayrıcalıklı) ile $3$ arasında numaralandırılır; Linux ve Windows yalnızca halka~0'ı (çekirdek) ve halka~3'ü (kullanıcı) kullanır. Bölüm~\ref{sec:simple}'deki MS-DOS örneği, bu koruma olmadığında ne olduğunu gösterir.
+
+% =====================================================================
+\section{Uygulama: Bir Programın Çekirdeği Çağırmasını İzlemek}
+\label{sec:syscall}
+
+Bu bölümdeki programlar, bu notların yanındaki \texttt{code/} klasöründedir. Linux için C dilinde yazılmışlardır. Onları laboratuvar bilgisayarlarında, WSL'de (Windows Subsystem for Linux) ya da çevrim içi bir C derleyicisinde derleyebilirsiniz. Bu derste C yazmanız \emph{beklenmiyor}; açıklamaları okuyun ve programın ne yaptığına odaklanın.
+
+\subsection{Örnek 1: kütüphane çağrısı ve sistem çağrısı}
+
+\lstinputlisting[caption={}]{../code/hello_syscall.c}
+
+\cmd{printf()} bir \emph{kütüphane fonksiyonudur}: tamamen kullanıcı modunda çalışır ve metni biçimlendirir. Karakterleri gerçekten ekrana koymak için çekirdekten \cmd{write()} sistem çağrısıyla istekte bulunmak zorundadır. \cmd{strace} programı, başka bir programın yaptığı her sistem çağrısını gösterir:
+
+\begin{lstlisting}[style=term]
+$ gcc hello_syscall.c -o hello_syscall
+$ strace ./hello_syscall
+...
+write(1, "Hello from printf!\n", 19)  = 19
+write(1, "Hello from write()!\n", 20) = 20
+exit_group(0)                         = ?
+\end{lstlisting}
+
+İki satır da sonunda aynı \cmd{write} sistem çağrısına dönüşür. Sayıların anlamı şöyledir: dosya tanımlayıcısı (file descriptor) $1$ (standart çıktı, yani ekran), yazılacak baytlar, bunların sayısı ve \texttt{=} işaretinden sonra çekirdeğin döndürdüğü değer (gerçekten yazılan bayt sayısı).
+
+Basit bir komut bile çok sayıda sistem çağrısı yapar. Test makinemizde \cmd{strace -c ls /} komutu $76$ sistem çağrısı bildirdi; bunların çoğu dosyaları açmak, okumak, belleğe eşlemek ve kapatmak içindi.
+
+\subsection{Örnek 2: bir sistem çağrısı ne kadar pahalı?}
+
+\lstinputlisting[caption={}]{../code/syscall_cost.c}
+
+\Needspace{8\baselineskip}
+Test makinemizdeki (bir Linux sanal makinesi) örnek çıktı:
+
+\begin{lstlisting}[style=term]
+$ gcc -O2 syscall_cost.c -o syscall_cost
+$ ./syscall_cost
+ordinary function call :    1.5 ns
+system call (getpid)   :  116.1 ns
+system call is about 76 times slower
+\end{lstlisting}
+
+Sizin sayılarınız farklı olacaktır: tipik bir bilgisayarda en küçük sistem çağrısı kabaca $50$--$200$ ns, bir fonksiyon çağrısı ise yaklaşık $1$--$2$ ns sürer. Asıl ders orandadır: kullanıcı modu ile çekirdek modu arasındaki sınırı geçmek \emph{pahalıdır}, çünkü işlemci yazmaçları kaydetmeli, mod değiştirmeli, isteği denetlemeli ve geri dönmelidir. Bunu Bölüm~\ref{sec:micro} için aklınızda tutun.
+
+\begin{example}[Bu ne kadar ek yük eder?]
+$t_{\text{func}} = 1.5$ ns ve $t_{\text{sys}} = 116$ ns iken, fonksiyon çağrıları yerine $N = 10^{6}$ sistem çağrısı yapmak
+\[
+N\,(t_{\text{sys}} - t_{\text{func}}) = 10^{6} \times (116 - 1.5)\ \text{ns} \approx 1.1\times10^{8}\ \text{ns} \approx 0.11\ \text{s}
+\]
+ek süre getirir.
+\end{example}
+
+% =====================================================================
+\section{İşletim Sistemi Yapıları}
+\label{sec:structures}
+
+Genel amaçlı bir işletim sistemi çok büyük bir programdır; yalnızca Linux çekirdeği $30$ milyonu aşkın kaynak kod satırından oluşur ve bunun çoğu aygıt sürücüleridir. Böyle bir programın nasıl düzenlendiği, hızını, güvenilirliğini ve gelişebilirliğini büyük ölçüde etkiler. Altı yaklaşıma bakacağız.
+
+\subsection{Basit yapı: MS-DOS}
+\label{sec:simple}
+
+MS-DOS (1981), özgün IBM PC'de en az yerde en çok işlevi sunmak için yazıldı. Özenle ayrılmış modüllere bölünmemişti.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[l/.style={rectangle,rounded corners=2pt,minimum width=6.2cm,minimum height=0.75cm,font=\small}]
+\node[l,fill=light] (a) at (0,3.0) {Uygulama programı};
+\node[l,fill=mint!25] (r) at (0,2.0) {Bellekte kalıcı sistem programı};
+\node[l,fill=mint] (d) at (0,1.0) {MS-DOS aygıt sürücüleri};
+\node[l,fill=charcoal,text=white] (b) at (0,0) {ROM BIOS aygıt sürücüleri};
+\draw[-{Stealth},thick,red!60!black] (3.4,3.0) -- (3.4,0.0);
+\draw[-{Stealth},thick,red!60!black] (3.9,3.0) -- (3.9,1.0);
+\node[font=\footnotesize,text=red!60!black,align=left,anchor=west] at (4.1,1.5) {uygulamalar katmanları\\atlayabiliyordu};
+\end{tikzpicture}
+\caption{MS-DOS katman yapısı: programlar donanıma doğrudan ulaşabiliyordu.}
+\end{figure}
+
+Uygulama programları işletim sistemini atlayıp doğrudan ekrana ya da diske yazabiliyordu. IBM PC'nin Intel 8088 işlemcisinde ikili mod \emph{yoktu}; bu yüzden işletim sisteminin onları durdurmasının hiçbir yolu yoktu. Sonuç olarak tek bir hatalı program bütün sistemi çökertebiliyordu. \textbf{Ders:} koruma, hem donanım desteği hem de bu desteği kullanan bir işletim sistemi gerektirir.
+
+\subsection{Monolitik çekirdek: UNIX ve Linux}
+
+\term{Monolitik} (monolithic) bir çekirdekte tüm işletim sistemi hizmetleri (süreç zamanlama, bellek yönetimi, dosya sistemleri, ağ, aygıt sürücüleri) çekirdek modunda, tek bir adres uzayında çalışan büyük bir program oluşturur.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[s/.style={rectangle,rounded corners=2pt,minimum width=2.4cm,minimum height=0.7cm,font=\small}]
+\foreach \i/\t in {0/kabuk,1/tarayıcı,2/derleyici,3/uygulamanız} \node[s,fill=light] at (\i*2.7,2.4) {\t};
+\draw[dashed,slate] (-1.3,1.75) -- (9.4,1.75) node[right,font=\footnotesize\itshape,text=slate,align=left] {sistem çağrısı\\arayüzü};
+\fill[charcoal,rounded corners=3pt] (-1.3,-0.95) rectangle (9.4,1.45);
+\node[font=\footnotesize\bfseries,text=mint,anchor=west] at (-1.1,1.2) {TEK ÇEKİRDEK (çekirdek modu)};
+\foreach \i/\t in {0/zamanlayıcı,1/bellek yöneticisi,2/dosya sistemleri} \node[s,fill=slate,text=white,minimum width=3.0cm] at (\i*3.4+0.4,0.6) {\t};
+\foreach \i/\t in {0/ağ yığını,1/aygıt sürücüleri,2/{sinyaller, IPC}} \node[s,fill=slate,text=white,minimum width=3.0cm] at (\i*3.4+0.4,-0.4) {\t};
+\node[rectangle,rounded corners=2pt,minimum width=10.7cm,minimum height=0.6cm,fill=dark,text=white,font=\small] at (4.05,-1.5) {Donanım};
+\end{tikzpicture}
+\caption{Monolitik bir çekirdek.}
+\end{figure}
+
+\begin{itemize}
+  \item[\textcolor{mintdeep}{$+$}] \textbf{Hızlı:} çekirdek bileşenleri birbirini sıradan fonksiyon çağrıları gibi doğrudan çağırır; bir sistem çağrısı yalnızca iki mod geçişi gerektirir.
+  \item[\textcolor{red!60!black}{$-$}] \textbf{Bakımı zor:} tek bir programda milyonlarca satır.
+  \item[\textcolor{red!60!black}{$-$}] \textbf{Kırılgan:} herhangi bir parçadaki (çoğunlukla bir sürücüdeki) hata bütün çekirdeği çökertebilir (Linux'ta \emph{çekirdek paniği} (kernel panic), Windows'ta ``mavi ekran'').
+\end{itemize}
+Örnekler: özgün UNIX (1970'ler), Linux, geleneksel BSD.
+
+\subsection{Katmanlı yaklaşım}
+
+İşletim sistemi katmanlara bölünür. $0$.\ katman donanım, en üst katman ise kullanıcı arayüzüdür. Her katman yalnızca altındaki katmanların hizmetlerini kullanabilir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\foreach \i/\t/\c in {0/{Katman 5: kullanıcı programları, operatör}/light, 1/{Katman 4: G/Ç aygıtları için tamponlama}/mint!25, 2/{Katman 3: operatör konsolu sürücüsü}/mint!50, 3/{Katman 2: bellek yönetimi}/mint!25, 4/{Katman 1: işlemci zamanlaması ve çoklu programlama}/mint!50, 5/{Katman 0: donanım}/charcoal} {
+  \pgfmathsetmacro{\w}{9-0.5*\i}
+  \node[rectangle,rounded corners=2pt,minimum width=\w cm,minimum height=0.62cm,fill=\c,font=\small] at (0,-0.72*\i) {\ifnum\i=5 \color{white}\fi\t};
+}
+\end{tikzpicture}
+\caption{Dijkstra'nın THE sistemine (1968) gevşek biçimde dayanan katmanlı bir işletim sistemi.}
+\end{figure}
+
+\begin{itemize}
+  \item[\textcolor{mintdeep}{$+$}] İnşa etmesi ve hata ayıklaması kolaydır: önce 1.\ katmanı test edin, sonra onun üzerinde 2.\ katmanı, ve böyle devam edin.
+  \item[\textcolor{red!60!black}{$-$}] Katmanların sırasına karar vermek zordur. Bellek yönetimi zamanlayıcıya ihtiyaç duyar (bir diski beklemek için), ama zamanlayıcı da belleğe ihtiyaç duyar (tabloları için). Hangisi önce gelmeli?
+  \item[\textcolor{red!60!black}{$-$}] Her istek, her biri ek yük getiren birçok katmandan geçer.
+\end{itemize}
+
+Saf katmanlı yapı bugün genel amaçlı sistemlerde nadirdir, ama fikir her işletim sisteminin içinde yaşar; örneğin ağ yığını kesin biçimde katmanlıdır.
+
+\subsection{Mikroçekirdek}
+\label{sec:micro}
+
+\term{Mikroçekirdek} (microkernel) yaklaşımı, temel olmayan her şeyi çekirdekten çıkarır ve \emph{sunucu} (server) adı verilen sıradan kullanıcı modu programları olarak çalıştırır. Mikroçekirdeğin kendisi yalnızca asgari süreç ve bellek yönetimini ve her şeyden önce programlar arasında \term{mesaj aktarımını} (message passing) sağlar.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[s/.style={rectangle,rounded corners=2pt,minimum width=2.3cm,minimum height=0.85cm,font=\small,align=center}]
+\node[s,fill=light] (app) at (0,2.4) {Uygulama};
+\node[s,fill=mint!25] (fs) at (2.6,2.4) {Dosya\\sunucusu};
+\node[s,fill=mint!25] at (5.2,2.4) {Aygıt\\sürücüsü};
+\node[s,fill=mint!25] at (7.8,2.4) {Ağ\\sunucusu};
+\draw[dashed,slate] (-1.3,1.6) -- (9.1,1.6) node[right,font=\footnotesize\itshape,text=slate] {kullanıcı / çekirdek};
+\node[rectangle,rounded corners=2pt,minimum width=10.4cm,minimum height=0.85cm,fill=mint,font=\small] (mk) at (3.9,0.6) {\textbf{Mikroçekirdek}: mesaj aktarımı, temel zamanlama, temel bellek};
+\node[rectangle,rounded corners=2pt,minimum width=10.4cm,minimum height=0.6cm,fill=charcoal,text=white,font=\small] at (3.9,-0.45) {Donanım};
+\draw[-{Stealth},very thick,mintdeep] (app.south) -- node[left,font=\footnotesize]{1} (app.south |- mk.north);
+\draw[-{Stealth},very thick,mintdeep] (fs.south |- mk.north) -- node[right,font=\footnotesize]{2} (fs.south);
+\end{tikzpicture}
+\caption{Bir mikroçekirdekte, uygulamanın dosya sunucusuna isteği çekirdek üzerinden bir mesaj olarak gider.}
+\end{figure}
+
+\begin{itemize}
+  \item[\textcolor{mintdeep}{$+$}] \textbf{Güvenilir:} çöken bir sürücü yalnızca çöken bir kullanıcı programıdır; sistem onu yeniden başlatabilir.
+  \item[\textcolor{mintdeep}{$+$}] \textbf{Güvenli ve genişletilebilir:} yeni hizmetler yeni kullanıcı programlarıdır; küçük çekirdeği denetlemek daha kolaydır. seL4 mikroçekirdeğinin doğruluğu \emph{matematiksel olarak kanıtlanmıştır}.
+  \item[\textcolor{red!60!black}{$-$}] \textbf{Daha yavaş:} her hizmet isteği ek mesajlar ve mod geçişleri gerektirir.
+\end{itemize}
+Örnekler: Mach (Carnegie Mellon, 1980'ler), MINIX~3, QNX (otomobillerde ve tıbbi cihazlarda kullanılır), L4 ve seL4.
+
+\begin{example}[Mikroçekirdeğin bedeli]
+Tek bir dosya okuması için mod geçişlerini sayalım.
+\begin{itemize}
+  \item Monolitik: uygulama $\to$ çekirdek $\to$ uygulama: $2$ geçiş.
+  \item Mikroçekirdek: uygulama $\to$ çekirdek $\to$ dosya sunucusu $\to$ çekirdek $\to$ uygulama: $4$ geçiş ve ayrıca $2$ mesaj kopyası.
+\end{itemize}
+Temsilî değerler alalım: bir mod geçişi $t_{s} = 0.1\ \mu\text{s}$, bir mesaj kopyası $t_{c} = 0.15\ \mu\text{s}$, yararlı iş $t_{w} = 1\ \mu\text{s}$. Bu durumda
+\[
+T_{\text{mono}} = 2t_{s} + t_{w} = 0.2 + 1.0 = 1.2\ \mu\text{s},
+\qquad
+T_{\mu} = 4t_{s} + 2t_{c} + t_{w} = 0.4 + 0.3 + 1.0 = 1.7\ \mu\text{s}
+\]
+olur; yani mikroçekirdek bu işlem için $T_{\mu}/T_{\text{mono}} \approx 1.42$ kat, başka bir deyişle yaklaşık \%42 daha yavaştır. Uzun işlemlerde (büyük $t_{w}$) oran $1$'e yaklaşır ve ek yük pek önemli olmaz:
+\[
+\lim_{t_{w}\to\infty} \frac{4t_{s} + 2t_{c} + t_{w}}{2t_{s} + t_{w}} = 1 .
+\]
+\end{example}
+
+\subsection{Modüler çekirdek: yüklenebilir çekirdek modülleri}
+
+Modern sistemlerin çoğu \term{modüler} (modular) bir tasarım kullanır: bir temel çekirdek ve sistem çalışırken eklenip çıkarılabilen \term{yüklenebilir çekirdek modülleri} (loadable kernel modules). Bir USB aygıtı taktığınızda Linux doğru sürücü modülünü kendiliğinden yükleyebilir.
+
+\begin{itemize}
+  \item[\textcolor{mintdeep}{$+$}] Monolitik çekirdekte olduğu gibi modüller çekirdek modunda çalışır; bu yüzden aralarındaki çağrılar hızlıdır.
+  \item[\textcolor{mintdeep}{$+$}] Mikroçekirdekte olduğu gibi sistem esnektir: yalnızca gereken modüller yüklenir.
+  \item[\textcolor{red!60!black}{$-$}] Hatalı bir modül yine çekirdek modunda çalışır ve sistemi yine çökertebilir.
+\end{itemize}
+Örnekler: Linux, Solaris, modern BSD'ler.
+
+\paragraph{Örnek 3: en küçük çekirdek modülü.} Aşağıdaki liste, standart ``merhaba dünya'' Linux çekirdek modülüdür. \cmd{main()} fonksiyonu yoktur; bunun yerine çekirdek, modül yüklendiğinde \cmd{hello\_init()} fonksiyonunu, kaldırıldığında \cmd{hello\_exit()} fonksiyonunu çağırır. Mesajları ekrana değil, çekirdek günlüğüne (kernel log) gider.
+
+\lstinputlisting[caption={}]{../code/hello_module.c}
+
+\begin{lstlisting}[style=term]
+$ make                          # çekirdek başlık paketi gerekir
+$ sudo insmod hello_module.ko   # yükle
+$ lsmod | grep hello            # orada mı?
+$ sudo dmesg | tail -1          # çekirdek günlüğünü oku
+hello_module: loaded into the kernel
+$ sudo rmmod hello_module       # kaldır
+\end{lstlisting}
+
+\begin{tryit}[Önce güvenlik]
+Bir çekirdek modülündeki kod çekirdek modunda çalışır: bir hata bütün bilgisayarı dondurabilir. Örnek~3'ü yalnızca bir sanal makinede deneyin. Örnek burada ``yüklenebilir modül''ün ne demek olduğunu \emph{görebilmeniz} için verilmiştir; böyle bir modül yazmanız gerekmeyecek.
+\end{tryit}
+
+\subsection{Hibrit sistemler}
+
+Gerçek işletim sistemleri nadiren tek bir saf tasarımı izler.
+
+\begin{itemize}
+  \item \textbf{Windows (NT ailesi)} mikroçekirdek fikirleriyle (ayrı alt sistemler) tasarlandı, ancak hız için grafik dahil hizmetlerin çoğu çekirdek modunda çalışır. Sürücüler, modüller gibi yüklenebilir.
+  \item \textbf{macOS ve iOS}, Mach mikroçekirdeğini BSD UNIX'in parçalarıyla birleştirip tek bir çekirdek olarak derleyen \emph{XNU} çekirdeğini ve buna ek olarak yüklenebilir çekirdek uzantılarını kullanır.
+  \item \textbf{Android}, değiştirilmiş bir Linux çekirdeği (monolitik ve modüler) kullanır; bunun üzerinde bir donanım soyutlama katmanı, yerel kütüphaneler ve uygulamalar için Android çalışma zamanı bulunur.
+\end{itemize}
+
+\begin{histnote}[Tanenbaum--Torvalds tartışması (1992)]
+Ocak 1992'de MINIX mikroçekirdeğinin yazarı Andrew Tanenbaum, ``LINUX is obsolete'' (Linux eskimiştir) başlıklı bir mesaj yayımladı ve monolitik bir çekirdeğin ``1970'lere doğru dev bir geri adım'' olduğunu savundu. Linus Torvalds, Linux'un çalıştığını ve hızlı olduğunu söyleyerek yanıt verdi. Otuz yılı aşkın bir süre sonra iki tasarım da her gün kullanılıyor: Linux sunucularda ve telefonlarda, mikroçekirdekler ise otomobillerde, uçaklarda ve güvenliğin kritik olduğu diğer cihazlarda.
+\end{histnote}
+
+\subsection{Karşılaştırma}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{Yapı} & \textbf{Çekirdek modunda} & \textbf{Hız} & \textbf{Güvenilirlik} & \textbf{Örnek} \\
+\midrule
+Basit & her şey (koruma yok) & yüksek & çok düşük & MS-DOS \\
+Monolitik & tüm sistem hizmetleri & yüksek & orta & UNIX, Linux \\
+Katmanlı & tüm katmanlar & düşük & yüksek & THE (1968) \\
+Mikroçekirdek & yalnızca küçük çekirdek & daha düşük & yüksek & MINIX 3, QNX, seL4 \\
+Modüler & temel + yüklenen modüller & yüksek & orta & Linux, Solaris \\
+Hibrit & değişir & yüksek & orta--yüksek & Windows, macOS, Android \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Tekrarlanan ödünleşim: eklediğiniz her sınır (bir katman, bir mesaj, bir mod geçişi) güvenilirlik kazandırır ve hızdan götürür.
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Altı cümlede 2. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item İşletim sistemi donanımı yönetir ve programlara daha basit, daha güvenli bir makine sunar; bellekte sürekli bulunan özü çekirdektir.
+  \item İşletim sistemine yukarıdan aşağıya bir genişletilmiş makine (soyutlama) ya da aşağıdan yukarıya bir kaynak yöneticisi (zaman ve alan çoğullama) olarak bakılabilir.
+  \item Üç tasarım hedefi kullanım kolaylığı, verimlilik ve gelişebilirliktir; bunlar kişisel bilgisayarlarda, sunucularda, telefonlarda ve gömülü sistemlerde farklı ağırlık taşır.
+  \item Bir bilgisayar sisteminin dört bileşeni vardır: donanım, işletim sistemi, uygulama programları ve kullanıcılar; aygıtlar işlemciye kesmelerle haber verir.
+  \item İkili mod çalışması sistemi korur; bir sistem çağrısı çekirdek moduna geçer ve bir fonksiyon çağrısından çok daha pahalıdır.
+  \item İşletim sistemi yapıları (basit, monolitik, katmanlı, mikroçekirdek, modüler, hibrit), hız ile güvenilirlik arasındaki farklı uzlaşmalardır.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Sözlük}
+
+\begin{description}[leftmargin=0pt,style=nextline,itemsep=0.2em]
+  \item[Aygıt sürücüsü (device driver)] Bir tür aygıt denetleyicisini denetleyen işletim sistemi kodu.
+  \item[Ayrıcalıklı komut (privileged instruction)] İşlemcinin yalnızca çekirdek modunda yürüttüğü komut.
+  \item[Çekirdek (kernel)] İşletim sisteminin her zaman bellekte bulunan ve çekirdek modunda çalışan kısmı.
+  \item[Çoğullama (multiplexing)] Bir kaynağı zamanda (sırayla) ya da alanda (bölerek) paylaştırmak.
+  \item[İkili mod çalışması (dual-mode operation)] Bir mod bitiyle seçilen iki işlemci modu (kullanıcı ve çekirdek) için donanım desteği.
+  \item[Kesme (interrupt)] İşlemcinin durup bir işletim sistemi işleyicisini çalıştırmasına ve sonra kaldığı yerden devam etmesine yol açan donanım sinyali.
+  \item[Kesme vektörü (interrupt vector)] Kesme numarasına göre sıralanmış işleyici adresleri tablosu.
+  \item[Mikroçekirdek (microkernel)] Asgari bir çekirdek; işletim sistemi hizmetlerinin çoğu, mesajlarla haberleşen kullanıcı modu sunucu programları olarak çalışır.
+  \item[Monolitik çekirdek (monolithic kernel)] Tüm işletim sistemi hizmetlerinin çekirdek modunda tek bir program olarak çalıştığı çekirdek.
+  \item[Sistem çağrısı (system call)] Bir programın çekirdekten yaptığı istek; işlemciyi çekirdek moduna geçirir.
+  \item[Soyutlama (abstraction)] Ayrıntıları gizleyen sadeleştirilmiş bir görünüm; ör.\ disk sektörleri yerine bir \emph{dosya}.
+  \item[Tamponlama (buffering)] Pahalı işlemlerin sayısını azaltmak için veriyi büyük bloklarda toplamak.
+  \item[Tuzak (trap)] Bir sistem çağrısının ya da bir hatanın yol açtığı, yazılım kaynaklı kesme.
+  \item[Yüklenebilir çekirdek modülü (loadable kernel module)] Çalışan bir çekirdeğe eklenebilen ya da ondan çıkarılabilen kod.
+\end{description}
+
+% =====================================================================
+\Needspace{20\baselineskip}
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Kendi işletim sisteminizin içine bakın]
+\textbf{Linux} (laboratuvar bilgisayarları, WSL ya da bir sanal makine):
+\begin{lstlisting}[style=term]
+$ uname -r          # çekirdek sürümü nedir?
+$ lsmod | head      # hangi modüller yüklü?
+$ strace -c ls      # ls'in yaptığı sistem çağrılarını say
+\end{lstlisting}
+\textbf{Windows:} Komut İstemi'nde \cmd{winver} (Windows derlemesi) ve \cmd{driverquery} (kurulu sürücüler) komutlarını çalıştırın. Görev Yöneticisi $\to$ \emph{Performans} $\to$ CPU ekranında grafiğe sağ tıklayıp \emph{Çekirdek sürelerini göster} seçeneğini seçin.
+\begin{enumerate}[leftmargin=1.4em]
+  \item Makinenizde kaç çekirdek modülü yüklü?
+  \item \cmd{ls} en sık hangi sistem çağrısını kullanıyor?
+  \item Çekirdek modunda çok zaman geçiren bir program bulun. Bunun nedeni ne olabilir?
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item İşletim sisteminin üç ders kitabı tanımını verin. Her biri hangi yönü vurgular?
+  \item ``Genişletilmiş makine'' ve ``kaynak yöneticisi'' bakışları arasındaki farkı açıklayın. Her birine bir örnek verin.
+  \item Bir zaman çoğullama ve bir alan çoğullama örneği verin.
+  \item Çekirdek ile bir sistem programı arasındaki fark nedir? Kabuk (shell) çekirdeğin parçası mıdır?
+  \item İşletim sisteminin üç tasarım hedefini sayın. (a) Bir akıllı telefon, (b) bir web sunucusu, (c) bir otomobilin fren denetleyicisi için hangisi en önemlidir?
+  \item Bir disk denetleyicisi kesme ürettiğinde ne olduğunu adım adım anlatın.
+  \item Koruma neden donanım tarafından desteklenmelidir? İkili modu olmayan bir işlemcide ne olurdu?
+  \item \cmd{printf()} ile \cmd{write()} arasındaki fark nedir?
+  \item Monolitik ve mikroçekirdek tasarımlarını karşılaştırın: her birinin bir avantajı ve bir dezavantajı.
+  \item Modüler bir çekirdek neden ``iki dünyanın en iyisi'' olarak tanımlanır? Geriye kalan zayıflığı nedir?
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item Bir sistem çağrısı $0.2\ \mu$s sürüyor. Bir program $1$~MB'lık bir dosyayı (a) bayt bayt, (b) $4096$ baytlık bloklarla okuyor. Her iki durumda sistem çağrısı ek yükünü hesaplayın. ($1\ \text{MB} = 2^{20}$ bayt alın.)
+  \item Bir aygıt saniyede $500$ kez yoklanıyor; her kontrol $2\ \mu$s sürüyor. İşlemcinin ne kadarı yoklamaya harcanır? Bu, günde kaç işlemci-saniyesi eder?
+  \item ``Yazmaç erişimi $=1$ s'' ölçeğiyle, RAM'e ($80$ ns) ve bir SSD'ye ($100\ \mu$s) erişim ne kadar sürerdi? Yazmaç erişim süresini $0.3$ ns alın.
+  \item Mikroçekirdek örneğinde yararlı iş $t_{w} = 10\ \mu$s'ye çıkıyor. $T_{\mu}/T_{\text{mono}}$ yavaşlamasını hesaplayın. Bu size ne söyler?
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=11]
+  \item (a) $2^{20}$ çağrı $\times\, 0.2\ \mu\text{s} \approx 0.21$ s. (b) $2^{20}/2^{12} = 256$ çağrı $\times\, 0.2\ \mu\text{s} \approx 51\ \mu\text{s}$, yani $4096$ kat daha az.
+  \item $500 \times 2\times10^{-6} = 10^{-3} = 0.1\%$. Günde: $0.001 \times 86\,400\ \text{s} \approx 86$ işlemci-saniyesi.
+  \item Ölçek çarpanı $1/(0.3\ \text{ns}) \approx 3.33\times10^{9}$. RAM: $80\times10^{-9} \times 3.33\times10^{9} \approx 267$ s $\approx 4.4$ dk. SSD: $10^{-4} \times 3.33\times10^{9} \approx 3.3\times10^{5}$ s $\approx 3.9$ gün.
+  \item $T_{\text{mono}} = 0.2 + 10 = 10.2\ \mu$s, $T_{\mu} = 0.4 + 0.3 + 10 = 10.7\ \mu$s; oran $\approx 1.05$, yalnızca \%5 daha yavaş. Mikroçekirdeğin ek yükü kısa ve sık işlemlerde önemlidir, uzun işlemlerde değil.
+\end{enumerate}
+
+% =====================================================================
+\section{İleriye Bakış: 3. Hafta}
+
+\begin{itemize}
+  \item İşletim sisteminin kullanıcılara ve programlara sunduğu hizmetler.
+  \item Ayrıntılı sistem çağrıları: türleri, parametre aktarımı, sistem çağrısı tablosu.
+  \item Süreç (process) kavramı: yürütülmekte olan program ve bellek düzeni.
+  \item Süreç durumları: yeni, hazır, çalışıyor, bekliyor, sonlandı; süreç denetim bloğu (process control block, PCB).
+\end{itemize}
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley, Bölüm~1--2.
+  \item W.\ Stallings, \emph{Operating Systems: Internals and Design Principles}, 9.\ baskı, Pearson, Bölüm~2.
+  \item A.\,S.\ Tanenbaum ve H.\ Bos, \emph{Modern Operating Systems}, 4.\ baskı, Pearson, Kısım~1.1 ve~1.7.
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}, Bölüm~6, ``Limited Direct Execution'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf}
+\end{itemize}
+
+\end{document}

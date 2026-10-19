@@ -1,0 +1,675 @@
+% =====================================================================
+%  MBLP131 -- İşletim Sistemleri Temelleri
+%  Hafta 1 Ders Notları: Genel Bakış ve Bilişimin Tarihi
+%  Dosya: MBLP131_Hafta1_Notlar.tex
+%  XeLaTeX ile derleyin (kaynakçalar/çapraz başvurular için iki kez):
+%      xelatex MBLP131_Hafta1_Notlar.tex
+%      xelatex MBLP131_Hafta1_Notlar.tex
+%  Görseller ./figures/ klasöründe bulunmalıdır.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+% ---------- Sayfa ve yazı tipleri ---------------------------------------------
+\usepackage[a4paper,margin=2.3cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{turkish}
+\IfFontExistsTF{Calibri}{\setmainfont{Calibri}}{\setmainfont{Carlito}}
+\IfFontExistsTF{Cambria}{\newfontfamily\headfont{Cambria}}{\newfontfamily\headfont{Caladea}}
+\IfFontExistsTF{Consolas}{\setmonofont[Scale=0.95]{Consolas}}{\setmonofont[Scale=0.88]{DejaVu Sans Mono}}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\linespread{1.12}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+% ---------- Renkler (ders tasarım sistemi) ----------------------------
+\usepackage{xcolor}
+\definecolor{dark}{HTML}{212121}
+\definecolor{charcoal}{HTML}{36454F}
+\definecolor{slate}{HTML}{50808E}
+\definecolor{mint}{HTML}{02C39A}
+\definecolor{mintdeep}{HTML}{028090}
+\definecolor{light}{HTML}{F2F2F2}
+\definecolor{muted}{HTML}{6B7679}
+
+% ---------- Paketler ---------------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{needspace}
+\graphicspath{{figures/}}
+\usepackage[font=small,labelfont={bf,color=mintdeep},justification=centering]{caption}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\setlist{itemsep=0.25em,topsep=0.3em}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=mintdeep,urlcolor=mintdeep,citecolor=mintdeep]{hyperref}
+
+% ---------- Başlıklar ----------------------------------------------------
+\titleformat{\section}{\headfont\Large\bfseries\color{charcoal}}{\color{mint}\thesection}{0.7em}{}
+\titleformat{\subsection}{\headfont\large\bfseries\color{charcoal}}{\color{mintdeep}\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\headfont\normalsize\bfseries\color{mintdeep}}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+
+% ---------- Üst bilgi / alt bilgi -----------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}MBLP131 --- İşletim Sistemleri Temelleri}
+\fancyhead[R]{\small\color{muted}Hafta 1 Ders Notları}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% ---------- Kutular ---------------------------------------------------------
+\newtcolorbox{keyidea}[1][Temel fikir]{enhanced,breakable,colback=charcoal,colframe=charcoal,
+  coltext=white,fonttitle=\headfont\bfseries\color{mint},title={#1},
+  attach title to upper={\par\smallskip},boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{example}[1][Çözümlü örnek]{enhanced,colback=light,colframe=light,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{tryit}[1][Kendiniz deneyin]{enhanced,breakable,colback=white,colframe=mint,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.8pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{histnote}[1][Tarihsel not]{enhanced,breakable,colback=white,colframe=slate!40,
+  fonttitle=\headfont\bfseries\color{slate},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.5pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt,fontupper=\small}
+
+% Fotoğraf yardımcısı: görseli kutuya sığdırır, en-boy oranını korur (keepaspectratio)
+\newcommand{\photo}[3]{\includegraphics[width=#1,height=#2,keepaspectratio]{#3}}
+
+\newcommand{\term}[1]{\textbf{\color{mintdeep}#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+
+% =====================================================================
+\begin{document}
+
+% ---------------------------- Başlık bloğu ------------------------------
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 1 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Genel Bakış ve Bilişimin Tarihi}\par\smallskip
+{\small\itshape\color{white!70} Bilgisayar nedir? İşletim sistemi nedir? Ve bugüne nasıl geldik?}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim Üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi\\[0.3em]
+\textbf{Ders Telegram kanalı:} \texttt{[ders grubu bağlantısı]}\\[0.3em]
+{\color{muted}Duyurular, sorular ve laboratuvar desteği için kanala katılın.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.22\linewidth}
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Bilgisayarı, \emph{girdi $\to$ işlem $\to$ çıktı} modelini kullanarak komutları izleyen bir makine olarak tanımlamak.
+  \item İşletim sistemi (\emph{operating system}, OS) için ilk, işe yarar bir tanım vermek ve işletim sisteminin yaptığı üç işi açıklamak.
+  \item İşletim sistemine \emph{neden} ihtiyaç duyduğumuzu, işletim sistemli ve işletim sistemsiz bir bilgisayarı karşılaştırarak açıklamak.
+  \item Bilişim tarihinin önemli dönüm noktalarını, Babbage'ın Analitik Makine'sinden bulut bilişime kadar bir zaman çizelgesine yerleştirmek.
+  \item \emph{Toplu işleme}, \emph{çoklu programlama} ve \emph{zaman paylaşımı} gibi fikirlerin neden icat edildiğini basit bir hesapla açıklamak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{2}
+\tableofcontents
+
+% =====================================================================
+\section{Bilgisayar Aslında Nedir?}
+
+Ekranı, klavyeyi ve uygulamaları bir kenara bırakın. Özünde \term{bilgisayar} (\emph{computer}), \emph{komutları izleyen} bir makinedir. Bir \emph{girdi} alır, bu girdiyi bir komut listesine, yani bir \term{programa} (\emph{program}) göre \emph{işler} ve bir \emph{çıktı} üretir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={rectangle,rounded corners=3pt,minimum width=3.4cm,minimum height=1.6cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=3mm]},thick,color=slate}]
+\node[box,fill=light] (in) {\headfont\bfseries Girdi\\[2pt]\footnotesize bir tuşa basma, bir sayı,\\\footnotesize bir sensör ölçümü};
+\node[box,fill=mint,right=1.2cm of in] (pr) {\headfont\bfseries İşlem\\[2pt]\footnotesize komutlar (bir program)\\\footnotesize girdi üzerinde çalışır};
+\node[box,fill=light,right=1.2cm of pr] (out) {\headfont\bfseries Çıktı\\[2pt]\footnotesize ekranda bir metin,\\\footnotesize kaydedilen bir dosya, bir motor};
+\draw[arr] (in) -- (pr);
+\draw[arr] (pr) -- (out);
+\node[box,fill=white,draw=slate!50,minimum width=3.4cm,minimum height=1.0cm,below=0.8cm of pr] (mem) {\headfont\bfseries Bellek\\\footnotesize hem veriyi \emph{hem de} programı saklar};
+\draw[arr,{Stealth[length=3mm]}-{Stealth[length=3mm]}] (pr) -- (mem);
+\end{tikzpicture}
+\caption{Girdi--işlem--çıktı (\emph{input--process--output}, IPO) modeli. Bellek hem veriyi hem de programın kendisini tutar.}
+\label{fig:ipo}
+\end{figure}
+
+Şekil~\ref{fig:ipo}'deki iki ayrıntı dersin geri kalanı için önemlidir:
+
+\begin{itemize}
+  \item \textbf{Program da tıpkı veri gibi bellekte saklanır.} Buna \term{depolanmış program} (\emph{stored-program}) fikri denir. Bu sayede bilgisayarın ne yapacağını, hiçbir kabloyu değiştirmeden, yalnızca başka bir program yükleyerek değiştirebiliriz. Bölüm~\ref{sec:gen1}'de göreceğimiz gibi, ilk elektronik bilgisayarlar bu şekilde \emph{çalışmıyordu}.
+  \item \textbf{Döngü hiç durmaz.} İşlemci aynı çevrimi tekrar tekrar uygular: bellekten sıradaki komutu \emph{getirir} (\emph{fetch}), \emph{çözer} (\emph{decode}) ve \emph{yürütür} (\emph{execute}). Modern bir işlemci bunu saniyede milyarlarca kez yapar.
+\end{itemize}
+
+\begin{example}[``Saniyede milyarlarca kez'' ne kadar hızlıdır?]
+Saat frekansı $f = 3\ \text{GHz}$ olan bir işlemci bir saat çevrimini
+\[
+T = \frac{1}{f} = \frac{1}{3\times 10^{9}\ \text{s}^{-1}} \approx 0{,}33\ \text{ns}
+\]
+sürede tamamlar. Bu sürede ışık yalnızca yaklaşık $c\,T \approx (3\times10^{8}\ \text{m/s})(0{,}33\times10^{-9}\ \text{s}) \approx 10\ \text{cm}$ yol alır. Dolayısıyla bir sabit diski yalnızca $10\ \text{ms}$ beklemek bile yaklaşık $3\times10^{7}$ saat çevrimine mal olur. Bu sayıyı aklınızda tutun: işletim sistemleri tarihinin büyük bölümü, bu çevrimleri \emph{boşa harcamamakla} ilgilidir.
+\end{example}
+
+Karşılaşacağınız her bilgisayar, ister bir telefon, ister bir dizüstü bilgisayar, ister bir dronun uçuş kontrolcüsü, isterse bir çamaşır makinesi olsun, aynı döngüyü izler.
+
+% =====================================================================
+\section{İşletim Sistemi Nedir?}
+
+\begin{keyidea}[İlk tanım (2. haftada netleştireceğiz)]
+\textbf{İşletim sistemi}, bilgisayarı açtığınızda ilk çalışan ve diğer programların çalışabilmesi için geri kalan her şeyi yöneten programdır.
+\end{keyidea}
+
+Bu kısa tanımın içinde birbirinden ayrı üç görev saklıdır:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{İlk o başlar.} Güç düğmesine bastığınızda küçük bir ürün yazılımı (\emph{firmware}) donanımı denetler ve ardından işletim sistemini yükler. Tarayıcınız, bir oyun ya da bir metin düzenleyici gibi diğer tüm programları işletim sistemi başlatır.
+  \item \textbf{Diğer her şeyi yönetir.} Birçok program işlemciyi, belleği, diski ve ağı aynı anda kullanmak ister. Kimin neyi, ne zaman alacağına işletim sistemi karar verir.
+  \item \textbf{Zor kısımları gizler.} \emph{Kaydet}'e basarsınız; dosyanızın hangi diskin hangi kesimlerine (\emph{sectors}) yazıldığını bilmeniz gerekmez. İşletim sistemi, karmaşık donanım ayrıntılarının yerine basit ve tek tip hizmetler sunar.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[layer/.style={rectangle,minimum width=9.5cm,minimum height=0.9cm,align=center,font=\small}]
+\node[layer,fill=light] (u) {\textbf{Kullanıcı} \quad {\color{muted}siz}};
+\node[layer,fill=light,below=2pt of u] (a) {\textbf{Uygulama programları} \quad {\color{muted}tarayıcı, düzenleyici, oyun, derleyici}};
+\node[layer,fill=mint,below=2pt of a] (os) {\textbf{İşletim sistemi} \quad {\color{dark}donanımı yönetir ve gizler}};
+\node[layer,fill=charcoal,text=white,below=2pt of os] (hw) {\textbf{Donanım} \quad {\color{white!75}CPU, bellek, disk, ağ, ekran}};
+\end{tikzpicture}
+\caption{İşletim sistemi, uygulama programları ile donanım arasında yer alır.}
+\label{fig:layers}
+\end{figure}
+
+\begin{example}[``Kaydet''e bastığınızda ne olur?]
+Bir metin düzenleyicide 2~MB'lık bir belgeyi kaydettiğinizi varsayalım.
+\begin{enumerate}[leftmargin=1.4em]
+  \item Düzenleyici işletim sisteminden şunu ister: \emph{``Bu baytları \cmd{rapor.docx} adlı bir dosyaya yaz.''} Bu isteğe \term{sistem çağrısı} (\emph{system call}) denir (2. haftada ilk kez, 3. haftada ayrıntılı olarak).
+  \item İşletim sistemi diskte boş yer bulur, dosyanın parçalarının nerede saklandığını kaydeder ve dosya adının doğru yeri göstermesi için klasörü günceller (dosya sistemleri, 7. hafta).
+  \item İşletim sistemi disk denetleyicisiyle onun kendi dilinde konuşur, işlemin bitmesini bekler ve düzenleyiciye ``tamam'' der.
+  \item Disk meşgulken işletim sistemi işlemciyi \emph{başka} programların kullanımına verir (çoklu programlama, Bölüm~\ref{sec:multiprog}).
+\end{enumerate}
+Düzenleyicinin programcısı bütün bunlar için tek bir satır kod yazdı. Gerisini işletim sistemi yaptı.
+\end{example}
+
+% =====================================================================
+\section{İşletim Sistemine Neden İhtiyaç Duyarız?}
+
+İşletim sisteminin amacını görmenin en kolay yolu, işletim sistemi olmayan bir bilgisayarı hayal etmektir.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{\color{red!60!black}İşletim sistemi olmadan} & \textbf{\color{mintdeep}İşletim sistemiyle} \\
+\midrule
+Bilgisayarı aynı anda yalnızca bir program kullanabilir. & Birçok program aynı donanımı güvenle paylaşır. \\
+Her program diski, ekranı ve klavyeyi kendisi sürmek zorundadır; bunu doğru yapmak zor, bozmak ise kolaydır. & Programlar işletim sisteminden hizmet ister; donanımı bir kez ve doğru biçimde işletim sistemi yönetir. \\
+Hatalı bir program başka bir programın belleğinin, hatta bütün makinenin üzerine yazabilir. & İşletim sistemi programları ayrı ve korumalı bellek alanlarında tutar. \\
+Program giriş/çıkış (G/Ç) beklediği her an işlemci boşta kalır. & İşletim sistemi bekleme süresince işlemciyi başka bir programa verir. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Sol sütun hayal ürünü değildir: ilk bilgisayarların nasıl çalıştığını neredeyse birebir anlatır. Bu notların geri kalanı, sağ sütunun her seferinde bir sorun çözülerek nasıl inşa edildiğinin hikâyesidir.
+
+% =====================================================================
+\section{Bugüne Nasıl Geldik? İşletim Sistemlerinin Tarihi}
+
+Bilişim tarihini \emph{kuşaklara} ayırmak yaygın bir alışkanlıktır. Sınırlar yaklaşıktır; ancak her kuşak yeni bir donanım teknolojisi ve onunla birlikte yazılımın çözmesi gereken yeni bir sorun getirmiştir.
+
+% ---------------------------------------------------------------------
+\subsection{0. Kuşak: Elektronikten önce (1837--1941)}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[b]{0.32\linewidth}\centering
+\photo{\linewidth}{3.6cm}{analytical_engine.png}\\[2pt]
+{\footnotesize\color{muted}(a) Babbage'ın Analitik Makine için yaptığı ``değirmen'' deneme modeli}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.32\linewidth}\centering
+\photo{\linewidth}{3.6cm}{hollerith_tabulator.png}\\[2pt]
+{\footnotesize\color{muted}(b) Delikli kart okuyuculu Hollerith tablolama makinesi}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.32\linewidth}\centering
+\photo{\linewidth}{3.6cm}{zuse_z3.png}\\[2pt]
+{\footnotesize\color{muted}(c) Konrad Zuse'nin Z3 makinesinin kopyası}
+\end{minipage}
+\caption{Elektronik bilgisayarlardan önceki programlanabilir makineler.}
+\label{fig:gen0}
+\end{figure}
+
+\subsubsection{Charles Babbage ve Analitik Makine (1837)}
+İngiliz matematikçi Charles Babbage, mekanik ve genel amaçlı bir bilgisayar olan \term{Analitik Makine}'yi (\emph{Analytical Engine}) tasarladı. Tasarımında bugün her bilgisayarda bulunan iki parça zaten vardı: \emph{değirmen} (\emph{mill}) adını verdiği bir işlem birimi ve \emph{depo} (\emph{store}) adını verdiği bir bellek. Komutlar ve veriler, makineye delikli kartlarla verilecekti; bu fikir, kumaşa desen dokumak için delikli kartlar kullanan Jacquard dokuma tezgâhından alınmıştı. Makine hiçbir zaman tamamlanmadı; Şekil~\ref{fig:gen0}(a), değirmenin bir bölümüne ait deneme modelini göstermektedir.
+
+\textbf{Ada Lovelace} 1843'te Analitik Makine üzerine, Bernoulli sayılarını hesaplamak için adım adım bir yöntem içeren notlar yayımladı. Bu yöntem, yaygın olarak yayımlanmış ilk bilgisayar programı kabul edilir. Lovelace, böyle bir makinenin yalnızca sayıları değil, her türlü simgeyi işleyebileceğini de fark etmişti.
+
+\subsubsection{Herman Hollerith ve delikli kart (1890)}
+1880 ABD nüfus sayımının elle işlenmesi yaklaşık sekiz yıl sürmüştü. \textbf{Herman Hollerith}, 1890 sayımı için elektromekanik bir \term{tablolama makinesi} (\emph{tabulating machine}) yaptı. Her kişinin yanıtları bir karta açılan delikler olarak kaydediliyordu. Kart okuyucuya bastırıldığında yaylı iğneler deliklerden geçip cıva dolu küçük kaplara değiyor, bir elektrik devresini tamamlıyor ve bir sayaç kadranını bir birim ilerletiyordu. 1890 sayımı, öncekinin süresinin küçük bir kesrinde tamamlandı.
+
+Hollerith'in şirketi daha sonra başka şirketlerle birleşti ve 1924'te \textbf{IBM} adını aldı. Delikli kartın kendisi ise programları ve verileri bilgisayara aktarmanın standart yolu olarak yaklaşık bir yüzyıl boyunca kullanıldı.
+
+\begin{figure}[H]
+\centering
+\photo{0.55\linewidth}{5cm}{punch_card.png}
+\caption{Kart delme/doğrulama makinesinde okunan bir delikli kart. Her delik sütunu bir karakteri kodlar; bir kart genellikle bir program satırını taşırdı.}
+\label{fig:punchcard}
+\end{figure}
+
+\begin{example}[Tek bir kart ne kadar bilgi tutabilir?]
+Standart IBM kartında $80$ sütun ve $12$ satır olası delik konumu vardı. Her konumu bir ikili basamak (delik var / delik yok) olarak kullansaydık, bir kart en fazla
+\[
+80 \times 12 = 960\ \text{bit} = 120\ \text{bayt}
+\]
+bilgi tutabilirdi. Uygulamada her sütun bir karakteri kodluyordu; dolayısıyla bir kart $80$ karakter taşıyordu. $2000$ satırlık bir program bu yüzden $2000$ kartlık, yaklaşık $35$\,cm yüksekliğinde bir deste gerektiriyordu ve bu destenin yere düşmesi gerçek bir felaketti.
+\end{example}
+
+\subsubsection{Konrad Zuse ve Z3 (1941)}
+Berlin'de mühendis \textbf{Konrad Zuse} bir dizi programlanabilir makine yaptı. 1941'de tamamlanan ve yaklaşık 2.600 telefon rölesinden oluşan \term{Z3}, çalışan ilk programlanabilir bilgisayarlardan biriydi. Programını delikli film şeridinden okuyordu. Özgün makine 1943'teki bir hava saldırısında yok oldu; Şekil~\ref{fig:gen0}(c)'deki makine 1960'larda yapılmış bir kopyadır.
+
+\begin{keyidea}[0. Kuşaktan çıkarılacak ders]
+Bütün bileşenler zaten mevcuttu: bir işlemci, bir bellek, kartlar üzerinde programlar. Eksik olan \emph{hızdı}; makineyi yönetecek hiçbir yazılım da yoktu.
+\end{keyidea}
+
+% ---------------------------------------------------------------------
+\subsection{1. Kuşak: Vakum tüpleri ve işletim sisteminin yokluğu (1945--1955)}
+\label{sec:gen1}
+
+\begin{figure}[H]
+\centering
+\photo{0.62\linewidth}{6cm}{eniac.png}
+\caption{ENIAC (\emph{Electronic Numerical Integrator and Computer} -- Elektronik Sayısal Entegratör ve Bilgisayar), 1945.}
+\label{fig:eniac}
+\end{figure}
+
+ABD Ordusu için Pennsylvania Üniversitesi'nde 1945'te tamamlanan \textbf{ENIAC}, genel amaçlı ilk \emph{elektronik} bilgisayarlardan biriydi. Bazı sayılar:
+
+\begin{itemize}
+  \item yaklaşık $18.000$ vakum tüpü, yaklaşık $30$ (kısa) ton ağırlık ve yaklaşık $9\ \text{m}\times15\ \text{m}$'lik bir odayı dolduran boyut;
+  \item saniyede yaklaşık $5.000$ toplama, yani masa hesap makinesi kullanan bir insandan binlerce kat hızlı;
+  \item vakum tüpleri sık sık bozuluyor, teknisyenler arızalı tüpü bulup değiştirmek zorunda kalıyordu.
+\end{itemize}
+
+ENIAC'ın klavyesi, ekranı ve \textbf{işletim sistemi yoktu}. ``Programlama'', bağlantı panolarını fiziksel olarak yeniden kablolamak ve binlerce anahtarı ayarlamak demekti; bu da günler sürebiliyordu. ENIAC'ın ilk programcıları altı kadından oluşan bir ekipti: Kay McNulty, Betty Jennings, Betty Snyder, Marlyn Wescoff, Fran Bilas ve Ruth Lichterman.
+
+Aynı anda yalnızca tek bir iş çalışıyor ve makinenin tüm denetimi o işte oluyordu. Yönetilecek hiçbir şey yoktu, çünkü başka bir yazılım yoktu.
+
+% ---------------------------------------------------------------------
+\subsection{GM-NAA I/O ve toplu işleme (1956)}
+
+1950'lerin ortasına gelindiğinde bilgisayarlar transistör kullanıyor, daha güvenilir hâle geliyor ve çok pahalıya mal oluyordu; dolayısıyla boşa geçen her dakika para demekti. Buna karşın her iş bittiğinde bir insan operatörün makineye gidip biten işi indirmesi, sıradaki işin teyplerini ve kartlarını takması ve işi başlatması gerekiyordu. Bütün bu süre boyunca bilgisayar hiçbir şey yapmıyordu.
+
+1956'da General Motors Research ve North American Aviation, IBM~704 ana bilgisayarları (\emph{mainframe}) için \term{GM-NAA I/O}'yu yazdı. Bu sistem bellekte \term{yerleşik monitör} (\emph{resident monitor}) adı verilen küçük ve kalıcı bir program tutuyordu. Bu programın tek görevi, sıradaki işi otomatik olarak, birbiri ardına yükleyip çalıştırmaktı. GM-NAA I/O, \emph{başka} programları yönetmek için yazılmış ve en yaygın atıf yapılan en erken program olduğundan çoğu zaman \textbf{ilk işletim sistemi} olarak anılır.
+
+Bu bilişim biçimine \term{toplu işleme} (\emph{batch processing}) denir:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Kartları del.} Programcı işini bir deste delikli karta yazar.
+  \item \textbf{Toplu işi oluştur.} Bir operatör birçok işi toplar ve hepsini birlikte yükler.
+  \item \textbf{Otomatik çalıştır.} Monitör, işleri arada hiçbir insan müdahalesi olmadan birbiri ardına çalıştırır.
+  \item \textbf{Çıktıyı al.} Saatler, hatta bir gün sonra programcı kâğıt çıktısını alır ve bir yazım hatası yapıp yapmadığını ancak o zaman öğrenir.
+\end{enumerate}
+
+\begin{example}[Monitör kendi maliyetini neden çıkardı?]
+Her işin $t_{\text{çalışma}} = 2$ dakikalık hesaplamaya ihtiyaç duyduğunu ve bir insan operatörün iki iş arasında geçiş yapmak için $t_{\text{hazırlık}} = 8$ dakikaya ihtiyaç duyduğunu varsayalım. İşlemcinin faydalı iş yaptığı zamanın oranı, yani \term{kullanım oranı} (\emph{utilization}),
+\[
+U = \frac{t_{\text{çalışma}}}{t_{\text{çalışma}} + t_{\text{hazırlık}}} = \frac{2}{2+8} = 0{,}20 = \%20
+\]
+olur. Yerleşik monitör geçiş süresini $t_{\text{hazırlık}} = 0{,}5$ dakikaya indirirse
+\[
+U = \frac{2}{2+0{,}5} = 0{,}80 = \%80
+\]
+elde edilir. Aynı makine, daha hızlı bir donanım olmadan, artık günde dört kat fazla iş yapar.
+\end{example}
+
+% ---------------------------------------------------------------------
+\subsection{IBM System/360: tek işletim sistemi, çok sayıda makine (1964)}
+
+1964'ten önce her IBM bilgisayar modelinin kendine özgü ve birbiriyle uyumsuz bir komut kümesi vardı; bu nedenle daha büyük bir bilgisayar almak, bütün yazılımları yeniden yazmak anlamına geliyordu. IBM 1964'te \term{System/360}'ı duyurdu: küçükten çok büyüğe uzanan ve hepsi aynı programları çalıştıran bir bilgisayar ailesi. Bu ailenin işletim sistemi \term{OS/360}, o güne dek girişilmiş en büyük yazılım projelerinden biriydi ve gecikmesi ile bütçeyi aşmasıyla ün kazandı. Projenin yöneticisi Fred Brooks, bu projeden çıkardığı dersleri daha sonra \emph{The Mythical Man-Month} (1975) adlı kitabında anlattı.
+
+Temel fikir şudur: \textbf{işletim sistemi, tek bir makineye bağlı kalmadan birçok makineye taşınabilen, başlı başına bir ürün olabilir.}
+
+% ---------------------------------------------------------------------
+\subsection{Çoklu programlama: CPU'ya aynı anda birden çok iş (1960'lar)}
+\label{sec:multiprog}
+
+Toplu işleme insanı döngüden çıkardı, ancak bu kez yeni bir israf ortaya çıktı. Tipik bir iş, zamanının önemli bir kısmını yavaş giriş/çıkış (G/Ç; \emph{input/output}, I/O) işlemlerini, yani bir teybin, diskin ya da kartın okunmasını bekleyerek geçirir. Bir iş beklerken hızlı işlemci boşta kalır.
+
+Çözüm \term{çoklu programlamadır} (\emph{multiprogramming}): bellekte aynı anda \emph{birkaç} iş tutmak. Çalışan iş G/Ç beklemeye başladığında işletim sistemi işlemciyi, hesaplama yapmaya hazır olan başka bir işe geçirir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.55cm,y=0.55cm,font=\footnotesize]
+  % tek iş
+  \node[anchor=east] at (-0.3,3.5) {Tek iş};
+  \foreach \a/\b/\c in {0/3/mint,3/7/light,7/10/mint,10/14/light,14/17/mint}
+    \fill[\c] (\a,3) rectangle (\b,4);
+  \node at (1.5,3.5) {CPU}; \node at (5,3.5) {\color{muted}G/Ç (CPU boşta)}; \node at (8.5,3.5) {CPU};
+  \node at (12,3.5) {\color{muted}G/Ç (CPU boşta)}; \node at (15.5,3.5) {CPU};
+  % çoklu programlama
+  \node[anchor=east] at (-0.3,1.5) {A ve B işleri};
+  \foreach \a/\b/\c/\t in {0/3/mint/A,3/6/mintdeep/B,6/9/mint/A,9/12/mintdeep/B,12/15/mint/A,15/17/mintdeep/B}
+    {\fill[\c] (\a,1) rectangle (\b,2); \node[text=white] at ({(\a+\b)/2},1.5) {\t};}
+  \draw[-{Stealth},thick,color=slate] (0,0.3) -- (17.8,0.3) node[right] {zaman};
+\end{tikzpicture}
+\caption{Üstte: tek bir iş, G/Ç beklerken CPU'yu boşta bırakır. Altta: bellekte iki iş varken işletim sistemi bu boşlukları doldurur.}
+\end{figure}
+
+\begin{example}[CPU kullanım oranı için basit bir model]
+Her işin zamanının $p$ kadarlık bir kesrini G/Ç bekleyerek geçirdiğini ve basitlik için işlerin birbirinden bağımsız olarak beklediğini varsayalım. CPU yalnızca bellekteki $n$ işin \emph{tamamı} aynı anda bekliyorsa boşta kalır; bunun olasılığı $p^{n}$'dir. Dolayısıyla
+\[
+U(n) = 1 - p^{\,n}
+\]
+olur. $p = 0{,}8$ olan, G/Ç ağırlıklı tipik bir iş için:
+\[
+U(1) = 1 - 0{,}8 = \%20, \qquad U(4) = 1 - 0{,}8^{4} \approx \%59, \qquad U(10) = 1 - 0{,}8^{10} \approx \%89.
+\]
+Bellekte ne kadar çok iş varsa CPU o kadar meşgul ve verimlidir. Gerçek işler birbirinden bağımsız beklemediği için model basitleştirilmiştir; ancak çoklu programlamanın neden zahmetine değdiğini ve \emph{belleğin} (6. hafta) neden bu kadar önem kazandığını gösterir: daha fazla bellek, bellekte aynı anda daha fazla iş tutulabilmesi demektir.
+\end{example}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.72\linewidth,height=5.2cm,xmin=1,xmax=10,ymin=0,ymax=100,
+  xlabel={bellekteki iş sayısı, $n$},ylabel={CPU kullanım oranı $U$ (\%)},
+  grid=major,grid style={color=light},axis line style={color=muted},tick label style={font=\footnotesize},
+  label style={font=\small},legend pos=south east,legend style={font=\footnotesize,draw=none,fill=white}]
+\addplot[color=mint,very thick,mark=*,mark size=1.5pt,domain=1:10,samples=10] {100*(1-0.5^x)};
+\addplot[color=mintdeep,very thick,mark=*,mark size=1.5pt,domain=1:10,samples=10] {100*(1-0.8^x)};
+\addplot[color=charcoal,very thick,mark=*,mark size=1.5pt,domain=1:10,samples=10] {100*(1-0.9^x)};
+\legend{$p=0{,}5$,$p=0{,}8$,$p=0{,}9$}
+\end{axis}
+\end{tikzpicture}
+\caption{Üç farklı G/Ç bekleme kesri $p$ için $U(n)=1-p^{n}$.}
+\end{figure}
+
+% ---------------------------------------------------------------------
+\subsection{Zaman paylaşımı: aynı anda çok kullanıcı, tek makine (1960'lar)}
+
+Çoklu programlama CPU'yu meşgul tuttu, ama programcı hâlâ işini teslim edip sonucu saatlerce bekliyordu. \term{Zaman paylaşımı} (\emph{time-sharing}) bu sorunu, tek bir bilgisayara çok sayıda \emph{terminal} (bir klavye ile bir yazıcı ya da ekran) bağlayarak çözdü. İşletim sistemi her kullanıcıya, hızlı bir sırayla, \term{zaman dilimi} (\emph{time quantum}) adı verilen küçük bir CPU süresi verir. Her kullanıcı, makinenin tamamı kendisindeymiş gibi hisseder.
+
+İlk başarılı uygulama, 1961'de MIT'de geliştirilen \textbf{CTSS}'tir (\emph{Compatible Time-Sharing System}).
+
+\begin{example}[Neden anlık hissettirir?]
+$n = 20$ kullanıcının tek bir CPU'yu paylaştığını ve işletim sisteminin her birine $q = 10\ \text{ms}$'lik bir zaman dilimi verdiğini varsayalım. En kötü durumda bir kullanıcı, yeniden çalışmadan önce diğer herkesi bekler:
+\[
+T_{\text{bekleme}} \approx n\,q = 20 \times 10\ \text{ms} = 200\ \text{ms}.
+\]
+Bir tuşa bastıktan sonra yaklaşık $0{,}2$\,s'lik bir gecikme bir insan için neredeyse fark edilmez. CPU paylaşılır, ama her kullanıcı \emph{etkileşimli} bir bilgisayar deneyimi yaşar. Öte yandan $n=200$ kullanıcıda bekleme yaklaşık $2$\,s'ye çıkar ve bu can sıkıcıdır. $q$'yu iyi seçmek, 4.--5. haftalarda ele alacağımız zamanlama (\emph{scheduling}) sorularından biridir.
+\end{example}
+
+Zaman paylaşımı, bugün kullanılan bütün çok kullanıcılı ve çok süreçli sistemlerin doğrudan atasıdır. İşlemcisini onlarca uygulama ve arka plan hizmeti arasında zaman paylaşımıyla bölüştüren telefonunuz da buna dâhildir.
+
+% ---------------------------------------------------------------------
+\subsection{Multics: zamanında teslim edilemeyen dev (1965--1969)}
+
+MIT, Bell Labs ve General Electric 1965'te \term{Multics} projesini başlattı: bir kamu hizmeti gibi bütün bir şehre hizmet verecek, sürekli açık, kolayca genişletilebilen ve güvenli bir zaman paylaşımlı sistem. Fikirleri çağının çok ötesindeydi: hiyerarşik dosyalar ve dizinler, dinamik bellek yönetimi ve ayrıntılı güvenlik denetimi. Ancak tasarım o kadar iddialıydı ki sistem planlanandan daha yavaş ve daha pahalı hâle geldi; Bell Labs 1969'da projeden çekildi. Multics sonunda çalıştı, fakat en kalıcı etkisi, projede çalışmış iki Bell Labs araştırmacısı üzerinde oldu.
+
+% ---------------------------------------------------------------------
+\subsection{UNIX doğuyor (1969--1973)}
+
+\begin{itemize}
+  \item \textbf{1969.} Ken Thompson, \term{UNIX}'in ilk sürümünü Bell Labs'te boşta duran bir PDP-7 mini bilgisayarında yazar. Sistem bilerek küçük ve basit tutulmuştur; Multics'in tam tersidir.
+  \item \textbf{1970--1972.} Thompson ve Dennis Ritchie onu, her biri tek bir işi iyi yapan ve birbirine zincirlenebilen küçük ama güçlü araçlardan oluşan bir kümeye dönüştürür.
+  \item \textbf{1972--1973.} Ritchie \textbf{C} programlama dilini tasarlar ve UNIX C ile yeniden yazılır. UNIX'in daha sonra neredeyse her donanımda çalışabilmesini sağlayan tek karar budur: sistemi yeni bir makineye taşımak için onu yeniden yazmak yerine büyük ölçüde yeniden derlemek yeterlidir.
+\end{itemize}
+
+\begin{keyidea}[UNIX felsefesi (Doug McIlroy'un özetiyle)]
+Tek bir iş yapan ve onu iyi yapan programlar yazın. Birlikte çalışacak programlar yazın. Metin akışlarını işleyen programlar yazın, çünkü metin evrensel bir arayüzdür.
+\end{keyidea}
+
+Bu felsefeyi 9.--14. haftalarda doğrudan kullanacaksınız. Örneğin
+\begin{center}\cmd{cat access.log | grep "404" | wc -l}\end{center}
+komutu, bir web sunucusu günlüğünün (\emph{log}) kaç satırında 404 hata kodu geçtiğini saymak için üç küçük programı birbirine zincirler.
+
+UNIX taşınabilir C diliyle yazıldığı ve yıllarca üniversitelerle paylaşıldığı için tek bir ürün olarak kalmadı; bütün bir aileye ayrıldı: \textbf{BSD} (erken internetin üzerinde çalıştığı TCP/IP ağ desteğini ekleyen Kaliforniya Üniversitesi, Berkeley), \textbf{HP-UX}, \textbf{AIX}, \textbf{SunOS/Solaris} ve daha sonra sertifikalı bir UNIX olan Apple'ın \textbf{macOS}'u.
+
+% ---------------------------------------------------------------------
+\subsection{Kişisel bilgisayar (1977--1995)}
+
+\subsubsection{Apple II (1977)}
+Steve Wozniak tarafından tasarlanıp Apple Computer tarafından satılan \term{Apple II}, seri üretilen ilk başarılı kişisel bilgisayarlardan biriydi. Renkli grafik ve yerleşik bir BASIC diliyle geliyordu; bu sayede açıldığı anda programlanmaya hazırdı. İlk kez, bilgisayarı kullanan kişi ile bilgisayarın sahibi çoğu zaman aynı kişiydi.
+
+\subsubsection{IBM PC ve MS-DOS (1981)}
+
+\begin{figure}[H]
+\centering
+\photo{0.5\linewidth}{5.5cm}{ibm_pc.png}
+\caption{IBM Kişisel Bilgisayarı (\emph{IBM Personal Computer}, model 5150), 1981.}
+\label{fig:ibmpc}
+\end{figure}
+
+IBM, 1981'de hazır parçalardan hızla bir araya getirilmiş \term{IBM PC} ile pazara girdi. Bilgisayarın işletim sistemi, mevcut bir sistemi (86-DOS) satın alıp uyarlayan Microsoft adlı küçük bir şirketten geldi; IBM onu PC DOS adıyla, Microsoft ise başka üreticilere \term{MS-DOS} adıyla sattı. MS-DOS, makine her açıldığında bir disketten yükleniyordu; sabit disk gerekmiyordu.
+
+IBM, PC için ayrıntılı teknik belgeler yayımladı. Compaq'tan başlayarak başka şirketler, IBM'in sahip olduğu tek parçayı, yani BIOS adlı başlangıç ürün yazılımını yasal yollarla yeniden oluşturunca uyumlu ``klon'' makineler üretebildi. Binlerce şirket bunu yaptı ve ``PC uyumlu'' kavramı sonraki yirmi yıl boyunca sektör standardı oldu.
+
+\subsubsection{Grafik kullanıcı arayüzleri}
+\begin{itemize}
+  \item \textbf{Xerox PARC, 1973.} Araştırmacılar üst üste binen pencereler, simgeler ve fare içeren \emph{Alto}'yu yapar. Alto büyük ölçüde bir araştırma makinesiydi ve hiçbir zaman yaygın olarak satılmadı.
+  \item \textbf{Apple Macintosh, 1984.} Bu fikirleri kitlesel bir ürüne taşır: tıkla-seç kullanım, çöp kutusu simgesi, masaüstü benzetmesi ve komut yazma zorunluluğunun ortadan kalkması.
+  \item \textbf{Microsoft Windows, 1985--1995.} MS-DOS'un üzerinde çalışan grafik bir kabuk olarak başlar; \emph{Windows 95} ile çoğu insanın PC kullanma biçimi hâline gelir.
+\end{itemize}
+
+Çoğu kullanıcı için komut yazmak olağan olmaktan çıkar. Ancak komut satırı hiçbir zaman kaybolmaz: hâlâ yüzeyin altındadır ve 9.--14. haftalarda çalışacağınız yer de orasıdır.
+
+% ---------------------------------------------------------------------
+\subsection{Linux doğuyor (1991)}
+
+\begin{histnote}[25 Ağustos 1991, bir Usenet iletisi]
+``I'm doing a (free) operating system (just a hobby, won't be big and professional like gnu) for 386(486) AT clones.''\\
+{\color{muted}[``386(486) AT klonları için (ücretsiz) bir işletim sistemi yapıyorum (sadece bir hobi, GNU gibi büyük ve profesyonel olmayacak).'']} \hfill --- Linus Torvalds, Helsinki'de 21 yaşında bir öğrenci
+\end{histnote}
+
+\term{Linux} yeni bir \emph{çekirdektir} (\emph{kernel}; bir işletim sisteminin özü). Sıfırdan yazılmıştır, ancak davranış ve komutlar bakımından bilerek UNIX ile uyumlu tutulmuştur. İçinde hiç UNIX kodu yoktur; ``UNIX benzeri'' (\emph{UNIX-like}) bir sistemdir.
+
+Yayılmasını iki etken sağladı:
+\begin{itemize}
+  \item \textbf{Lisans.} Linux 1992'den itibaren \textbf{GNU Genel Kamu Lisansı} (\emph{GNU General Public License}, GPL) ile yayımlandı: herkes kaynak kodunu okuyabilir, değiştirebilir ve yeniden dağıtabilir; ancak değiştirilmiş sürümler de açık kalmak zorundadır.
+  \item \textbf{GNU.} Richard Stallman'ın başlattığı \textbf{GNU Projesi} 1983'ten beri, çekirdek dışındaki bütün standart UNIX araçlarının özgür sürümlerini yazıyordu. Eksik çekirdeği Linux sağladı. GNU ve Linux birlikte eksiksiz ve özgür bir işletim sistemi oluşturdu.
+\end{itemize}
+
+\subsubsection{Bu arada sunucu odasında}
+Windows masaüstünü kazanırken UNIX ve Linux, çoğu insanın hiç görmediği makineleri kazandı. Bu sistemler en baştan çok sayıda eşzamanlı kullanıcı ve uzun, kesintisiz çalışma süresi için tasarlanmıştı; Linux'un lisans ücreti gerektirmemesi de sunucu çiftlikleri binlerce makineye ulaştığında belirleyici bir avantaj oldu. Bugün Linux, web sunucularının ve bulut sanal makinelerinin çoğunda ve 2017'den beri dünyanın en hızlı 500 süper bilgisayarının (TOP500 listesi) \emph{tamamında} çalışmaktadır.
+
+% ---------------------------------------------------------------------
+\subsection{6. Kuşak: cebinizdeki bilgisayar (2007--2008)}
+
+\begin{itemize}
+  \item \textbf{iPhone (2007).} Apple'ın telefonu, basitleştirilmiş bir telefon işletim sistemi değil, masaüstü işletim sisteminin eksiksiz, uyarlanmış bir sürümünü (sonraki adıyla iOS) çalıştırıyordu. Parmakla kullanılan kapasitif çoklu dokunmatik ekranı, gerçek bir web tarayıcısı ve 2008'den itibaren bir App Store'u vardı. Modern, çok görevli bir işletim sisteminin pille çalışan bir cihazda çalışabileceğini kanıtladı.
+  \item \textbf{Android (2008).} Android Inc.\ 2003'te kuruldu ve 2005'te Google tarafından satın alındı; ilk Android telefon (HTC Dream) 2008'de piyasaya çıktı. Android'in özü \emph{uyarlanmış bir Linux çekirdeğidir} ve Google onu her telefon üreticisine ücretsiz lisanslar. Bunun sonucunda dünyadaki akıllı telefonların çoğu, uygulama simgelerinin altında Linux çalıştırmaktadır.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{7. Kuşak: bulut (2006--günümüz)}
+
+Sunucu donanımı giderek güçlendi, ancak çoğu program koca bir fiziksel makineyi tek başına kullanmaya ihtiyaç duymuyordu.
+
+\begin{itemize}
+  \item \term{Sanallaştırma} (\emph{virtualization}). \emph{Hipervizör} (\emph{hypervisor}) adı verilen bir program, tek bir fiziksel sunucunun, her biri kendi konuk işletim sistemini çalıştıran ve birbirinden yalıtılmış birkaç bağımsız bilgisayar (\emph{sanal makine}) gibi davranmasını sağlar.
+  \item \term{Bulut bilişim} (\emph{cloud computing}). Amazon Web Services 2006'dan itibaren sanal makineleri saatlik olarak kiraladı: başkasının veri merkezini kendi bilgisayarınızmış gibi kullanırsınız.
+  \item \term{Konteynerler} (\emph{containers}). Daha da hafif bir fikir: konteyner, eksiksiz bir konuk işletim sistemi yerine ana makinenin Linux çekirdeğini paylaşır ve yalnızca uygulamayı ve uygulamanın ihtiyaç duyduklarını paketler. Red Hat \emph{OpenShift} (2011) ve Google'ın \emph{Kubernetes}'i (2014) gibi platformlar, binlerce konteyneri çok sayıda makine üzerinde çalıştırır ve yönetir.
+\end{itemize}
+
+Buradaki örüntüye dikkat edin: bir konteyner, özünde Linux çekirdeğinin süreçleri (\emph{processes}) birbirinden yalıtan bir dizi özelliğidir. Bu dersin konuları olan süreçler, bellek koruması ve dosya sistemleri, modern bulutun üzerine inşa edildiği temellerdir.
+
+% ---------------------------------------------------------------------
+\Needspace{12\baselineskip}
+\subsection{Zaman çizelgesinin tamamı, bir bakışta}
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{@{}p{1.9cm}p{4.3cm}p{8.4cm}@{}}
+\toprule
+\textbf{Yıl} & \textbf{Dönüm noktası} & \textbf{İşletim sistemleri açısından önemi} \\
+\midrule
+\endhead
+1837 & Analitik Makine (Babbage) & İşlemci (``değirmen'') + bellek (``depo'') + kartlar üzerinde programlar \\
+1843 & Lovelace'ın notları & Yayımlanmış ilk bilgisayar programı \\
+1890 & Hollerith tablolama makinesi & Delikli kart bir yüzyıl boyunca girdi ortamı olur \\
+1941 & Zuse Z3 & Çalışan ilk programlanabilir bilgisayarlardan biri \\
+1945 & ENIAC & Elektronik, ama işletim sistemi yok: tek iş, yeniden kablolamayla programlama \\
+1956 & GM-NAA I/O & Yerleşik monitör, toplu işleme: ilk işletim sistemi \\
+1961 & CTSS (MIT) & İlk zaman paylaşımlı sistem: etkileşimli bilişim \\
+1964 & IBM System/360, OS/360 & Bütün bir makine ailesi için tek işletim sistemi \\
+1965--69 & Multics & İddialı zaman paylaşımı; UNIX'e ilham verir \\
+1969 & UNIX (Bell Labs) & Küçük, basit, birleştirilebilir araçlar \\
+1973 & UNIX'in C ile yeniden yazılması & Taşınabilir işletim sistemi: neredeyse her donanımda çalışır \\
+1977 & Apple II & Evler ve okullar için kişisel bilgisayar \\
+1981 & IBM PC, MS-DOS & PC uyumlu standart; disketten yüklenen işletim sistemi \\
+1983 & GNU Projesi & UNIX araçlarının özgür yazılım sürümleri \\
+1984 & Apple Macintosh & Kitlesel pazar için grafik arayüz \\
+1991 & Linux & Özgür, UNIX benzeri çekirdek; GNU ile eksiksiz, özgür bir işletim sistemi \\
+1995 & Windows 95 & Grafik arayüz, PC kullanımının varsayılan biçimi olur \\
+2006 & Amazon Web Services & Bulut bilişim: sanal makineleri saatlik kiralamak \\
+2007 & iPhone & Telefonda eksiksiz, çok görevli işletim sistemi \\
+2008 & Android & Linux çekirdeği milyarlarca cebe girer \\
+2011 / 2014 & OpenShift / Kubernetes & Linux üzerinde büyük ölçekte yönetilen konteynerler \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\begin{figure}[H]
+\centering
+\photo{\linewidth}{8cm}{timeline_tr.png}
+\caption{GM-NAA I/O'dan (1956) OpenShift'e (2011) işletim sistemlerinin zaman çizelgesi.}
+\label{fig:timeline}
+\end{figure}
+
+% =====================================================================
+\section{Bu Tarih Neden Önemli?}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Her kuşak gerçek bir sorunu çözdü.} İşletim sistemi yok $\to$ otomasyon (toplu işleme) $\to$ CPU'yu paylaşmak (çoklu programlama) $\to$ CPU'yu etkileşimli olarak paylaşmak (zaman paylaşımı) $\to$ CPU'yu dünya çapında paylaşmak (bulut). Her işletim sistemi özelliği, onsuz birileri zaman ya da para kaybettiği için vardır.
+  \item \textbf{Eski fikirler hiçbir zaman gerçekten kaybolmaz.} Telefonunuz hâlâ çoklu programlama ve zaman paylaşımı yapar, arka planda hâlâ ``toplu'' işler (yedeklemeler, güncellemeler) çalıştırır.
+  \item \textbf{Bu ders de aynı sırayı izler.} Süreçleri, zamanlamayı, belleği ve dosyaları kabaca bu sorunları çözmek için icat edildikleri sırayla inceleyeceğiz.
+\end{enumerate}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{5.2cm} >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Tarihsel fikir} & \textbf{MBLP131'de yeniden karşılaşacağınız yer} \\
+\midrule
+Sırasını bekleyen toplu işler & 3. hafta: süreç kavramı, süreç durumları, süreç denetim bloğu (PCB) \\
+Çoklu programlama ve zaman paylaşımı & 4.--5. haftalar: CPU zamanlaması (temel kavramlar ve ölçütler; FCFS, SJF, Öncelik, Round Robin) \\
+Multics'in bellek ve güvenlik fikirleri & 6.--7. haftalar: bellek yönetimi, sayfalama, sanal bellek \\
+Hiyerarşik dosyalar ve dizinler & 7. hafta: dosya sistemleri ve dizin yapıları \\
+UNIX'in küçük, birleştirilebilir araçları & 9.--14. haftalar: Linux ve Bash, tamamen uygulamalı bölüm \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Altı cümlede 1. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Bilgisayar özünde komutları izler: girdi $\to$ işlem $\to$ çıktı; program da bellekte saklanır.
+  \item İlk çalışma tanımı: işletim sistemi, ilk başlayan ve diğer her şeyi yöneten programdır.
+  \item Programların donanımı güvenle paylaşabilmesi, programcıların ve kullanıcıların da donanımı kendilerinin yönetmek zorunda kalmaması için bir işletim sistemine ihtiyaç duyarız.
+  \item Tarih şu yolu izledi: yazılım yok (ENIAC) $\to$ toplu işleme $\to$ çoklu programlama/zaman paylaşımı $\to$ kişisel bilgisayarlar $\to$ mobil ve bulut.
+  \item Her adımı, boşta kalan işlemcinin maliyeti yönlendirdi; bu maliyeti $U = \dfrac{t_{\text{çalışma}}}{t_{\text{çalışma}}+t_{\text{hazırlık}}}$ ve $U(n) = 1 - p^{n}$ gibi basit formüllerle kestirebiliriz.
+  \item Akılda tutulmaya değer iki tarih: UNIX, 1969; dönemin ilerleyen haftalarında uygulamalı olarak kullanacağımız sistem olan Linux, 1991.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Terimler Sözlüğü}
+
+\begin{description}[leftmargin=0pt,style=nextline,itemsep=0.2em]
+  \item[Çekirdek (kernel)] İşletim sisteminin her zaman bellekte duran, donanımı denetleyen ve kaynakları yöneten temel parçası.
+  \item[Çoklu programlama (multiprogramming)] Bir iş G/Ç beklerken CPU'nun başka bir işe geçebilmesi için bellekte aynı anda birkaç iş tutmak.
+  \item[Depolanmış program bilgisayarı (stored-program computer)] Programını veri gibi bellekte saklayan ve bu nedenle yeniden kablolama yapılmadan programı değiştirilebilen bilgisayar.
+  \item[İşletim sistemi (operating system, OS)] İlk başlayan ve bilgisayarın donanımını ve diğer bütün programları yöneten program.
+  \item[Kullanım oranı (utilization)] Bir kaynağın (genellikle CPU'nun) faydalı iş yaparak geçirdiği zamanın oranı.
+  \item[Program] Bilgisayara ne yapacağını söyleyen komutlar listesi.
+  \item[Sanal makine (virtual machine)] Gerçek (fiziksel) bir makinenin üzerinde, kendi işletim sistemini çalıştıran, yazılımla oluşturulmuş bilgisayar.
+  \item[Sistem çağrısı (system call)] Bir programın işletim sisteminden bir hizmet istemesi (örneğin ``bu dosyayı aç'').
+  \item[Toplu işleme (batch processing)] Bir araya toplanmış bir grup işi, aralarında hiçbir insan etkileşimi olmadan otomatik olarak birbiri ardına çalıştırmak.
+  \item[Yerleşik monitör (resident monitor)] Bellekte kalıcı olarak tutulan ve işleri otomatik olarak yükleyip başlatan küçük program; işletim sisteminin en erken biçimi.
+  \item[Zaman dilimi (time quantum)] İşletim sisteminin her programa ya da kullanıcıya sırayla verdiği küçük CPU süresi.
+  \item[Zaman paylaşımı (time-sharing)] CPU'yu çok sayıda etkileşimli kullanıcı arasında, her biri makinenin tamamı kendisindeymiş gibi hissedecek kadar hızlı biçimde değiştirmek.
+\end{description}
+
+% =====================================================================
+\Needspace{20\baselineskip}
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Çoklu programlamayı kendi bilgisayarınızda görün]
+\textbf{Windows:} Görev Yöneticisi'ni (\emph{Task Manager}) açmak için \cmd{Ctrl+Shift+Esc} tuşlarına basın ve \emph{İşlemler} (\emph{Processes}) sekmesine bakın. \textbf{Linux/macOS:} bir terminal açın ve \cmd{top} yazın (çıkmak için \cmd{q} tuşuna basın).
+\begin{enumerate}[leftmargin=1.4em]
+  \item Şu anda kaç süreç çalışıyor? (Genellikle 100'den fazla.)
+  \item Bilgisayarınızda kaç CPU çekirdeği var? (Görev Yöneticisi $\to$ \emph{Performans}.)
+  \item Süreç sayısı çekirdek sayısından çok daha fazlaysa bu süreçlerin hepsi nasıl ``çalışıyor'' olabilir? \emph{Zaman paylaşımı} ve \emph{çoklu programlama} kavramlarını kullanarak iki cümle yazın.
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item Girdi--işlem--çıktı modelini çizin ve bir akıllı telefon kamerası için her bölüme bir örnek verin.
+  \item İşletim sisteminin ilk çalışma tanımını yazın ve üç görevini kendi cümlelerinizle açıklayın.
+  \item İşletim sistemi yokken birkaç programın aynı bilgisayarı kullanmak istemesi durumunda ortaya çıkan iki sorunu belirtin.
+  \item ENIAC neden ``hiç işletim sistemi olmayan'' bir bilgisayar olarak tanımlanır?
+  \item \emph{Yerleşik monitör} neydi ve hangi sorunu çözdü?
+  \item \emph{Çoklu programlama} ile \emph{zaman paylaşımı} arasındaki farkı açıklayın. Bunlardan hangisi esas olarak CPU verimliliğiyle, hangisi esas olarak kullanıcı deneyimiyle ilgilidir?
+  \item UNIX'in 1973'te C ile yeniden yazılması neden bu kadar önemli bir karardı?
+  \item Linux'ta hiç UNIX kodu yoktur. Hangi anlamda yine de UNIX ailesinin bir üyesidir?
+  \item Windows masaüstünü kazanmış olsa da Linux'un sunucularda kazanmasının bir nedenini belirtin.
+  \item Bir konteyner sanal makineden nasıl ayrılır?
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item Bir iş $t_{\text{çalışma}} = 3$ dk çalışıyor ve operatörün işler arasında $t_{\text{hazırlık}} = 9$ dk'ya ihtiyacı var. CPU kullanım oranını hesaplayın. $U = \%90$ olması için $t_{\text{hazırlık}}$ ne olmalıdır?
+  \item İşler zamanlarının $p = 0{,}7$'sini G/Ç bekleyerek geçiriyor. $U(n)=1-p^{n}$ formülünü kullanarak $n = 1, 2, 5$ için $U$'yu bulun. $U \geq \%95$ sağlayan en küçük $n$ nedir?
+  \item Zaman paylaşımlı bir sistemde $n$ kullanıcı ve $q = 20$ ms'lik bir zaman dilimi var. Kullanıcılar $0{,}5$ s'den uzun beklerlerse şikâyet ediyor. Sistemin destekleyebileceği en fazla kullanıcı sayısı nedir?
+  \item Bir işlemci $2{,}5$ GHz'te çalışıyor. Bir disk için $5$ ms beklerken kaç saat çevrimi geçer?
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=11]
+  \item $U = \dfrac{3}{3+9} = \%25$. $U = 0{,}9$ için: $\dfrac{3}{3+t_{\text{hazırlık}}} = 0{,}9 \Rightarrow t_{\text{hazırlık}} = \dfrac{3}{0{,}9} - 3 \approx 0{,}33$ dk $= 20$ s.
+  \item $U(1) = \%30$, $U(2) = 1 - 0{,}49 = \%51$, $U(5) = 1 - 0{,}7^{5} \approx \%83$. $0{,}7^{n} \leq 0{,}05$ olmalıdır, yani $n \geq \dfrac{\ln 0{,}05}{\ln 0{,}7} \approx 8{,}4$; dolayısıyla $n = 9$.
+  \item $n\,q \leq 0{,}5\ \text{s} \Rightarrow n \leq \dfrac{0{,}5}{0{,}020} = 25$ kullanıcı. (Gerçek sistemler kullanıcılar arasında geçiş yaparken de zaman kaybeder; bu nedenle gerçek sınır biraz daha düşüktür.)
+  \item $N = f\,t = (2{,}5\times10^{9}\ \text{s}^{-1})(5\times10^{-3}\ \text{s}) = 1{,}25\times10^{7}$ çevrim.
+\end{enumerate}
+
+% =====================================================================
+\section{Sırada Ne Var: 2. Hafta}
+
+Gelecek hafta gayriresmî tanımımızın yerine kesin bir tanım koyacak ve işletim sisteminin içine bakacağız:
+\begin{itemize}
+  \item işletim sisteminin biçimsel tanımı ve iki klasik bakış açısı: \emph{kaynak yöneticisi} (\emph{resource manager}) ve \emph{genişletilmiş makine} (\emph{extended machine});
+  \item işletim sisteminin tasarım hedefleri: kolaylık, verimlilik ve gelişebilirlik;
+  \item bir bilgisayar sisteminin dört bileşeni: donanım, işletim sistemi, uygulama programları ve kullanıcılar;
+  \item işletim sisteminin donanımla nasıl çalıştığı: kesmeler (\emph{interrupts}), bellek hiyerarşisi, çift kip (\emph{dual mode}) ve C ile \cmd{strace} kullanarak sistem çağrılarına ilk bakış;
+  \item işletim sistemlerinin nasıl inşa edildiği: monolitik, katmanlı, mikroçekirdek ve modüler yapılar.
+\end{itemize}
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item R.\,H.\ Arpaci-Dusseau ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}, ücretsiz çevrim içi ders kitabı: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10. baskı, Wiley, 1. bölüm.
+  \item A.\,S.\ Tanenbaum ve H.\ Bos, \emph{Modern Operating Systems}, 4. baskı, Pearson, Bölüm~1.2 (``History of Operating Systems'').
+  \item D.\,M.\ Ritchie, ``The Evolution of the Unix Time-sharing System'' (1979): \url{https://www.bell-labs.com/usr/dmr/www/hist.html}
+\end{itemize}
+
+\end{document}
