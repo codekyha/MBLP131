@@ -1,0 +1,5 @@
+student@okan-lab:~/lab$ ln -s logs/access.log latest.log
+student@okan-lab:~/lab$ ls -l latest.log
+lrwxrwxrwx 1 student student 15 Oct 12 08:50 latest.log -> logs/access.log
+student@okan-lab:~/lab$ head -n 1 latest.log
+10.0.1.10 - - [12/Oct/2026:08:00:00 +0300] "GET /about.html HTTP/1.1" 404 442

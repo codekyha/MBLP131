@@ -1,0 +1,17 @@
+student@okan-lab:~/lab/scripts$ ./report.sh
+===== Lab report, 2026-10-12 08:50 =====
+--- Web server: access.log ---
+Requests: 300, errors (4xx/5xx): 98 (32%)
+Top 3 pages:
+     41 /courses/mcmp117
+     37 /about.html
+     33 /index.html
+--- Students: students.csv ---
+Students: 40
+Per department:
+     10 CS
+     17 ECT
+      2 EE
+     11 ME
+Average midterm 67.0, average final 65.6
+Passed (0.4 x midterm + 0.6 x final >= 50): 35

@@ -1,0 +1,17 @@
+student@okan-lab:~/lab$ groups
+student sudo students
+student@okan-lab:~/lab$ whoami
+student
+student@okan-lab:~/lab$ sudo whoami
+[sudo] password for student: 
+root
+student@okan-lab:~/lab$ ls -l docs/notes_02.txt
+-rw-rw-r-- 1 student student 16 Oct 12 19:38 docs/notes_02.txt
+student@okan-lab:~/lab$ chown root docs/notes_02.txt
+chown: changing ownership of 'docs/notes_02.txt': Operation not permitted
+student@okan-lab:~/lab$ sudo chown root:root docs/notes_02.txt
+student@okan-lab:~/lab$ ls -l docs/notes_02.txt
+-rw-rw-r-- 1 root root 16 Oct 12 19:38 docs/notes_02.txt
+student@okan-lab:~/lab$ echo "more" >> docs/notes_02.txt
+bash: docs/notes_02.txt: Permission denied
+student@okan-lab:~/lab$ sudo -k

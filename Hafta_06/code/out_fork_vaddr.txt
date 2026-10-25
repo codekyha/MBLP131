@@ -1,0 +1,2 @@
+child  (PID 1760): &x = 0x55bc4a29c010   x = 200
+parent (PID 1759): &x = 0x55bc4a29c010   x = 100

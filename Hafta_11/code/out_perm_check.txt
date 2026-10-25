@@ -1,0 +1,50 @@
+digit  bits  symbolic
+  0    000   ---
+  1    001   --x
+  2    010   -w-
+  3    011   -wx
+  4    100   r--
+  5    101   r-x
+  6    110   rw-
+  7    111   rwx
+
+mode strings -> octal
+  rwxr-x--- = 750  (7 + 5 + 0)
+  rw-r--r-- = 644  (6 + 4 + 4)
+  rwx------ = 700  (7 + 0 + 0)
+  rwxr-xr-x = 755  (7 + 5 + 5)
+  rw-rw-r-- = 664  (6 + 6 + 4)
+  rwxr-xr-- = 754  (7 + 5 + 4)
+  rw-r----- = 640  (6 + 4 + 0)
+  r--r--r-- = 444  (4 + 4 + 4)
+
+octal -> mode strings
+  640 = rw-r-----
+  711 = rwx--x--x
+  775 = rwxrwxr-x
+  754 = rwxr-xr--
+  600 = rw-------
+  700 = rwx------
+  755 = rwxr-xr-x
+  644 = rw-r--r--
+  750 = rwxr-x---
+  777 = rwxrwxrwx
+
+umask: new mode = base AND (NOT umask);  compare with plain subtraction
+  umask 002: file 664 rw-rw-r--   dir 775 rwxrwxr-x   | subtraction: file 664, dir 775
+  umask 022: file 644 rw-r--r--   dir 755 rwxr-xr-x   | subtraction: file 644, dir 755
+  umask 027: file 640 rw-r-----   dir 750 rwxr-x---   | subtraction: file 637  WRONG, dir 750
+  umask 077: file 600 rw-------   dir 700 rwx------   | subtraction: file 567  WRONG, dir 700
+  umask 033: file 644 rw-r--r--   dir 744 rwxr--r--   | subtraction: file 633  WRONG, dir 744
+  umask 007: file 660 rw-rw----   dir 770 rwxrwx---   | subtraction: file 657  WRONG, dir 770
+  umask 011: file 666 rw-rw-rw-   dir 766 rwxrw-rw-   | subtraction: file 655  WRONG, dir 766
+
+bit-by-bit for umask 033 on a file
+  base       666 = 110110110
+  umask      033 = 000011011
+  NOT umask      = 111100100
+  AND result     = 110100100 = 644
+  (666 - 033 = 633 would be rw--wx-wx: write+execute without read -- nonsense)
+
+2^3 = 8 combinations per class; 2^9 = 512 basic modes; with setuid/setgid/sticky 2^12 = 4096
+special: 4755 = rwxr-xr-x + setuid -> rwsr-xr-x;  1777 -> rwxrwxrwt;  2770 -> rwxrws---

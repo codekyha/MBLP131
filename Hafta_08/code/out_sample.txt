@@ -1,0 +1,103 @@
+== C1: CPU scheduling ==
+  jobs (name, arrival, burst, priority): [('A', 0, 6, 3), ('B', 2, 5, 2), ('C', 3, 2, 1), ('D', 5, 4, 4)]
+--- (a) SJF (non-preemptive) ---
+Gantt: [0-6 A] [6-8 C] [8-12 D] [12-17 B]
+      arr burst prio first done  TAT wait resp
+A       0     6    3     0    6    6    0    0
+B       2     5    2    12   17   15   10   10
+C       3     2    1     6    8    5    3    3
+D       5     4    4     8   12    7    3    3
+sum waiting 16, sum turnaround 33, sum response 16
+avg waiting 4  avg turnaround 8.25  avg response 4  context switches 3  CPU busy 17/17 ms
+--- (b) Priority (preemptive) ---
+Gantt: [0-2 A] [2-3 B] [3-5 C] [5-9 B] [9-13 A] [13-17 D]
+      arr burst prio first done  TAT wait resp
+A       0     6    3     0   13   13    7    0
+B       2     5    2     2    9    7    2    0
+C       3     2    1     3    5    2    0    0
+D       5     4    4    13   17   12    8    8
+sum waiting 17, sum turnaround 34, sum response 8
+avg waiting 4.25  avg turnaround 8.5  avg response 2  context switches 5  CPU busy 17/17 ms
+--- (c) Round Robin q = 3 ---
+Gantt: [0-3 A] [3-6 B] [6-8 C] [8-11 A] [11-14 D] [14-16 B] [16-17 D]
+      arr burst prio first done  TAT wait resp
+A       0     6    3     0   11   11    5    0
+B       2     5    2     3   16   14    9    1
+C       3     2    1     6    8    5    3    3
+D       5     4    4    11   17   12    8    6
+sum waiting 25, sum turnaround 42, sum response 10
+avg waiting 6.25  avg turnaround 10.5  avg response 2.5  context switches 6  CPU busy 17/17 ms
+
+== C2a: base and limit (hexadecimal) ==
+  0x09ff: < limit -> 0x6000 + 0x09ff = 0x69ff = 27135
+  0x0a00: not < limit -> TRAP
+  0x0150: < limit -> 0x6000 + 0x0150 = 0x6150 = 24912
+  legal range 0x6000 .. 0x69ff
+
+== C2b: segment table ==
+  <2, 1099>: limit 1100: 4300 + 1099 = 5399
+  <1, 400>: limit 400: TRAP
+  <3, 512>: limit 1000: 3200 + 512 = 3712
+
+== C2c: TLB hit ratio for EAT = 128 ns (t_TLB = 20, t_m = 100) ==
+  20 + (2 - a) 100 = 128 -> a = 0.92; check EAT = 128.00 ns
+  without TLB: 2 x 100 = 200 ns
+  alpha = 0.8: EAT = 0.8 x 120 + 0.2 x 220 = 140.00 ns = 20 + 1.2 x 100
+
+== C3: page replacement, 3 frames ==
+  distinct pages [0, 1, 2, 3, 4] -> 5 compulsory faults
+FIFO, 3 frames: 8 page faults
+ref    1  0  4  2  1  0  1  2  3  1  2  3
+fr0    1  1  1  2  2  2  2  2  3  3  3  3
+fr1    .  0  0  0  1  1  1  1  1  1  2  2
+fr2    .  .  4  4  4  0  0  0  0  0  0  0
+fault  F  F  F  F  F  F        F     F   
+evict           1  0  4        2     1   
+
+LRU, 3 frames: 7 page faults
+ref    1  0  4  2  1  0  1  2  3  1  2  3
+fr0    1  1  1  2  2  2  2  2  2  2  2  2
+fr1    .  0  0  0  1  1  1  1  1  1  1  1
+fr2    .  .  4  4  4  0  0  0  3  3  3  3
+fault  F  F  F  F  F  F        F         
+evict           1  0  4        0         
+
+OPT, 3 frames: 5 page faults
+ref    1  0  4  2  1  0  1  2  3  1  2  3
+fr0    1  1  1  1  1  1  1  1  1  1  1  1
+fr1    .  0  0  0  0  0  0  0  3  3  3  3
+fr2    .  .  4  2  2  2  2  2  2  2  2  2
+fault  F  F  F  F              F         
+evict           4              0         
+
+== C4: first-, best-, worst-fit ==
+  holes: 650@200, 450@1100, 200@1800, 550@2200, 250@3000 | total 2100 KB
+--- first-fit ---
+  A (270 KB) -> hole 650@200, placed at 200-470, leftover 380 KB
+  B (290 KB) -> hole 380@470, placed at 470-760, leftover 90 KB
+  C (330 KB) -> hole 450@1100, placed at 1100-1430, leftover 120 KB
+  D (510 KB) -> hole 550@2200, placed at 2200-2710, leftover 40 KB
+  holes left: 90@760, 120@1430, 200@1800, 40@2710, 250@3000 | total free = 700 KB
+--- best-fit ---
+  A (270 KB) -> hole 450@1100, placed at 1100-1370, leftover 180 KB
+  B (290 KB) -> hole 550@2200, placed at 2200-2490, leftover 260 KB
+  C (330 KB) -> hole 650@200, placed at 200-530, leftover 320 KB
+  D (510 KB): no hole large enough -> waits (free 1210 KB, largest hole 320 KB)
+  holes left: 320@530, 180@1370, 200@1800, 260@2490, 250@3000 | total free = 1210 KB
+--- worst-fit ---
+  A (270 KB) -> hole 650@200, placed at 200-470, leftover 380 KB
+  B (290 KB) -> hole 550@2200, placed at 2200-2490, leftover 260 KB
+  C (330 KB) -> hole 450@1100, placed at 1100-1430, leftover 120 KB
+  D (510 KB): no hole large enough -> waits (free 1210 KB, largest hole 380 KB)
+  holes left: 380@470, 120@1430, 200@1800, 260@2490, 250@3000 | total free = 1210 KB
+
+== C5a: direct access, 300-B records, 1024-B blocks ==
+  record 45: byte 13500; block 13500//1024 = 13; offset 13500 - 13 x 1024 = 188; last byte 13799 in block 13
+  record 58: byte 17400; block 17400//1024 = 16; offset 17400 - 16 x 1024 = 1016; last byte 17699 in block 17  -> CROSSES into the next block
+
+== C5b: fork(); printf X; fork(); fork(); printf Y ==
+  X printed 2 times, Y printed 8 times, 8 processes in total (7 created)
+  real run with os.fork(): {'X': 2, 'Y': 8}
+
+== C5c: context-switch overhead, s = 20 us, q = 5 ms ==
+  20/(5000+20) = 0.398 %

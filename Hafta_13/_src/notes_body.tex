@@ -1,0 +1,687 @@
+% ============================ Hafta 13 gövdesi ============================
+\setlength{\emergencystretch}{3em}
+\lstset{tabsize=8}
+% bu haftanın terminal oturumları uzun: dersin varsayılanından bir boy küçük
+\lstdefinestyle{wterm}{style=term,basicstyle=\ttfamily\footnotesize\linespread{1.0}\selectfont\color{light},
+  literate={─}{{─}}1 {┬}{{┬}}1 {├}{{├}}1 {└}{{└}}1 {│}{{│}}1 {…}{{…}}1}
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 13 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Süreçler ve İş Denetimi}\par\smallskip
+{\small\itshape\color{white!70} Yazdığınız her komut bir sürece dönüşür. Bu hafta onu izlemeyi, duraklatmayı, taşımayı ve durdurmayı öğreniyorsunuz.}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Kabuğun her komutu \cmd{fork()}, \cmd{exec()} ve \cmd{wait()} ile nasıl bir sürece dönüştürdüğünü açıklamak; sürecin PID'sini ve PPID'sini bulmak.
+  \item Süreçleri \cmd{ps} (\cmd{-f}, \cmd{-ef}, \cmd{aux}, \cmd{-o}), \cmd{pstree}, \cmd{top}/\cmd{htop} ve \texttt{/proc/<pid>/status} ile listelemek ve incelemek; yük ortalaması dahil her sütunu okumak.
+  \item 3.~haftanın beş süreç durumunu \texttt{STAT} harfleri R, S, D, T ve Z ile eşleştirmek.
+  \item İşleri ön planda ve arka planda çalıştırmak; \texttt{\&}, Ctrl+Z, Ctrl+C, \cmd{jobs}, \cmd{fg} ve \cmd{bg} ile aralarında taşımak.
+  \item \cmd{kill}, \cmd{pkill} ve \cmd{killall} ile sinyal göndermek; SIGTERM, SIGKILL, SIGINT, SIGHUP, SIGSTOP ve SIGCONT sinyallerini ve $128 + n$ çıkış durumunu açıklamak.
+  \item \cmd{nohup}, \verb|$$| ve \verb|$!| kullanmak; öncelikleri \cmd{nice} ve \cmd{renice} ile değiştirmek ve işlemci paylarını öngörmek (5.~hafta).
+  \item Bilerek bir zombi süreç oluşturmak, onu tanımak ve neden yalnızca ebeveynin onu kaldırabildiğini açıklamak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{12. Haftadan 13. Haftaya}
+
+Geçen hafta programları yönlendirmeler ve borularla birbirine bağladınız. \cmd{grep ERROR logs/system.log | wc -l} gibi her satırın arkasında kabuk sessizce \emph{süreçler} oluşturdu: aynı anda çalışan ve bir boruyla birleştirilmiş iki süreç. Bu hafta bu süreçlere doğrudan bakıyoruz. Gerekenlerin neredeyse tamamı kâğıt üzerinde 3.~haftada (süreç, PID, süreç durumları, PCB, \cmd{fork()}/\cmd{exec()}/\cmd{wait()}, zombiler) ve 5.~haftada (öncelikli zamanlama, nice değerleri) tanıtılmıştı. Şimdi bu fikirlerin her birini gerçek bir Linux terminalinde görecek ve süreçleri kendiniz denetlemeyi öğreneceksiniz.
+
+\paragraph{Bu notlardaki çıktılar hakkında.} Burada gösterilen her oturum gerçek çıktıdır; laboratuvar makinemizde, sıradan kullanıcı \texttt{student} olarak ve yeni oluşturulmuş bir \texttt{\textasciitilde/lab} klasöründe yakalandı. Komutlar \texttt{code/demo\_*.sh} dosyalarında, yakalanan çıktılar ise \texttt{code/out\_*.txt} dosyalarındadır. İş denetimi (job control; Ctrl+Z, \cmd{fg}, \cmd{bg}) yalnızca bir terminale sahip \emph{etkileşimli} bir kabukta çalışır; bu yüzden gösterimler küçük bir yardımcı program (\texttt{code/record\_session.py}) tarafından gerçek bir terminale yazıldı. \texttt{demo} dosyalarını ``bu satırları tek tek yazın'' diye okuyun. Bu dosyalarda \texttt{\#@} ile başlayan satırlar ``Ctrl+Z'ye basın'' gibi yönergelerdir.
+
+Sizin makinenizde PID'ler, saatler, tarihler, terminal adları (\texttt{pts/0}) ve kullanıcı numaraları farklı olacak; PID'ler her çalıştırmada değişir. Makinedeki bütün süreçleri içeren listeler (\cmd{ps -ef}, \cmd{ps aux}) \emph{kırpıldı}: ilk satırları ve yalnızca \texttt{student} kullanıcısının süreçlerini gösteriyor, çok uzun satırları ``\dots'' ile kesiyoruz. \cmd{ls} ve \cmd{sort} çıktısının sırası \emph{yerel ayara} (locale) bağlı olabilir; biz \cmd{LC\_ALL=C.UTF-8} kullandık. Türkçe yerel ayarlı bir sistemde (\texttt{LANG=tr\_TR.UTF-8}) birçok ileti Türkçe görünebilir ve sıralama farklı olabilir; bu notlardaki İngilizce iletiler, programların C yerel ayarında yazdığı biçimdedir.
+
+Bu hafta her yerde iki zararsız deneme programı kullanıyoruz: \cmd{sleep N}, $N$ saniye bekler ve hiçbir şey yapmaz (ömrünü \emph{bekliyor} durumunda geçirir); \cmd{yes} ise sonsuza dek \texttt{y} harfini yazar. \cmd{yes > /dev/null} ile çıktısı atılır ve yalnızca bir işlemci çekirdeğini meşgul eder (her zaman \emph{hazır} ya da \emph{çalışıyor} durumundadır).
+
+% =====================================================================
+\section{Süreçlere Yeniden Bakış}
+\label{sec:revisit}
+
+3.~haftadan hatırlayın: \term{program}, diskte duran edilgen bir dosyadır (örneğin \texttt{/usr/bin/sleep}); \term{süreç} (process) ise yürütülmekte olan bir programdır. Her sürecin benzersiz bir \term{süreç kimliği} (process identifier, PID) vardır, ebeveyninin PID'sini (PPID) bilir ve çekirdekte \term{süreç denetim bloğu} (process control block, PCB) ile tanımlanır. Süreçler bir ağaç oluşturur, çünkü (ilki dışında) her biri bir başkası tarafından oluşturulur.
+
+Bir komut yazdığınızda kabuk (\cmd{bash}), 3.~haftadaki C programı \texttt{fork\_exec\_wait.c}'nin yaptığının aynısını yapar:
+\begin{enumerate}[leftmargin=1.4em]
+  \item \cmd{fork()} kabuğun bir kopyasını, yani çocuğu oluşturur;
+  \item çocuk \cmd{exec()} çağırır; bu çağrı \cmd{bash} kopyasını istediğiniz programla değiştirir, PID aynı kalır;
+  \item ebeveyn kabuk \cmd{wait()} çağırır ve sonraki komut istemini (prompt) ancak çocuk bittiğinde yazdırır.
+\end{enumerate}
+Komut \texttt{\&} ile bitiyorsa 3.~adım atlanır: kabuk beklemez, istemi hemen yazdırır ve komut \emph{arka planda} çalışır. Ön plan ile arka plan komutu arasındaki farkın tamamı budur.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[b/.style={rectangle,rounded corners=2pt,minimum height=0.9cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=2mm]},thick,mintdeep}]
+\node[b,fill=charcoal,text=white,minimum width=2.0cm] (sh) at (0,0) {\textbf{bash}\\PID 1913};
+\node[b,fill=mint!25,minimum width=2.3cm] (fk) at (3.3,0) {\texttt{fork()}\\bash'in kopyası};
+\node[b,fill=mint!25,minimum width=2.6cm] (ex) at (6.8,0) {\texttt{exec("sleep")}\\çocuk PID 1970};
+\node[b,fill=mint,minimum width=2.6cm] (sl) at (10.5,0) {\textbf{sleep 300}\\PID 1970, PPID 1913};
+\draw[arr] (sh) -- (fk); \draw[arr] (fk) -- (ex); \draw[arr] (ex) -- (sl);
+\node[b,fill=light,minimum width=7.5cm,font=\footnotesize] (fg) at (5.1,-1.35) {ön plan: bash \texttt{wait()} çağırır --- \texttt{sleep} bitene dek istem yok};
+\node[b,fill=orange!12,minimum width=7.5cm,font=\footnotesize] (bg) at (5.1,-2.35) {arka plan (\texttt{\&}): bash \emph{beklemez} --- istem hemen geri gelir};
+\draw[-{Stealth[length=2mm]},slate,thick] (sh.south) |- (fg.west);
+\draw[-{Stealth[length=2mm]},orange!80!black,thick] (sh.south) |- (bg.west);
+\end{tikzpicture}
+\caption{Kabuk \texttt{sleep 300 \&} komutunu nasıl çalıştırır? PID'ler Kısım~\ref{sec:ps}'teki gerçek oturumdan alınmıştır.}
+\end{figure}
+
+% =====================================================================
+\section{Süreçlere Bakmak}
+\label{sec:ps}
+
+\subsection{\texttt{ps}: süreçlerinizin anlık görüntüsü}
+
+\cmd{ps} (\emph{process status}) süreçlerin tek seferlik bir anlık görüntüsünü yazdırır. Seçeneksiz olarak yalnızca geçerli terminalinize bağlı süreçleri gösterir. \verb|$$|, kabuğun kendi PID'sini tutan özel bir kabuk değişkenidir.
+
+\lstinputlisting[style=wterm,linerange={1-10,17-22}]{../code/out_ps.txt}
+
+Neye dikkat etmeli?
+\begin{itemize}
+  \item Kabuğumuzun PID'si $1913$'tür; listede \texttt{bash} olarak görünür, \cmd{ps -f} ise tam adını, \texttt{-bash}'i gösterir. Baştaki tire bir \emph{giriş kabuğunu} (login shell) belirtir.
+  \item \cmd{ps} kendisini de listeler: anlık görüntüyü aldığı sırada o da çalışan bir süreçtir. (İki arka plan komutundan sonraki ikinci yalın \cmd{ps}, burada atlandı, \texttt{bash}, \texttt{sleep}, \texttt{yes} ve \texttt{ps} süreçlerini listeler.)
+  \item İki arka plan komutu \texttt{[1] 1970} ve \texttt{[2] 1971} yazdırır: köşeli parantez içinde bir \emph{iş numarası} (job number) ve PID.
+  \item \cmd{ps -f} (\emph{full}, tam biçim) sahibi (UID), PPID'yi, işlemci kullanımı \texttt{C}'yi, başlama zamanını ve komut satırının tamamını ekler. \cmd{sleep} ve \cmd{yes} süreçlerinin PPID'si $1913$'tür: ebeveynleri kabuktur. Kabuğun PPID'si olan $1912$, onu başlatan terminal programına aittir.
+  \item \cmd{yes} sürecinin \texttt{C} sütunu $96$'dır: bir işlemci çekirdeğinin neredeyse tamamını kullanır. PID'ler atlar ($1913$'ten $1969$'a), çünkü bu arada başka kullanıcılar süreç oluşturdu.
+\end{itemize}
+
+\subsection{\texttt{-o} ile sütun seçmek ve \texttt{pstree}}
+
+\cmd{-o} seçeneği tam olarak ihtiyacınız olan sütunları seçmenizi sağlar. En sık kullandığımız biçim budur:
+
+\lstinputlisting[style=wterm,firstline=23,lastline=32]{../code/out_ps.txt}
+
+\texttt{STAT} süreç durumudur (Kısım~\ref{sec:stat}), \texttt{NI} ise nice değeri (Kısım~\ref{sec:nice}). \cmd{yes} \texttt{R} durumundadır ve işlemcinin \%97,4'ünü kullanır; \cmd{sleep} \texttt{S} durumundadır ve \%0 kullanır. \cmd{pstree -p \$\$}, 3.~haftanın süreç ağacını kabuğumuzdan başlayarak gerçek PID'lerle çizer: kabuğun üç çocuğu vardır. Oturumun sonunda iki işi de durdurduk:
+
+% code/out_ps.txt dosyasından birebir kopyalandı (listings, atlanan satırlardaki UTF-8'i yanlış işliyor)
+\begin{lstlisting}[style=wterm]
+student@okan-lab:~/lab$ kill %1 %2
+student@okan-lab:~/lab$ jobs
+[1]-  Terminated              sleep 300
+[2]+  Terminated              yes > /dev/null
+\end{lstlisting}
+
+\texttt{\%1} ``1 numaralı iş'' demektir (Kısım~\ref{sec:jobs}); kabuk her iş için bir kez \texttt{Terminated} bildirir.
+
+\subsection{Bütün süreçler: \texttt{ps -ef}, \texttt{ps aux}, \texttt{ps -u}}
+
+Tarihsel nedenlerle iki seçenek stili vardır. \cmd{ps -ef} (System~V stili, tireli) ve \cmd{ps aux} (BSD stili, tire\emph{siz}) ikisi de \emph{bütün} kullanıcıların \emph{bütün} süreçlerini listeler; \cmd{aux} bellek sütunlarını ekler. Laboratuvar makinemizde tam listeler, çoğu \texttt{root}'a ait yaklaşık $70$ satırdır; bu yüzden yalnızca \cmd{ps -ef}'in başını gösteriyor, ardından \texttt{student} kullanıcısını \cmd{grep} ile seçiyoruz (\cmd{ps -f -u student} aynı seçimi \cmd{ps -f} biçiminde verir):
+
+% code/out_ps.txt dosyasından birebir kopyalandı (listings, atlanan satırlardaki UTF-8'i yanlış işliyor)
+\begin{lstlisting}[style=wterm]
+student@okan-lab:~/lab$ ps -ef | head -4
+UID        PID  PPID  C STIME TTY          TIME CMD
+root         1     0  0 16:17 ?        00:00:02 /process_api --firecracker-init --addr 0.0.0.0:2024 --max-ws-buffer-size 32768 --block-local-connections --listen-vsock-port 2024 --log-vsock-port 5002
+root         2     0  0 16:17 ?        00:00:00 [kthreadd]
+root         3     2  0 16:17 ?        00:00:00 [pool_workqueue_release]
+student@okan-lab:~/lab$ ps aux | head -1
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+student@okan-lab:~/lab$ ps aux | grep '^student'
+student   1913  0.6  0.0   8436  7532 pts/0    Ss   16:58   0:00 -bash
+student   1970  0.0  0.0   3132  1996 pts/0    S    16:58   0:00 sleep 300
+student   1971 99.0  0.0   3132  1884 pts/0    R    16:58   0:02 yes
+student   1981  0.0  0.0   8340  4328 pts/0    R+   16:58   0:00 ps aux
+student   1982  0.0  0.0   4100  2200 pts/0    S+   16:58   0:00 grep ^student
+\end{lstlisting}
+
+\begin{itemize}
+  \item \textbf{PID 1}, açılışta çekirdeğin başlattığı ilk kullanıcı alanı sürecidir; yetimleri evlat edinir (3.~hafta). Laboratuvar makinemizde bu, \texttt{process\_api} adlı küçük bir konteyner başlatma programıdır (uzun komut satırı yukarıda alt satıra kayıyor); normal bir Ubuntu kurulumunda PID~1 \cmd{systemd}'dir.
+  \item \textbf{PID 2}, \texttt{kthreadd}, bütün çekirdek iş parçacıklarının ebeveynidir; bunların adları köşeli parantez içinde gösterilir.
+  \item \cmd{ps aux | grep '\textasciicircum student'} öğrencinin satırlarını bulur --- ve \cmd{ps} anlık görüntüyü alırken çalışmakta olan \cmd{grep} sürecinin kendisini de. \cmd{pgrep} (Kısım~\ref{sec:pkill}) bu sürprizi önler.
+\end{itemize}
+
+\subsection{Sütunları okumak}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{>{\ttfamily}l >{\raggedright\arraybackslash}X l}
+\toprule
+\textbf{\rmfamily Sütun} & \textbf{Anlamı} & \textbf{Örnek (yukarıda)} \\
+\midrule
+PID, PPID & süreç kimliği ve ebeveynin süreç kimliği (3.~hafta) & \texttt{1970}, \texttt{1913}\\
+UID, USER & sürecin sahibi (11.~hafta) & \texttt{student}\\
+STAT, S & durum harfi ve bayraklar (Kısım~\ref{sec:stat}) & \texttt{S}, \texttt{R+}, \texttt{Ss}\\
+\%CPU, C & işlemci zamanı bölü başlangıçtan beri geçen süre, \% & \cmd{yes} için \texttt{99.0}\\
+\%MEM & yerleşik bellek bölü toplam RAM, \% & \texttt{0.0}\\
+VSZ & sanal bellek boyutu, KiB (6--7.~haftalar) & \texttt{3132}\\
+RSS & yerleşik küme boyutu (resident set size): RAM'deki kısım, KiB & \texttt{1884}\\
+TTY & sürecin terminali; \texttt{?} = yok (daemon'lar) & \texttt{pts/0}\\
+STIME, START & başlama zamanı & \texttt{16:58}\\
+TIME & şimdiye dek kullanılan toplam işlemci zamanı & \texttt{0:02}\\
+CMD, COMMAND & komut satırı (\texttt{[...]} = çekirdek iş parçacığı) & \texttt{sleep 300}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\texttt{VSZ} ve \texttt{RSS} 6--7.~haftalara bağlanır: \cmd{yes} sürecinin $3132$~KiB sanal adres alanı vardır, ama yalnızca $1884$~KiB'ı RAM'de yerleşiktir --- iş başındaki isteğe bağlı sayfalama. \cmd{ps}'in \texttt{\%CPU} değeri sürecin \emph{bütün ömrü} boyunca bir ortalamadır; \cmd{top} ise son birkaç saniyeyi ölçer. Çok iş parçacıklı bir süreç (4.~hafta) \%100'ün üstünde görünebilir: \%200, iki işlemci çekirdeğinin tamamen dolu olduğu anlamına gelir.
+
+\subsection{\texttt{ps} içinde süreç durumları: STAT harfleri}
+\label{sec:stat}
+
+3.~hafta beş durum tanımlamıştı: \emph{yeni} (new), \emph{hazır} (ready), \emph{çalışıyor} (running), \emph{bekliyor} (waiting) ve \emph{sonlandı} (terminated). Linux her süreç için \cmd{ps}'in \texttt{STAT} sütununda (\cmd{top}'ta \texttt{S} sütununda) bir durum harfi bildirir ve ders kitabı modelinde olmayan bir durum ekler: \emph{durdurulmuş} (stopped).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  st/.style={rectangle,rounded corners=9pt,minimum width=2.3cm,minimum height=0.85cm,font=\headfont\bfseries},
+  arr/.style={-{Stealth[length=2.5mm]},thick,slate},
+  job/.style={-{Stealth[length=2.5mm]},very thick,orange!80!black},
+  lab/.style={font=\footnotesize\bfseries,text=slate},
+  jl/.style={font=\footnotesize\bfseries,text=orange!80!black,align=center},
+  bd/.style={circle,fill=mint,draw=white,thick,font=\scriptsize\ttfamily\bfseries,inner sep=1.5pt,minimum size=0.5cm}]
+\node[st,fill=light] (new) at (0,3) {yeni};
+\node[st,fill=orange!15] (stp) at (5,3) {durdurulmuş};
+\node[st,fill=light] (trm) at (10,3) {sonlandı};
+\node[st,fill=mint!25] (rdy) at (2,0.8) {hazır};
+\node[st,fill=mint] (run) at (8,0.8) {çalışıyor};
+\node[st,fill=slate,text=white] (wt) at (5,-1.4) {bekliyor};
+\node[rectangle,rounded corners=9pt,draw=slate,dashed,minimum width=2.0cm,minimum height=0.85cm,font=\itshape\small,text=muted] (gone) at (13.6,3) {kaldırıldı};
+\node[bd] at (new.north east) {--};
+\node[bd] at (stp.north east) {T};
+\node[bd] at (trm.north east) {Z};
+\node[bd] at (rdy.north east) {R};
+\node[bd] at (run.north east) {R};
+\node[bd,rectangle,rounded corners=6pt,minimum width=0.9cm] at (wt.north east) {S/D};
+\draw[arr] (new) -- node[left,lab]{kabul edildi} (rdy);
+\draw[arr] ([yshift=5pt]rdy.east) -- node[above,lab,font=\scriptsize\bfseries,xshift=6pt]{zamanlayıcı görevlendirir} ([yshift=5pt]run.west);
+\draw[arr] ([yshift=-5pt]run.west) -- node[below,lab]{zaman dilimi doldu} ([yshift=-5pt]rdy.east);
+\draw[arr] (run) -- node[right,lab,xshift=2pt]{G/Ç, sleep, \texttt{wait()}} (wt);
+\draw[arr] (wt) -- node[left,lab,xshift=-2pt]{olay gerçekleşti} (rdy);
+\draw[job] (run) -- node[right,jl,xshift=10pt,yshift=4pt]{Ctrl+Z\\\texttt{kill -STOP}} (stp);
+\draw[job] (stp) -- node[left,jl,xshift=-10pt,yshift=4pt]{\texttt{fg}, \texttt{bg}\\\texttt{kill -CONT}} (rdy);
+\draw[job] (run) -- node[right,jl,xshift=4pt,yshift=-2pt]{\texttt{exit()}, Ctrl+C\\\texttt{kill}, \texttt{kill -9}} (trm);
+\draw[arr] (trm) -- node[below,lab,font=\scriptsize\bfseries,align=center]{ebeveynin\\\texttt{wait()} çağrısı} (gone);
+\end{tikzpicture}
+\caption{Her durumun \texttt{STAT} harfiyle (nane rozetler) ve bu haftanın iş denetimi eylemleriyle (turuncu oklar) 3.~haftanın durum diyagramı. Gri okları çekirdek ve zamanlayıcı izler.}
+\label{fig:states}
+\end{figure}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{>{\ttfamily\bfseries}c >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}p{3.2cm}}
+\toprule
+\textbf{\rmfamily Harf} & \textbf{Anlamı} & \textbf{3.~hafta durumu} & \textbf{Bu notlarda nerede}\\
+\midrule
+R & çalışıyor ya da çalıştırılabilir: bir işlemcide ya da hazır kuyruğunda & çalışıyor \emph{ya da} hazır & \cmd{yes > /dev/null}\\
+S & kesilebilir uyku: bir olayı (zamanlayıcı, klavye, çocuk) bekliyor & bekliyor & \cmd{sleep}, \cmd{bash}\\
+D & kesilemez uyku, genellikle disk G/Ç'sini bekliyor & bekliyor & seyrek ve kısa\\
+T & Ctrl+Z ya da SIGSTOP ile durdurulmuş & (Linux eki) & Kısım~\ref{sec:jobs}\\
+Z & zombi: sonlandı, çıkış durumu henüz toplanmadı & sonlandı & Kısım~\ref{sec:zombie}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Harften sonraki karakterler \emph{bayraklardır}: \texttt{s} = oturum lideri (giriş kabuğunuz \texttt{Ss} gösterir), \texttt{+} = ön plan süreç grubunun üyesi (\cmd{ps}'in kendisi \texttt{R+} gösterir), \texttt{N} = düşük öncelik, yani pozitif nice değeri (\texttt{RN}, \texttt{SN}), \texttt{<} = yüksek öncelik, \texttt{l} = çok iş parçacıklı. Üç not:
+\begin{itemize}
+  \item Linux \emph{hazır} ile \emph{çalışıyor} durumlarını ayırmaz: ikisi de \texttt{R}'dir. $2$ çekirdekli bir makinede herhangi bir anda en çok $2$ süreç gerçekten çalışır; öteki \texttt{R} süreçleri hazır kuyruğundadır.
+  \item \emph{Yeni} durumu yalnızca mikrosaniyeler sürer ve harfi yoktur.
+  \item \texttt{S} durumundaki bir süreç de sonlandırılabilir: \cmd{sleep} bütün ömrünü \texttt{S}'de geçirir ve onu sürekli sonlandırıyoruz. Diyagram, okunaklı kalsın diye \cmd{kill} okunu yalnızca \emph{çalışıyor} durumundan çiziyor.
+\end{itemize}
+
+\subsection{\texttt{/proc/<pid>/status}: metin olarak PCB}
+\label{sec:proc}
+
+3.~haftadan beri Linux'un her PCB'nin bazı kısımlarını \texttt{/proc} altında metin dosyaları olarak gösterdiğini biliyoruz. \verb|$!| en son arka plan işinin PID'sidir:
+
+\Needspace{10\baselineskip}
+\lstinputlisting[style=wterm,linerange={1-15,21-24}]{../code/out_proc.txt}
+
+Alanlar 3.~haftanın PCB'sine karşılık gelir: \texttt{State} (\texttt{S}, zamanlayıcısını bekliyor), \texttt{Pid} ve \texttt{PPid} (kimlik ve ebeveyn), \texttt{Uid} (sahibin kullanıcı numarası; laboratuvar makinemizde $1013$, sizinkinde genellikle $1000$, 11.~hafta), \texttt{VmRSS} (bellek yönetimi bilgisi), \texttt{Threads} (4.~hafta) ve bağlam değişimi sayaçları (hesap bilgisi: süreç beklemek için işlemciyi kendisi bıraktığında \emph{gönüllü} (voluntary), zamanlayıcı işlemciyi elinden aldığında \emph{gönülsüz} (nonvoluntary) bir geçiş olur). (\texttt{code/out\_proc.txt} içindeki tam oturum \texttt{/proc/\$!/cmdline} dosyasını ve \texttt{cwd} ile \texttt{exe} bağlantılarını da okur: komut satırı, çalışma dizini ve program dosyası.) Kendi kabuğumuz (\verb|$$|) da uyuyor: klavyeyi bekliyor.
+
+\subsection{\texttt{top} ve \texttt{htop}: canlı görünüm}
+\label{sec:top}
+
+\cmd{top} süreçleri işlemci kullanımına göre sıralı gösterir ve birkaç saniyede bir yenilenir; çıkmak için \texttt{q}'ya basın. Bu notlara basabilmek için \emph{toplu kipi} (batch mode, \cmd{-b}) tek bir yinelemeyle (\cmd{-n 1}) ve kullanıcı süzgeci \cmd{-u student} ile kullandık; bu sırada (yarım dakika önce \texttt{\&} ile başlatılmış) bir \cmd{yes} ve bir \cmd{sleep} çalışıyordu:
+
+\lstinputlisting[style=wterm,firstline=5,lastline=21]{../code/out_top.txt}
+
+\begin{itemize}
+  \item \textbf{1.~satır} (\cmd{uptime} çıktısının aynısı): şimdiki saat, açılıştan beri geçen süre, oturum açmış kullanıcı sayısı (laboratuvar makinemizde $0$, çünkü konsolunda kimse oturum açmamış) ve son $1$, $5$ ve $15$ dakikanın \term{yük ortalaması} (load average).
+  \item \textbf{2.~satır} makinenin bütün görevlerini durumlarına göre sayar: çalışan ($R$), uyuyan ($S$ ve $D$), durdurulmuş ($T$), zombi ($Z$).
+  \item \textbf{3.~satır} \emph{bütün makinenin} işlemci zamanını böler: \texttt{us} kullanıcı modu, \texttt{sy} çekirdek modu (ikili mod, 2.~hafta), \texttt{ni} nice uygulanmış kullanıcı süreçleri, \texttt{id} boşta, \texttt{wa} G/Ç bekleme, \texttt{st} sanallaştırma konağının ``çaldığı'' zaman. $2$ çekirdekten biri tamamen doluysa bu, makinenin yalnızca $1/2 = 50\%$'sidir.
+  \item \textbf{4--5.~satırlar}: MiB cinsinden bellek ve takas alanı (6--7.~haftalar).
+  \item \textbf{Süreç listesi}: \texttt{PR} önceliktir; normal süreçler için $\text{PR} = 20 + \text{NI}$; \texttt{VIRT}/\texttt{RES} sanal ve yerleşik bellektir; \texttt{S} durumdur; \texttt{\%CPU} son yenileme aralığında ölçülür. \cmd{yes} \emph{bir} çekirdeğin \%100'ünü kullanır.
+\end{itemize}
+
+\cmd{top} içindeki yararlı tuşlar: \texttt{P} işlemciye göre sırala, \texttt{M} belleğe göre sırala, \texttt{u} tek bir kullanıcıyı göster, \texttt{k} sonlandır (bir PID ve bir sinyal sorar), \texttt{r} renice, \texttt{1} her işlemciyi ayrı göster, \texttt{q} çık. \cmd{htop} daha kullanıcı dostu, renkli bir sürümdür: ok tuşlarıyla bir süreç seçin; \texttt{F9} sinyal gönderir, \texttt{F7}/\texttt{F8} nice değerini değiştirir, \texttt{F10} çıkar. Kurulu değilse \cmd{sudo apt install htop} ile kurun.
+
+\begin{example}[Çözümlü örnek: yük ortalamasını okumak]
+Yük ortalaması, çalışan ya da hazır (R durumu) süreçleri, artı kesilemez disk beklemesindeki (D) süreçleri sayar ve $1$, $5$ ve $15$ dakika üzerinden ortalar. Yalnızca işlemci çekirdeği sayısı $c$'ye göre anlam taşır (\cmd{nproc} bu sayıyı yazdırır; laboratuvar makinemizde $c = 2$):
+\begin{align*}
+\text{yük } 0.59: &\quad 0.59 / 2 = 29.5\% \text{ kapasite kullanılıyor,}\\
+\text{yük } 2.00: &\quad 2.00 / 2 = 100\%: \text{ her çekirdek dolu, kimse beklemiyor,}\\
+\text{yük } 3.00: &\quad 3.00 / 2 = 150\%: \text{ ortalama } 3 - 2 = 1 \text{ süreç hazır kuyruğunda bekliyor.}
+\end{align*}
+$1$ dakikalık değer $15$ dakikalık değerden büyükse yük artıyordur. Anlık görüntümüz \cmd{yes} başladıktan $30$~s sonra alındı; bu yüzden $1$ dakikalık ortalama (0,59) henüz $1$'e tırmanmamıştı: ortalamalar anlık sayımlar değil, üstel olarak sönümlenen ortalamalardır. \texttt{/proc/loadavg} içinde dördüncü alan \texttt{3/98}, şu anda toplam $98$ görevden $3$'ünün çalıştırılabilir olduğu anlamına gelir; son sayı en son atanan PID'dir. 4.~hafta terimleriyle: yük $c$'nin üstündeyse süreçler hazır kuyruğunda zaman geçirir, yani bekleme süreleri uzar. (Sayılar \texttt{code/check\_numbers.py} ile denetlendi.)
+\end{example}
+
+% =====================================================================
+\section{İş Denetimi}
+\label{sec:jobs}
+
+\term{İş} (job), kabuğun başlattığı tek bir komut satırıdır: tek bir süreç ya da borularla bağlanmış birkaç süreç. Kabuk işlerini \texttt{[1]}, \texttt{[2]}, \dots{} diye numaralandırır. Klavyeye aynı anda yalnızca \emph{bir} iş sahip olur: \term{ön plan} (foreground) işi. Ctrl+C ve Ctrl+Z tuşları sinyalleri (Kısım~\ref{sec:signals}) yalnızca ön plan işine gönderir. \term{Arka planda} (background) istediğiniz kadar iş çalışabilir.
+
+\textbf{Ön planda} (\texttt{komut}) kabuk bekler ve iş bitene dek istem göstermez; iş klavyeyi okur; Ctrl+C onu sonlandırır, Ctrl+Z durdurur. Kısa komutlar ve etkileşimli programlar (\cmd{nano}, \cmd{less}, \cmd{top}) için kullanın. \textbf{Arka planda} (\texttt{komut \&}) kabuk \texttt{[iş] PID} ve istemi hemen yazdırır; tuşlar işe ulaşmaz (\cmd{kill \%n} kullanın); iş klavyeden okumaya çalışırsa durdurulur (\texttt{Stopped (tty input)}); çıktısını yönlendirmezseniz (12.~hafta) yine terminalde görünür. Uzun, etkileşimsiz işler için kullanın: derleme, kopyalama, indirme.
+
+\subsection{Bir işi Ctrl+Z ile durdurmak, \texttt{bg} ile sürdürmek}
+
+\lstinputlisting[style=wterm,firstline=1,lastline=19]{../code/out_jobs.txt}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \cmd{sleep 100} ön planda çalışıyor: istem yok. \textbf{Ctrl+Z}'ye basmak (ekranda \texttt{\^{}Z} olarak görünür) onu durdurur; kabuk \texttt{[1]+ Stopped} bildirir ve istemi geri verir.
+  \item \cmd{jobs} bu kabuğun işlerini listeler; \cmd{ps} \texttt{T} (durdurulmuş) durumunu gösterir. Durdurulmuş bir süreç belleğini ve açık dosyalarını korur ama işlemci zamanı almaz: 3.~hafta terimleriyle ne hazır ne de bekliyor durumundadır; Linux'un ek duruma bu yüzden ihtiyacı vardır.
+  \item \cmd{bg} geçerli işin \emph{arka planda} sürmesini sağlar; kabuk komutu sonuna bir \texttt{\&} ekleyerek yazdırır. \cmd{jobs -l} PID'leri ekler. \cmd{sleep} yeniden \texttt{S} durumundadır: takılmadı, yine zamanlayıcısını bekliyor.
+\end{enumerate}
+
+\subsection{\texttt{\&} ile başlatmak, \texttt{fg}, Ctrl+C ve \texttt{kill \%n}}
+
+\lstinputlisting[style=wterm,firstline=20,lastline=38]{../code/out_jobs.txt}
+
+\begin{itemize}
+  \item \texttt{[3] 2405}: $3$ numaralı iş, PID $2405$. \cmd{jobs} listesinde \texttt{+} \emph{geçerli} işi (argümansız \cmd{fg} ve \cmd{bg} için varsayılan), \texttt{-} ise bir öncekini gösterir.
+  \item \cmd{fg \%3} \cmd{yes}'i ön plana getirir (kabuk komut satırını yazdırır); \textbf{Ctrl+C} (\texttt{\^{}C}) onu sonlandırır.
+  \item \cmd{kill \%1 \%2} $1$ ve $2$ numaralı işlere SIGTERM gönderir. Kabuk \texttt{Terminated} iletisini bir kez, bir sonraki istemden hemen önce bildirir; ikinci \cmd{jobs} hiçbir şey yazdırmaz.
+\end{itemize}
+
+\subsection{İşleri ve süreçleri adlandırmak; \texttt{\$\$} ve \texttt{\$!}}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{>{\ttfamily}l >{\raggedright\arraybackslash}X >{\ttfamily}l}
+\toprule
+\textbf{\rmfamily Yazdığınız} & \textbf{Anlamı} & \textbf{\rmfamily Örnek}\\
+\midrule
+\%1, \%2, \dots & bu kabuğun $n$ numaralı işi & fg \%2, kill \%1\\
+\%+ \textrm{ya da} \%\% & geçerli iş (\texttt{+} ile işaretli) & fg\\
+\%- & bir önceki iş (\texttt{-} ile işaretli) & bg \%-\\
+\%sleep & komutu \texttt{sleep} ile başlayan iş & kill \%sleep\\
+1970 & bir PID: her terminalde ve her araçla geçerli & kill 1970\\
+\$\$ & geçerli kabuğun PID'si & echo \$\$\\
+\$! & en son arka plan işinin PID'si & kill \$!\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+İş numaraları yalnızca işleri başlatan kabuğun içinde vardır: ikinci bir terminalin kendi \texttt{[1]}'i olur. PID'ler ise geneldir. \textbf{Dikkat:} \cmd{kill 1} (\texttt{\%} olmadan) 1 numaralı işi değil, PID~$1$'i belirtir --- Kısım~\ref{sec:errors}'daki sık hatalara bakın. \verb|$$| ve \verb|$!| değişkenleri 14.~haftanın betiklerinde işe yarayacak.
+
+% =====================================================================
+\section{Sinyaller}
+\label{sec:signals}
+
+\subsection{Sinyal nedir?}
+
+\term{Sinyal} (signal), çekirdeğin bir sürece ilettiği küçük, numaralı bir bildirimdir. 2.~haftadaki donanım kesmesinin yazılımdaki karşılığıdır: bir kesme işlemcinin yaptığı işi bırakıp bir işleyici çalıştırmasına yol açar; bir sinyal ise tek bir \emph{sürecin} yaptığı işi bırakıp tepki vermesine yol açar. Sinyalleri kullanıcılar (tuşlar, \cmd{kill} komutu), başka süreçler ve çekirdeğin kendisi gönderir (örneğin bir çocuk sonlandığında SIGCHLD, geçersiz bir bellek erişiminden sonra SIGSEGV).
+
+Çekirdek sinyali \emph{bekleyen} (pending) olarak işaretler ve hedef sürece iletir; süreç üç biçimde tepki verir: o sinyalin \emph{varsayılan eylemi} (sonlan, dur, sürdür ya da yok say), kendi \emph{işleyici} (handler) fonksiyonu (sinyali \emph{yakalamak}) ya da sinyali yok saymak. İki sinyal özeldir: \textbf{SIGKILL (9)} ve \textbf{SIGSTOP (19)} ne yakalanabilir ne de yok sayılabilir --- çekirdek tek başına davranır. Sıradan kullanıcılar yalnızca kendi süreçlerine sinyal gönderebilir; \texttt{root} herkesinkine gönderebilir (bir koruma kuralı, 11.~hafta).
+
+\begin{histnote}[Tarihsel not: neden ``kill'' ve ``hang up''?]
+İlk UNIX'te sinyal gönderen komuta \cmd{kill} (öldür) adı verildi, çünkü sinyallerin çoğunun varsayılan eylemi süreci sonlandırmaktır; \cmd{kill -STOP} ya da \cmd{kill -CONT} hiçbir şeyi öldürmese de ad kaldı. SIGHUP (``hang up'', telefonu kapatmak) ise terminallerin telefon hatları ve modemlerle bağlandığı dönemden gelir: hat kapandığında o oturumun süreçleri SIGHUP alırdı. Bugün bir terminal penceresini ya da bir SSH bağlantısını kapatmak aynı şeyi yapar.
+\end{histnote}
+
+\subsection{Sinyal tablosu}
+\label{sec:sigtable}
+
+\cmd{kill -l}, Linux'un $64$ sinyal numarasının tümünü listeler (aşağıda ilk satırlar; tam liste \texttt{code/\allowbreak out\_signals.txt} dosyasında). \cmd{kill -l 15} bir numarayı ada, \cmd{kill -l KILL} bir adı numaraya çevirir.
+
+\lstinputlisting[style=wterm,firstline=1,lastline=4]{../code/out_signals.txt}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{c >{\ttfamily}l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{3.2cm} c}
+\toprule
+\textbf{No.} & \textbf{\rmfamily Ad} & \textbf{Gönderen} & \textbf{Varsayılan eylem} & \textbf{Yakalanır mı?}\\
+\midrule
+1 & SIGHUP & terminalin ya da SSH oturumunun kapanması & sonlan & evet\\
+2 & SIGINT & Ctrl+C & sonlan & evet\\
+3 & SIGQUIT & Ctrl+\textbackslash & sonlan + bellek dökümü & evet\\
+9 & SIGKILL & \cmd{kill -9}: son çare & hemen sonlan & \textbf{hayır}\\
+11 & SIGSEGV & geçersiz bir bellek erişiminden sonra çekirdek (7.~hafta) & sonlan + bellek dökümü & evet\\
+15 & SIGTERM & \cmd{kill} (varsayılan), \cmd{pkill}, \cmd{killall}, sistemin kapatılması & sonlan & evet\\
+17 & SIGCHLD & bir çocuk sonlandığında ya da durduğunda çekirdek & yok say & evet\\
+18 & SIGCONT & \cmd{fg}, \cmd{bg}, \cmd{kill -CONT} & durmuşsa sürdür & evet\\
+19 & SIGSTOP & \cmd{kill -STOP} & dur & \textbf{hayır}\\
+20 & SIGTSTP & Ctrl+Z & dur & evet\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Numaralar x86 ve ARM üzerindeki Linux'unkilerdir; bazıları başka UNIX sistemlerinde farklıdır, bu yüzden adlar numaralardan daha güvenlidir (her yerde aynı olan $9$ ve $15$ dışında). Adı ön ekle ya da ön eksiz yazabilirsiniz: \cmd{kill -TERM}, \cmd{kill -SIGTERM} ve \cmd{kill -15} eşdeğerdir. (``Bellek dökümü'', İngilizce \emph{core dump}: sürecin belleğinin hata ayıklama için bir dosyaya yazılması.)
+
+\subsection{SIGTERM, SIGKILL, SIGINT ve çıkış durumu}
+
+\lstinputlisting[style=wterm,firstline=19,lastline=32]{../code/out_signals.txt}
+
+Yerleşik \cmd{wait \$!} komutu arka plan işinin bitmesini bekler ve kabuğun işin \emph{nasıl} bittiğini bildirmesini sağlar: \texttt{Terminated} (SIGTERM), \texttt{Killed} (SIGKILL) ya da \texttt{Interrupt} (SIGINT: tam çıktı dosyasındaki \cmd{kill -INT} ile yapılan üçüncü deney \texttt{Interrupt} yazdırır). Ardından son komutun çıkış durumu (exit status) olan \verb|$?| sinyali kodlar:
+
+\begin{keyidea}[Sinyalle öldürülen bir sürecin çıkış durumu]
+Bir süreç $n$ numaralı sinyalle sonlandırılırsa kabuk onun çıkış durumunu $128 + n$ yapar:
+\[
+\text{SIGTERM: } 128 + 15 = 143, \qquad \text{SIGKILL: } 128 + 9 = 137, \qquad \text{SIGINT: } 128 + 2 = 130 .
+\]
+Normal bir çıkış $0$ ile $127$ arasında bir durum verir (başarı için genellikle $0$). Tersine, $s > 128$ olan bir durum ``$s - 128$ numaralı sinyalle öldürüldü'' demektir.
+\end{keyidea}
+
+\subsection{Duraklatmak ve sürdürmek: SIGSTOP ve SIGCONT}
+
+\lstinputlisting[style=wterm,firstline=40,lastline=52]{../code/out_signals.txt}
+
+\cmd{kill -STOP} \cmd{sleep}'i \texttt{T} durumuna sokar --- Ctrl+Z'nin ürettiği durumun ta kendisi; kabuğun işi \texttt{Stopped} olarak bildirmesinin nedeni budur. \cmd{kill -CONT} sürmesini sağlar (yeniden \texttt{S}). \cmd{fg} ve \cmd{bg}'nin içeride yaptığı da budur: SIGCONT gönderirler.
+
+\subsection{Süreçleri adlarıyla seçmek: \texttt{pgrep}, \texttt{pkill}, \texttt{killall}}
+\label{sec:pkill}
+
+\lstinputlisting[style=wterm,firstline=53,lastline=71]{../code/out_signals.txt}
+
+\cmd{pgrep}, adı bir kalıpla eşleşen süreçlerin PID'lerini yazdırır (\cmd{-l} adı ekler, \cmd{-c} sayar); \cmd{pkill} onlara bir sinyal gönderir (varsayılan SIGTERM); \cmd{killall} aynısını tam bir program adıyla yapar. Son \cmd{pgrep} hiçbir şey bulamaz ve çıkış durumu $1$'dir. \textbf{Her zaman \cmd{-u student} ekleyin} (kendi kullanıcı adınız): bu seçenek olmadan araçlar başka kullanıcıların süreçlerine de sinyal göndermeyi dener; bu ``Operation not permitted'' ile başarısız olur --- root olarak çalıştırılırsa ise onları gerçekten öldürür. \cmd{pkill}'i kullanmadan önce kalıbı \cmd{pgrep} ile deneyin: \cmd{pkill -u student bash} bütün terminallerinizi kapatırdı.
+
+\subsection{Sinyalleri yakalamak: \texttt{catch.c}}
+
+Bir program sinyallerin çoğu için kendi \emph{işleyicisini} kurabilir. \texttt{code/catch.c} programı SIGINT ve SIGTERM'i yakalar, ayrıca SIGKILL için bir işleyici kurmayı dener --- ve başaramaz. Listede programın özü görülüyor; tam dosya \texttt{\#include} satırlarını, \texttt{struct sigaction} hazırlığını ve başlangıç iletisini ekler:
+
+\lstinputlisting[caption={}]{../code/catch_excerpt.c}
+
+\cmd{gcc -Wall -O2} ile derlendi (uyarı yok) ve \texttt{\textasciitilde/lab/src} içinde çalıştırıldı:
+
+\lstinputlisting[style=wterm,firstline=1,lastline=24]{../code/out_catch.txt}
+
+SIGKILL işleyicisinin kurulumu başarısız olur (\texttt{Invalid argument}): çekirdek onu reddeder. Ctrl+C ve \cmd{kill -INT} artık programı sonlandırmaz --- işleyici çalışır ve program devam eder. Ctrl+Z onu hâlâ durdurur (SIGTSTP yakalanmıyor) ve \cmd{bg} sürdürür. SIGTERM programın temizlik yapıp normal biçimde çıkmasını sağlar (\cmd{jobs} \texttt{Terminated} değil, \texttt{Done} bildirir); \cmd{kill -9} ise her zaman işe yarar (\texttt{Killed}).
+Bir arka plan işinin yazdırdığı iletiler imleç neredeyse oraya --- istemin hemen arkasına --- basılır; bu yüzden yazdığınız sonraki komut yeni bir satırda başlar. Tuhaf görünür ama normaldir.
+
+\subsection{Bir süreci güvenle durdurmak}
+
+\begin{keyidea}[Önce rica et, en son zorla]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Ön plan işi: Ctrl+C'ye basın (SIGINT).
+  \item Değilse: \cmd{kill PID} (SIGTERM) ve $5$--$10$ saniye bekleyin.
+  \item \cmd{ps -p PID} ile hâlâ orada olup olmadığına ve hangi durumda olduğuna bakın.
+  \item Ancak ondan sonra: \cmd{kill -9 PID} (SIGKILL).
+\end{enumerate}
+\end{keyidea}
+
+\textbf{\cmd{kill -9} hakkında uyarı.} SIGKILL programa açık belgeleri kaydetme, tamponları boşaltma ya da geçici ve kilit dosyalarını silme fırsatı vermez; sonrasında bir veritabanının onarılması gerekebilir ve programın çocuklarına haber verilmez. Bazen \cmd{kill -9} hiç işe yaramaz: bir zombi (\texttt{Z}) zaten ölüdür (Kısım~\ref{sec:zombie}); \texttt{D} durumundaki bir süreç sinyali ancak disk G/Ç'si bittiğinde alır; başka bir kullanıcının sürecine ise sinyal gönderilemez (``Operation not permitted'').
+
+\subsection{SIGHUP ve \texttt{nohup}}
+\label{sec:nohup}
+
+Bir terminali (ya da bir SSH bağlantısını) kapattığınızda kabuğun işleri SIGHUP alır ve varsayılan olarak sonlanır. \cmd{nohup komut}, SIGHUP'ı yok sayan bir komut başlatır. Bu oturumda terminalin kapanmasını \cmd{kill -HUP} ile taklit ediyoruz:
+
+\lstinputlisting[style=wterm,firstline=1,lastline=23]{../code/out_nohup.txt}
+
+Yalın \cmd{sleep 500} sona erdi (\texttt{Hangup}), iki \cmd{nohup} işi çalışmayı sürdürdü. Bir \cmd{nohup} komutunun çıktısı terminale gidiyorsa \cmd{nohup} onu \texttt{nohup.out} dosyasına yönlendirir (ve bunu söyler: ileti istemden sonra çıktı, çünkü arka plandaki \cmd{nohup} onu bir an sonra yazdırdı). Temiz biçim şudur:
+\begin{lstlisting}[style=term]
+nohup long_command > run.log 2>&1 &
+\end{lstlisting}
+Bu biçim 12.~haftanın yönlendirmelerini kullanır. Tipik kullanım: SSH üzerinden uzak bir sunucuda uzun bir iş başlatın, oturumu kapatın ve \texttt{run.log} dosyasına daha sonra bakın.
+
+% =====================================================================
+\section{Öncelikler: \texttt{nice} ve \texttt{renice}}
+\label{sec:nice}
+
+5.~haftada öncelikli zamanlamayla ve işlemciyi çalıştırılabilir süreçler arasında bir \emph{ağırlıkla} orantılı olarak paylaştıran Linux zamanlayıcısıyla tanışmıştık. Ağırlık, $-20$ ile $+19$ arasında bir tamsayı olan \term{nice değerinden} (nice value) gelir ($40$ değer, varsayılan $0$). 5.~haftadaki gibi \emph{küçük} sayı \emph{yüksek} öncelik demektir: nice değeri yüksek bir süreç ötekilere karşı ``naziktir'' (nice). \cmd{top} önceliği $\text{PR} = 20 + \text{NI}$ olarak gösterir.
+
+\lstinputlisting[style=wterm,firstline=1,lastline=28]{../code/out_nice.txt}
+
+\begin{itemize}
+  \item Argümansız \cmd{nice} geçerli nice değerini yazdırır: $0$. \cmd{nice -n 10 komut} bir komutu nice değeri $10$ ile başlatır; \cmd{ps} \texttt{NI 10} ve \texttt{N} bayrağını (\texttt{RN}) gösterir.
+  \item \cmd{renice -n 15 -p PID} çalışan bir sürecin değerini değiştirir. \cmd{renice} iletisinde buna ``priority'' der; kastedilen nice değeridir. Değeri yükseltmek ($10 \to 15$) serbesttir; yeniden düşürmek ($15 \to 5$) sıradan kullanıcılar için \texttt{Permission denied} ile sonuçlanır --- yoksa herkes $-20$ ayarlardı. \cmd{nice -n -5} bir uyarı yazdırır ve komutu nice $0$ ile çalıştırır.
+  \item Son deney, 5.~haftanın ölçümünü \cmd{yes} ile tekrarlar: işlemci yoğun iki süreç \cmd{taskset -c 1} ile aynı çekirdeğe bağlanır (bağlanmasalardı her biri kendi çekirdeğini alır ve ikisi de yaklaşık \%100 gösterirdi).
+\end{itemize}
+
+\begin{example}[Çözümlü örnek: işlemci paylarını öngörmek]
+Çekirdeğin nice $0$ için ağırlığı $1024$, nice $10$ için $110$'dur (her nice adımı ağırlığı yaklaşık $1.25$ katı değiştirir ve $1.25^{10} \approx 9.31$). Tek çekirdekteki işlemci yoğun iki süreç şu payları alır:
+\[
+\frac{1024}{1024 + 110} \approx 90.3\,\%, \qquad \frac{110}{1024 + 110} \approx 9.7\,\%, \qquad \text{oran } \frac{1024}{110} \approx 9.31 .
+\]
+Biz \%89,3 ve \%9,6 ölçtük; oran $89.3 / 9.6 \approx 9.30$. (İki değerin toplamı tam olarak \%100 etmez, çünkü \cmd{ps} her sürecin ömrü boyunca ortalama alır ve iki süreç tam aynı anda başlamadı. Sayılar \texttt{code/check\_numbers.py} ile denetlendi.)
+\end{example}
+
+\texttt{root} olarak \cmd{sudo renice -n -5 -p PID} işe yarardı (11.~hafta) --- ama paylaşılan bir makinede kendi süreçlerinize herkesinkinden yüksek öncelik vermeyin.
+
+% =====================================================================
+\section{Zombiler ve Yetimler, Görünür Hâlde}
+\label{sec:zombie}
+
+3.~hafta \term{zombiyi} (zombie), sonlanmış ama ebeveyni çıkış durumunu henüz \cmd{wait()} ile toplamamış bir süreç olarak tanımlamıştı. Çekirdek onun belleğini zaten serbest bırakmış ve dosyalarını kapatmıştır; geriye yalnızca PID'yi ve çıkış durumunu tutan süreç tablosu girdisi kalır. 3.~haftada bir zombiyi bir kabuk hilesiyle üretmiştik; şimdi bunu bilerek yapan en küçük C programını yazıyoruz, \texttt{code/zombie.c}:
+
+\lstinputlisting[caption={}]{../code/zombie_excerpt.c}
+
+Listede programın özü görülüyor; tam dosya \texttt{\#include} satırlarını ekler, \texttt{secs} değerini komut satırından okur (varsayılan $30$) ve başarısız bir \cmd{fork()} durumunu denetler. Çocuk hemen $7$ durumuyla çıkar; ebeveyn \texttt{secs} saniye boyunca \cmd{wait()} çağır\emph{madan} uyur, sonra çocuğu \cmd{waitpid()} ile toplar (reap). \texttt{zombie.c}'yi \texttt{\textasciitilde/lab/src} içine kopyalayıp çalıştırdık:
+
+\lstinputlisting[style=wterm,firstline=1,lastline=28]{../code/out_zombie.txt}
+
+\begin{itemize}
+  \item PID $3120$, yani çocuk, \texttt{Z} durumundadır; adı köşeli parantez içinde gösterilir ve \texttt{<defunct>} olarak işaretlenir; ebeveyni $3119$'dur. \texttt{/proc} da aynı fikirdedir: \texttt{State: Z (zombie)}. (\cmd{pgrep -n} eşleşen süreçlerin \emph{en yenisini} seçer; o da çocuktur.)
+  \item Zombiye \cmd{kill -9} göndermek \emph{hiçbir şey} yapmaz: zaten ölmüş olanı öldüremezsiniz.
+  \item Kabuğun \cmd{wait} komutu arka plan işi \texttt{./zombie}'yi bekler; $25$ saniye sonra ebeveyn \cmd{waitpid()} çağırır, $7$ çıkış durumunu alır ve zombi listeden kaybolur.
+\end{itemize}
+
+Birkaç zombi zararsızdır. Ancak bir döngü içinde çocuk oluşturup hiçbirini beklemeyen hatalı bir ebeveyn süreç tablosunu doldurabilir: PID'ler sınırlıdır (makinemizde \nolinkurl{/proc/sys/kernel/pid_max} $32768$'dir, yani en büyük PID $32767$) ve tablo dolunca yeni süreç oluşturulamaz. Çare \emph{ebeveyni} düzeltmek ya da sonlandırmaktır: ebeveyn sonlanınca zombi bir \term{yetime} (orphan) dönüşür, PID~$1$ (ya da bir ``subreaper'' süreci) tarafından evlat edinilir ve bu yeni ebeveyn onu hemen toplar (3.~hafta). Çekirdek ebeveynlere SIGCHLD sinyaliyle yardım eder; bu sinyal bir çocuk sonlandığında gönderilir ve iyi yazılmış bir ebeveyn buna \cmd{wait()} çağırarak tepki verir.
+
+% =====================================================================
+\section{Komut Başvuru Tablosu}
+
+{\small
+\renewcommand{\arraystretch}{1.18}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\ttfamily\raggedright\arraybackslash}p{3.85cm} >{\raggedright\arraybackslash}X @{\hspace{8pt}} >{\ttfamily\raggedright\arraybackslash}p{3.85cm} >{\raggedright\arraybackslash}X@{}}
+\toprule
+\multicolumn{2}{@{}l}{\textbf{İnceleme}} & \multicolumn{2}{l@{}}{\textbf{İş denetimi}}\\
+\midrule
+ps \textrm{/} ps -f & bu terminal (kısa/tam) & cmd \& & arka planda başlat\\
+ps -ef \textrm{/} ps aux & bütün süreçler & Ctrl+C \textrm{/} Ctrl+Z & ön plan işine SIGINT / SIGTSTP\\
+ps -u student & bir kullanıcının süreçleri & jobs \textrm{/} jobs -l & işleri listele (PID'lerle)\\
+ps -o pid,stat,cmd & sütunları seç & fg \%n \textrm{/} bg \%n & ön plana getir / arka planda sürdür\\
+ps -p PID & tek bir süreç & wait [\%n] & bir arka plan işini bekle\\
+ps --sort=-\%cpu & en yüksek işlemci önce & & \\
+\midrule
+\multicolumn{2}{@{}l}{\textbf{İnceleme (devam)}} & \multicolumn{2}{l@{}}{\textbf{Sinyaller}}\\
+\midrule
+pstree -p [PID] & PID'leriyle süreç ağacı & kill PID \textrm{/} kill \%n & SIGTERM (15)\\
+pgrep -u student -l name & PID'ler ve adlar (\texttt{-c} sayı, \texttt{-n} en yeni) & kill -INT \textrm{/} -HUP \textrm{/} -9 & SIGINT, SIGHUP, SIGKILL\\
+top \textrm{/} htop & canlı görünüm (q ile çıkılır) & kill -STOP \textrm{/} -CONT & duraklat / sürdür\\
+uptime \textrm{/} nproc & yük ortalaması / çekirdek sayısı & kill -l [n] & sinyalleri listele / numarayı ada çevir\\
+cat /proc/PID/status & metin olarak PCB & pkill -u student pat & ad kalıbıyla sinyal\\
+echo \$\$ \textrm{/} echo \$! & kabuğun / son arka plan işinin PID'si & killall -u student name & tam adla sinyal\\
+\midrule
+\multicolumn{2}{@{}l}{\textbf{Öncelik}} & \multicolumn{2}{l@{}}{\textbf{Oturum kapanınca sürmek}}\\
+\midrule
+nice -n 10 cmd & nice değeri 10 ile başlat & nohup cmd > log 2>\&1 \& & SIGHUP'ı yok say, çıktı \texttt{log}'a\\
+renice -n 15 -p PID & değiştir (kullanıcı: yalnızca yukarı) & taskset -c 1 cmd & yalnızca 1.~çekirdekte çalıştır (deneyler)\\
+\bottomrule
+\end{tabularx}
+}
+
+% =====================================================================
+\section{Sık Yapılan Hatalar ve Anlamları}
+\label{sec:errors}
+
+\begin{description}[leftmargin=0pt,itemsep=0.35em]
+  \item[\texttt{-bash: kill: (1) - Operation not permitted}] \cmd{kill 1} yazdınız ama 1 numaralı işi kastettiniz. \texttt{\%} olmadan sayı bir PID'dir ve PID~$1$ root'a aittir. \cmd{kill \%1} kullanın. (Gerçek çıktı, Laboratuvar Föyü çözümü B4.)
+  \item[\texttt{-bash: kill: \%6: no such job}] \emph{Bu} kabukta $6$ numaralı iş yok. \cmd{jobs} ile bakın; başka bir terminalin işlerine PID ile başvurulmalıdır.
+  \item[\texttt{renice: failed to set priority for ... Permission denied}] Sıradan bir kullanıcı nice değerini düşürmeye çalıştı. Yalnızca yükseltmeye izin vardır.
+  \item[\texttt{nice: cannot set niceness: Permission denied}] Sıradan kullanıcı olarak negatif bir nice değeri. Komut yine de nice $0$ ile çalışır.
+  \item[\texttt{pkill: killing pid ... failed: Operation not permitted}] Kalıp başka bir kullanıcının süreciyle de eşleşti. Kullanıcı adınızla \cmd{-u} ekleyin.
+  \item[İstem geri gelmiyor] Bir ön plan işi çalışıyor (\texttt{\&} koymayı unuttunuz). İşi bitirmek için Ctrl+C'ye, ya da arka planda sürdürmek için Ctrl+Z'ye ve ardından \cmd{bg}'ye basın.
+  \item[\texttt{[1]+ Stopped (tty input)}] Bir arka plan işi klavyeden okumak istedi (\cmd{nano \&} ya da \cmd{cat \&} deneyin). Onu \cmd{fg} ile ön plana getirin.
+  \item[\texttt{There are stopped jobs.}] Durdurulmuş işler varken \cmd{exit} yazdınız. Onları sürdürün ya da sonlandırın (\cmd{jobs}, \cmd{fg}, \cmd{kill \%n}); \cmd{exit}'i ikinci kez yazmak yine de çıkar ve durdurulmuş işler sonlandırılır.
+  \item[Bir \texttt{Z <defunct>} satırı \cmd{kill -9}'dan sağ çıkıyor] Zombi zaten ölüdür. Onu yalnızca ebeveyninin bir \cmd{wait()} çağrısı kaldırır; ebeveyni sonlandırın ya da düzeltin.
+  \item[\texttt{grep} kendi sonucunda görünüyor] \cmd{ps aux | grep sleep} gibi bir boru hattı \cmd{grep} sürecinin kendisini de listeler. Bunun yerine \cmd{pgrep -l sleep} kullanın.
+\end{description}
+
+Türkçe yerel ayarlı bir sistemde bu iletilerin bazıları Türkçe görünebilir; anlamları aynıdır.
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Sekiz cümlede 13. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Her komut, kabuğun \cmd{fork()} ve \cmd{exec()} ile oluşturduğu bir süreçtir; ön planda kabuk \cmd{wait()} çağırır, \texttt{\&} ile çağırmaz.
+  \item \cmd{ps} (\cmd{-f}, \cmd{-ef}, \cmd{aux}, \cmd{-o}) ve \cmd{pstree} anlık görüntü alır; \cmd{top}/\cmd{htop} canlı bir görünüm verir; \texttt{/proc/<pid>/status} PCB'yi gösterir.
+  \item STAT harfleri: R = hazır ya da çalışıyor, S/D = bekliyor, T = durdurulmuş (Linux eki), Z = sonlandı ama henüz toplanmadı.
+  \item Yük ortalaması işlemci isteyen süreçleri sayar; onu işlemci çekirdeği sayısıyla karşılaştırın.
+  \item Ctrl+Z ön plan işini durdurur, \cmd{bg} ve \cmd{fg} onu sürdürür, \cmd{jobs} işleri listeler; \texttt{\%n} bir işi, yalın bir sayı bir PID'yi adlandırır.
+  \item \cmd{kill} sinyal gönderir (varsayılan SIGTERM, 15); Ctrl+C SIGINT (2) gönderir; SIGKILL (9) ve SIGSTOP (19) yakalanamaz; $n$ sinyaliyle öldürülen bir sürecin çıkış durumu $128 + n$'dir.
+  \item \cmd{nohup} bir işi SIGHUP'tan korur; \cmd{nice}/\cmd{renice} kullanıcıların yalnızca yükseltebildiği $-20 \dots 19$ nice değerini ayarlar; nice $0$'a karşı nice $10$ işlemcinin yaklaşık $1/9.3$'ünü alır.
+  \item Bir zombi öldürülemez; onu yalnızca ebeveyninin \cmd{wait()} çağrısı (ya da ebeveynin ölümü ve PID~1'in onu evlat edinmesi) kaldırır.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\section{Sözlük}
+
+\begin{description}[leftmargin=0pt,itemsep=0.15em]
+  \item[Arka plan işi (background job)] \texttt{\&} ile başlatılan iş; kabuk onu beklemez.
+  \item[Durdurulmuş (stopped, T)] SIGTSTP ya da SIGSTOP ile duraklatılmış bir sürecin durumu; SIGCONT ile sürdürülür.
+  \item[İş (job)] Kabuğun başlattığı bir komut satırı (bir ya da daha çok süreç); \texttt{[1]}, \texttt{[2]}, \dots{} diye numaralanır.
+  \item[Nice değeri (nice value)] Bir sürecin işlemci ağırlığını belirleyen $-20$ ile $19$ arasında sayı; yüksek değer ``daha nazik'' (daha düşük öncelik) demektir.
+  \item[Ön plan işi (foreground job)] Klavye girdisini ve Ctrl+C ile Ctrl+Z sinyallerini alan tek iş.
+  \item[Sinyal (signal)] Çekirdeğin bir sürece ilettiği numaralı yazılımsal bildirim.
+  \item[SIGKILL / SIGTERM] 9 numaralı sinyal (yakalanamaz, hemen sonlandırır) / 15 numaralı sinyal (sonlanmak için kibar bir rica).
+  \item[Yetim (orphan)] Ebeveyni sonlanmış süreç; PID~1 tarafından evlat edinilir.
+  \item[Yük ortalaması (load average)] Çalışan, hazır ya da disk beklemesindeki süreçlerin $1$, $5$ ve $15$ dakika üzerinden ortalama sayısı.
+  \item[Zombi (zombie, Z)] Çıkış durumu ebeveyni tarafından henüz toplanmamış, sonlanmış süreç.
+\end{description}
+
+% =====================================================================
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Kendiniz deneyin: kendi makinenizde süreçler]
+\textbf{Linux} (laboratuvar bilgisayarları, WSL ya da bir sanal makine), \texttt{\textasciitilde/lab} içinde; iki programı \cmd{gcc -Wall -O2 -o zombie zombie.c} ve \cmd{gcc -Wall -O2 -o catch catch.c} ile derleyin.
+\begin{enumerate}[leftmargin=1.4em]
+  \item Bir terminalde \cmd{top}'u başlatın, başka bir terminalde \cmd{yes > /dev/null \&} komutunu üç kez çalıştırın. Bir dakika boyunca yük ortalamasının tırmanışını izleyin. Hangi değere yaklaşıyor?
+  \item \cmd{nano notes.txt} çalıştırın, Ctrl+Z'ye basın, \cmd{ls} çalıştırın, sonra \cmd{fg}. Metniniz hâlâ orada.
+  \item \texttt{catch.c}'yi SIGTSTP'yi de yakalayacak biçimde değiştirin. Şimdi Ctrl+Z'ye basınca ne olur?
+  \item \cmd{./zombie 60 \&} çalıştırın, zombiyi bulun, sonra \emph{ebeveyni} \cmd{kill PID} ile sonlandırın. Zombiye ne olur ve neden?
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item Kabuk \cmd{sleep 10} ve \cmd{sleep 10 \&} için neyi farklı yapar? \cmd{fork()}, \cmd{exec()} ve \cmd{wait()} sözcüklerini kullanın.
+  \item 3.~haftanın beş durumunun her birini \cmd{ps}'in gösterdiği harflerle eşleştirin. Hangi Linux durumunun 3.~haftada karşılığı yoktur?
+  \item \cmd{kill 3} ile \cmd{kill \%3} arasındaki fark nedir?
+  \item SIGTERM ile SIGKILL'i karşılaştırın. Neden önce SIGTERM denenmelidir? Hangi durumlarda SIGKILL bile bir süreci listeden kaldırmaz?
+  \item \cmd{fg} ve \cmd{bg} durdurulmuş bir işe ne gönderir ve aralarındaki fark nedir?
+  \item Sıradan bir kullanıcı nice değerini neden yükseltebilir ama düşüremez?
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item Bir iş bitti ve \verb|echo $?| $130$ yazdırıyor. Ne oldu? $129$ ve $137$ ne anlama gelirdi?
+  \item $4$ çekirdekli bir makine \texttt{load average: 6.00, 3.00, 1.00} gösteriyor. Her değeri yorumlayın. Yük artıyor mu, azalıyor mu?
+  \item İşlemci yoğun iki süreç tek bir çekirdeği paylaşıyor; birinin nice değeri $0$ (ağırlık $1024$), ötekininki $5$ (ağırlık $335$). İşlemci paylarını hesaplayın.
+  \item \cmd{top}'taki bir süreç \texttt{NI 19} gösteriyor. \texttt{PR} değeri nedir? Nice değeri $-20$ olan bir sürecin \texttt{PR} değeri nedir?
+  \item Bir kabuğun dört işi var. \cmd{yes > /dev/null \&} komutundan sonra sırasıyla \cmd{sleep 50 \&}, \cmd{sleep 60 \&}, \cmd{sleep 70} (ardından Ctrl+Z) yazıldı. Her birinin iş numarası nedir ve geçerli iş hangisidir?
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=7]
+  \item $130 = 128 + 2$: SIGINT (Ctrl+C) ile sonlandırıldı. $129 = 128 + 1$: SIGHUP (hat kapandı). $137 = 128 + 9$: SIGKILL.
+  \item $4$ çekirdeğe göre: son dakika $6/4 = 150\%$ (ortalama $6 - 4 = 2$ süreç işlemci bekliyor); son $5$ dakika $3/4 = 75\%$; son $15$ dakika $1/4 = 25\%$. $1$ dakikalık değer en büyüğüdür: yük artıyor.
+  \item $1024/(1024 + 335) = 1024/1359 \approx 75.3\%$ ve $335/1359 \approx 24.7\%$; oran $1024/335 \approx 3.06 \approx 1.25^{5} \approx 3.05$.
+  \item $\text{PR} = 20 + 19 = 39$; nice $-20$ için: $\text{PR} = 20 - 20 = 0$.
+  \item \cmd{yes} \texttt{[1]}, \cmd{sleep 50} \texttt{[2]}, \cmd{sleep 60} \texttt{[3]}, \cmd{sleep 70} \texttt{[4]} (durdurulmuş). Geçerli iş (\texttt{+}) en son durdurulan ya da başlatılan iştir, yani \texttt{[4]}; \texttt{[3]} \texttt{-} ile işaretlidir.
+\end{enumerate}
+
+% =====================================================================
+\section{İleriye Bakış: 14. Hafta}
+
+Gelecek hafta komutları dosyalara koyup programa dönüştürüyoruz: \textbf{Kabuk Betiklerine Giriş} (shell scripting). Shebang satırı olan betikler yazacak, onları \cmd{chmod +x} ile çalıştırılabilir yapacak; değişkenleri, tırnaklamayı, komut yerine koymayı \verb|$( )|, aritmetiği \verb|$(( ))|, konumsal parametreleri, \cmd{read}'i, çıkış durumu \verb|$?|'i, testleri, \texttt{if} deyimini, döngüleri ve fonksiyonları kullanacaksınız. Bu haftanın konuları hemen geri dönüyor: arka plan işlerini yönetmek için \verb|$$| ve \verb|$!|, onları beklemek için \cmd{wait} ve bir betik bir komutun neden başarısız olduğunu denetlerken $128 + n$ kuralı. 15.~hafta final sınavı tekrarıdır.
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley: Bölüm~3 (Processes), özellikle Kısım~3.1--3.3 (süreç kavramı, zamanlama, süreçler üzerindeki işlemler) ve Linux zamanlaması (nice değerleri) üzerine Kısım~5.7.
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}:
+  \begin{itemize}
+    \item Bölüm~4, ``The Abstraction: The Process'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf}
+    \item Bölüm~5, ``Interlude: Process API'' (fork, exec, wait, sinyaller, \cmd{ps}, \cmd{top}, \cmd{kill}): \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-api.pdf}
+  \end{itemize}
+  \item GNU Bash kılavuzu, ``Job Control'' bölümü: \url{https://www.gnu.org/software/bash/manual/html_node/Job-Control.html}
+\end{itemize}
+
+% =====================================================================
+\section{Laboratuvar Föyü}
+\label{sec:lab}
+
+\textbf{Hazırlık:} \cmd{bash mcmp117\_lab\_setup.sh}, ardından \cmd{cd \textasciitilde/lab}. 13.~haftanın \texttt{code/} klasöründeki \texttt{zombie.c} dosyasını \texttt{\textasciitilde/lab/src} içine kopyalayın. Deneme süreci olarak yalnızca \cmd{sleep} ve \cmd{yes} kullanın ve \texttt{student} yerine kendi kullanıcı adınızı yazın. Her alıştırma için komut satır(lar)ını ve ilgili çıktıyı yazın ve soruyu yanıtlayın. Puanlar köşeli parantez içinde, toplam $100$. Çözümler Kısım~\ref{sec:sol}'da; önce kendiniz deneyin!
+
+\subsection*{Bölüm A --- Süreçleri incelemek (26 puan)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{A\arabic*}]
+  \item {[4]} Kabuğunuzun PID'sini yazdırın ve aynı numarayı \cmd{ps} çıktısında bulun.
+  \item {[5]} \cmd{ps -f} çalıştırın. \cmd{ps} sürecinin PPID'si nedir ve neden \verb|$$|'a eşittir?
+  \item {[6]} \cmd{sleep 1000 \&} başlatın. \texttt{/proc/\$!/status} kullanarak \texttt{State} ve \texttt{PPid} değerlerini bildirin. Bu hangi 3.~hafta durumudur?
+  \item {[5]} İki \cmd{sleep} işi daha başlatın ve \cmd{pstree -p \$\$} komutunun yazdırdığı ağacı çizin.
+  \item {[6]} \cmd{yes > /dev/null \&} başlatın ve bu terminaldeki bütün süreçlerin \texttt{pid}, \texttt{stat} ve \texttt{cmd} değerlerini gösterin. \cmd{yes}'in neden \texttt{R}, \cmd{sleep}'in neden \texttt{S} olduğunu açıklayın.
+\end{enumerate}
+
+\subsection*{Bölüm B --- İş denetimi (24 puan)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{B\arabic*}]
+  \item {[6]} \cmd{sleep 500}'ü ön planda çalıştırın ve Ctrl+Z ile durdurun. Onu \cmd{jobs} ile, \texttt{STAT} değerini \cmd{ps} ile gösterin.
+  \item {[6]} B1'deki işi arka planda sürdürün. Yeniden çalıştığını \cmd{jobs -l} ve \cmd{ps} ile kanıtlayın.
+  \item {[6]} Arka planda üç \cmd{sleep} işi başlatın. 2 numaralı işi ön plana getirin ve Ctrl+C ile bitirin. \cmd{jobs} şimdi ne gösterir?
+  \item {[6]} \cmd{kill 1}, ardından \cmd{kill \%1} yazın. İki farklı sonucu açıklayın.
+\end{enumerate}
+
+\subsection*{Bölüm C --- Sinyaller (26 puan)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{C\arabic*}]
+  \item {[8]} Üç \cmd{sleep 300 \&} işini sırasıyla SIGTERM, SIGKILL ve SIGINT ile bitirin. Her birinden sonra \cmd{wait \$!} ve \cmd{echo \$?} çalıştırın. Üç sayıyı açıklayın.
+  \item {[6]} Arka plandaki bir \cmd{sleep}'i \cmd{kill -STOP} ile duraklatın, \cmd{kill -CONT} ile sürdürün; her adımdan sonra \texttt{STAT} değerini gösterin.
+  \item {[6]} \cmd{sleep 901}, \cmd{sleep 902} ve \cmd{sleep 903}'ü arka planda başlatın. \cmd{sleep} süreçlerinizi \cmd{pgrep} ile sayın, hepsini tek bir komutla sonlandırın ve yeniden sayın.
+  \item {[6]} \cmd{sleep 800 \&} ve \cmd{nohup sleep 900 > /dev/null 2>\&1 \&} başlatın. İki işe de SIGHUP gönderin. Hangisi sağ kalır ve neden?
+\end{enumerate}
+
+\subsection*{Bölüm D --- Öncelik, zombiler ve meydan okumalar (24 puan)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{D\arabic*}]
+  \item {[7]} \cmd{sleep 600}'ü nice değeri $15$ ile başlatın ve \texttt{NI} ile \texttt{STAT} değerlerine bakın. Nice değerini $19$'a yükseltin, sonra yeniden $0$'a ayarlamayı deneyin. Sonucu açıklayın.
+  \item {[8]} \texttt{zombie.c}'yi \cmd{gcc -Wall -O2} ile derleyin, \cmd{./zombie 30 \&} çalıştırın ve zombiyi \cmd{ps} ile gösterin. Ona \cmd{kill -9} deneyin. Ne olur ve onu sonunda ne kaldırır?
+  \item {[4]} \emph{Meydan okuma.} Tek bir komut satırıyla, \texttt{\%CPU} değeri en yüksek üç sürecinizi (başlık satırıyla birlikte) gösterin.
+  \item {[5]} \emph{Meydan okuma (12.~hafta).} Tek bir boru hattıyla, süreçlerinizden kaçının hangi durumda olduğunu sayın (\texttt{STAT}'ın ilk harfi).
+\end{enumerate}
+
+% =====================================================================
+\section{Laboratuvar Föyü Çözümleri}
+\label{sec:sol}
+
+Çözümler yeni oluşturulmuş bir laboratuvarda çalıştırıldı. Öğretici kısımlarda zaten görünen çıktılara başvuru yapılıyor; ötekiler (A3, A5, B4, C3, D1, D3, D4) \texttt{code/demo\_lab.sh} betiğinden gelir ve tam gerçek çıktıları \texttt{code/out\_lab.txt} dosyasındadır. Sizin PID'leriniz farklı olacaktır. Başka doğru çözümler de vardır; önemli olan doğru sonuç ve mantıklı bir açıklamadır.
+
+{\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{longtable}{@{}p{0.6cm}>{\raggedright\arraybackslash}p{7.3cm}>{\raggedright\arraybackslash}p{7.6cm}@{}}
+\toprule
+& \textbf{Komut satır(lar)ı} & \textbf{Beklenen çıktı / yanıt}\\
+\midrule
+\endhead
+\textbf{A1} & \texttt{echo \$\$}\newline \texttt{ps} & \texttt{1913} gibi bir sayı; \cmd{ps} içinde bu PID'ye sahip satır \texttt{bash}'tir (Kısım~\ref{sec:ps}).\\
+\textbf{A2} & \texttt{ps -f} & \texttt{ps -f}'in PPID'si kabuğun PID'sine eşittir: \cmd{ps}'e dönüşen süreci kabuk fork etti.\\
+\textbf{A3} & \texttt{sleep 1000 \&}\newline \texttt{grep -E '\textasciicircum(State|PPid)' /proc/\$!/status} & \texttt{State: S (sleeping)}, \texttt{PPid:} kabuğun PID'si (\texttt{out\_lab.txt} içinde \texttt{3207}). 3.~hafta durumu: \emph{bekliyor} (bir zamanlayıcıyı).\\
+\textbf{A4} & \texttt{sleep 2000 \& sleep 3000 \&}\newline \texttt{pstree -p \$\$} & Çocukları \texttt{pstree} ve üç \texttt{sleep} süreci olan \texttt{bash(PID)}, Kısım~\ref{sec:ps}'teki gibi.\\
+\textbf{A5} & \texttt{yes > /dev/null \&}\newline \texttt{ps -o pid,stat,cmd} & \texttt{yes} \texttt{R}'dir: her zaman işlemci ister (hazır ya da çalışıyor). \texttt{sleep} \texttt{S}'dir: zamanlayıcısını bekler. \texttt{ps}'in kendisi \texttt{R+}, \texttt{-bash} \texttt{Ss}'dir.\\
+\textbf{B1} & \texttt{sleep 500}, sonra Ctrl+Z\newline \texttt{jobs}\newline \texttt{ps -o pid,stat,cmd} & \texttt{[1]+ Stopped sleep 500}; \texttt{STAT T} (Kısım~\ref{sec:jobs}).\\
+\textbf{B2} & \texttt{bg}\newline \texttt{jobs -l}\newline \texttt{ps -o pid,stat,cmd} & \texttt{[1]+ sleep 500 \&}, sonra \texttt{Running}; yeniden \texttt{STAT S}.\\
+\textbf{B3} & \texttt{sleep 100 \& sleep 200 \& sleep 300 \&}\newline \texttt{fg \%2}, sonra Ctrl+C\newline \texttt{jobs} & \cmd{jobs} yalnızca 1 ve 3 numaralı işleri \texttt{Running} olarak listeler; 2 numaralı iş bitti (\texttt{Terminated} iletisi yok: ön planda bitti).\\
+\textbf{B4} & \texttt{kill 1}\newline \texttt{kill \%1} & \texttt{-bash: kill: (1) - Operation not permitted}: \cmd{kill 1} root'a ait PID~1'i hedefler. \cmd{kill \%1} 1 numaralı işi sonlandırır (sonraki istemde \texttt{Terminated}).\\
+\textbf{C1} & \texttt{sleep 300 \&}\newline \texttt{kill \$!} \quad\textrm{(sonra \texttt{-9}, \texttt{-INT})}\newline \texttt{wait \$!; echo \$?} & $143$, $137$, $130$ = $128 + 15$, $128 + 9$, $128 + 2$ (Kısım~\ref{sec:signals}).\\
+\textbf{C2} & \texttt{sleep 300 \&}\newline \texttt{kill -STOP \$!; ps -o pid,stat,cmd -p \$!}\newline \texttt{kill -CONT \$!; ps -o pid,stat,cmd -p \$!} & \texttt{T}, sonra \texttt{S}.\\
+\textbf{C3} & \texttt{pgrep -c -u student sleep}\newline \texttt{pkill -u student sleep}\newline \texttt{pgrep -c -u student sleep} & \texttt{3}, üç \texttt{Terminated} iletisi, sonra \texttt{0}. (Önceki alıştırmalardan kalan işler hâlâ çalışıyorsa ilk sayı daha büyüktür.)\\
+\textbf{C4} & \texttt{sleep 800 \&}\newline \texttt{nohup sleep 900 > /dev/null 2>\&1 \&}\newline \texttt{kill -HUP \%1 \%2; jobs} & \texttt{sleep 800}: \texttt{Hangup}. \cmd{nohup} işi \texttt{Running} olarak sürer: \cmd{nohup}, \cmd{sleep}'i exec etmeden önce SIGHUP'ı ``yok say'' olarak ayarladı (Kısım~\ref{sec:nohup}).\\
+\textbf{D1} & \texttt{nice -n 15 sleep 600 \&}\newline \texttt{ps -o pid,ni,stat,cmd -p \$!}\newline \texttt{renice -n 19 -p \$!}\newline \texttt{renice -n 0 -p \$!} & \texttt{NI 15}, \texttt{STAT SN}; \texttt{old priority 15, new priority 19}; sonra \texttt{Permission denied}: kullanıcılar nice değerini yalnızca yükseltebilir.\\
+\textbf{D2} & \texttt{gcc -Wall -O2 -o zombie zombie.c}\newline \texttt{./zombie 30 \&}\newline \texttt{ps -o pid,ppid,stat,cmd}\newline \texttt{kill -9 <çocuk PID>} & Çocuk \texttt{Z} ve \texttt{[zombie] <defunct>} gösterir. \cmd{kill -9} hiçbir şeyi değiştirmez: süreç zaten ölü. $30$~s sonra ebeveynin \cmd{waitpid()} çağrısı onu toplar (Kısım~\ref{sec:zombie}); ebeveyni öldürmek de onu kaldırırdı (PID~1'in evlat edinmesi).\\
+\textbf{D3} & \texttt{ps -u student -o pid,stat,\%cpu,cmd --sort=-\%cpu | head -4} & Başlık artı üç satır; en üstte yaklaşık \%98 ile \cmd{yes} (\texttt{head -4} = başlık + $3$).\\
+\textbf{D4} & \texttt{ps -u student -o stat= | cut -c1 | sort | uniq -c} & Bizim çalıştırmamızda \texttt{2 R} (\cmd{yes}, \cmd{ps}) ve \texttt{5 S} (\texttt{-bash}, \texttt{sleep 600}, \cmd{cut}, \cmd{sort}, \cmd{uniq}). \texttt{stat=} sütunu başlıksız yazdırır; \cmd{cut -c1} durum harfini tutar; \cmd{sort | uniq -c} sayar (12.~hafta). Boru hattının kendi süreçleri de sayılır.\\
+\bottomrule
+\end{longtable}
+}

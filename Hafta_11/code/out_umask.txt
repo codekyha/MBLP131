@@ -1,0 +1,27 @@
+student@okan-lab:~/lab$ mkdir umask_test
+student@okan-lab:~/lab$ cd umask_test
+student@okan-lab:~/lab/umask_test$ umask
+0002
+student@okan-lab:~/lab/umask_test$ umask -S
+u=rwx,g=rwx,o=rx
+student@okan-lab:~/lab/umask_test$ touch f_002
+student@okan-lab:~/lab/umask_test$ mkdir d_002
+student@okan-lab:~/lab/umask_test$ umask 022
+student@okan-lab:~/lab/umask_test$ touch f_022
+student@okan-lab:~/lab/umask_test$ mkdir d_022
+student@okan-lab:~/lab/umask_test$ umask 077
+student@okan-lab:~/lab/umask_test$ touch f_077
+student@okan-lab:~/lab/umask_test$ mkdir d_077
+student@okan-lab:~/lab/umask_test$ umask 033
+student@okan-lab:~/lab/umask_test$ touch f_033
+student@okan-lab:~/lab/umask_test$ mkdir d_033
+student@okan-lab:~/lab/umask_test$ umask 002
+student@okan-lab:~/lab/umask_test$ stat -c '%a  %A  %n' f_* d_*
+664  -rw-rw-r--  f_002
+644  -rw-r--r--  f_022
+644  -rw-r--r--  f_033
+600  -rw-------  f_077
+775  drwxrwxr-x  d_002
+755  drwxr-xr-x  d_022
+744  drwxr--r--  d_033
+700  drwx------  d_077

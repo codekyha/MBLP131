@@ -1,0 +1,692 @@
+% ============================ Hafta 8 gövdesi ============================
+% Vize (1--7. haftalar) çalışma kılavuzu + formül kâğıdı + çözümlü deneme sınavı.
+% "Üretilmiş" diye işaretlenen tablolar ../code/gen_tables.py ile ../code/osim.py benzeticilerinden
+% üretilir; Türkçe başlıklı kopyaları ../code/make_tex_tr.py yazar (../code/tex_tr/).
+\setlength{\emergencystretch}{3em}
+\tcbset{breakable}
+% Gantt şeması yardımcıları (5. hafta notlarıyla aynı makro ve renkler)
+\definecolor{amber}{HTML}{C98A1B}
+\colorlet{colP1}{mint}\colorlet{txtP1}{dark}
+\colorlet{colP2}{slate}\colorlet{txtP2}{white}
+\colorlet{colP3}{amber}\colorlet{txtP3}{white}
+\colorlet{colP4}{charcoal}\colorlet{txtP4}{white}
+% \gantt{ms başına cm}{P/başlangıç/bitiş, ...}
+\newcommand{\gantt}[2]{%
+\begin{tikzpicture}[x=#1cm,y=1cm]
+\foreach \p/\a/\b in {#2} {
+  \fill[col\p] (\a,0) rectangle (\b,0.62);
+  \draw[white,line width=1.2pt] (\a,0) -- (\a,0.62);
+  \node[font=\small\bfseries,text=txt\p] at ({(\a+\b)/2},0.31) {\p};
+  \draw[muted] (\a,0) -- (\a,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1.5pt] {\a};
+  \draw[muted] (\b,0) -- (\b,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1.5pt] {\b};
+}
+\end{tikzpicture}}
+\newcommand{\gen}[1]{\input{../code/tex_tr/#1}}
+\newcommand{\pts}[1]{\textcolor{mintdeep}{\textbf{[#1~puan]}}\enspace}
+
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 8 \,·\, Çalışma Kılavuzu}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Ara Sınav Tekrarı ve Alıştırma: 1--7. Haftalar}\par\smallskip
+{\small\itshape\color{white!70} Vize için gereken her şey tek yerde: özetler, formüller, çözümlü problemler ve eksiksiz bir deneme sınavı.}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item 1--7. haftaların her temel terimini, somut bir örnekle birlikte bir iki cümleyle açıklamak.
+  \item Standart diyagramları ezbere çizmek: beş durumlu süreç diyagramı, sistem çağrısının yolu, TLB'li sayfalama donanımı, sayfa hatası adımları, dizin yapıları.
+  \item Dersteki her sayısal soru türünü çözmek: kullanım oranı ve ek yük formülleri, \cmd{fork()} ile süreç sayma, Amdahl yasası, bekleme/dönüş/yanıt süreleriyle Gantt şemaları, ilk uyan, en iyi uyan ve en kötü uyan ile yerleştirme, adres çevirisi, etkin erişim süresi (TLB ve sayfa hataları), sayfa değiştirme çerçeve tabloları ve doğrudan erişim blok hesabı.
+  \item Dersin uzlaşımlarını (zamanlamada eşitlikler, öncelik sırası, Round Robin'de gelişler, TLB formülü) ifade etmek ve tutarlı biçimde kullanmak.
+  \item 90 dakikalık eksiksiz bir deneme sınavını yazmak ve çözümlerle kendi kâğıdını puanlamak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{Ara Sınav (Vize)}
+\label{sec:exam}
+\subsection{Pratik bilgiler}
+Köşeli parantez içindeki maddeler öğretim üyesi tarafından dersin Telegram kanalında kesinleştirilecektir; sınav gününden önce kanala bakın.
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{4.0cm} X}
+\toprule
+\textbf{Madde} & \textbf{Ayrıntı} \\
+\midrule
+Tarih ve saat & [duyurulacak] \\
+Salon & [duyurulacak] \\
+Süre & [90] dakika \\
+Kapsam & 1--7. haftalar (dersler, slaytlar ve ders notları) \\
+İzin verilen malzeme & kalem; [basit, programlanamayan bir hesap makinesi --- kesinleşecek]; [kitap kapalı, not yok, telefon yok --- kesinleşecek]; [formül kâğıdı verilecek mi: evet/hayır --- kesinleşecek] \\
+Yanınızda olsun & öğrenci kimliğiniz; 10 dakika erken gelin \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Biçim}
+Bu haftanın malzemesiyle dağıtılan örnek kâğıt (\texttt{exam/MBLP131\_Vize\_Ornek.pdf}) ve Kısım~\ref{sec:practice}'teki deneme sınavı aynı yapıyı izler; aksi duyurulmadıkça gerçek kâğıt da bu yapıdadır.
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+\textbf{Bölüm} & \textbf{Soru türü} & \textbf{Puan} & \textbf{Önerilen süre} \\
+\midrule
+A & 10 çoktan seçmeli soru, her biri 2 puan & 20 & 15 dk \\
+B & 4 kısa yanıtlı soru, her biri 5 puan & 20 & 20 dk \\
+C & 5 sayısal problem & 60 & 45 dk \\
+ & başta okuma, sonda denetim & & $5 + 5$ dk \\
+\midrule
+ & \textbf{Toplam} & \textbf{100} & \textbf{[90] dk} \\
+\bottomrule
+\end{tabular}
+\end{center}
+$100$ puan için $90$ dakikanız olduğuna göre puan başına yaklaşık 0,9 dakikanız var: 2 puanlık bir soru $10$ dakika sürmemeli.
+
+\subsection{Dersin uzlaşımları: yanıtlarınızda belirtin}
+Ders kitapları küçük ayrıntılarda farklılaşır; bu yüzden ders aşağıdaki uzlaşımları sabitledi (5. ve 6.~haftalar). Sayısal bir yanıtın başına ilgili olanı yazın.
+\begin{keyidea}[MBLP131'de kullanılan uzlaşımlar]
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{Zamanlama:} bağlam değişimi süresi $0$ alınır (geçişler ayrıca sayılır); eşitlikler önce varış zamanına, sonra süreç adına göre bozulur; \emph{küçük} öncelik numarası \emph{yüksek} öncelik demektir; Round Robin'de tam bir zaman diliminin bittiği anda gelen süreç hazır kuyruğuna kesilen süreçten \emph{önce} girer.
+  \item \textbf{TLB:} arama süresi her erişimde sayılır ve bir ıska fazladan bir bellek erişimine mal olur: $\text{EAT} = t_{\text{TLB}} + (2-\alpha)\,t_m$.
+  \item \textbf{Yerleştirme:} delikler adres sırasıyla listelenir; istek seçilen deliğin başından kesilir.
+  \item \textbf{Sayfa değiştirme:} bütün çerçeveler boş başlar; yeni sayfa kurbanın çerçevesine girer.
+\end{itemize}
+\end{keyidea}
+
+\subsection{Bu çalışma kılavuzu nasıl kullanılır?}
+Kısım~\ref{sec:w1}--\ref{sec:w7} her hafta için kısa bir özet, formüller, tipik sınav soruları ve bir çözümlü örnek verir; çözümlü örnekler bu haftanın slaytlarında çözülen problemlerdir. Kısım~\ref{sec:sheet} tek sayfalık bir formül kâğıdıdır. Kısım~\ref{sec:practice} eksiksiz bir deneme sınavıdır: hiçbir şeye bakmadan $90$ dakikada yazın, sonra Kısım~\ref{sec:solutions}'teki çözümlerle puanlayın. Bu kılavuzdaki her sayı \texttt{code/} klasöründeki Python betikleriyle hesaplandı (Kısım~\ref{sec:check}).
+
+% =====================================================================
+\section{1. Hafta: Giriş ve Tarihçe}
+\label{sec:w1}
+\subsection*{Özet}
+Bir bilgisayar komutları izler: girdi $\to$ işlem $\to$ çıktı; program bellekte saklanır (\term{depolanmış program} fikri, stored-program). İlk çalışma tanımı: işletim sistemi, ilk başlayan ve diğer programların çalışabilmesi için her şeyi yöneten programdır; donanımı güvenle paylaştırır ve zor kısımlarını gizler. Tarih, her biri pahalı işlemcinin \emph{boşta} kalması sorununu çözen kuşaklar hâlinde ilerledi:
+\begin{itemize}
+  \item \textbf{İşletim sistemi yok} (ENIAC, 1945): bir seferde tek iş, programlama kablo panolarını yeniden bağlayarak.
+  \item \textbf{Toplu işleme} (batch processing; GM-NAA~I/O, 1956, sık sık ilk işletim sistemi sayılır): bir \term{yerleşik monitör} (resident monitor) işleri art arda yükleyip çalıştırır ve insanın hazırlık süresini ortadan kaldırır.
+  \item \textbf{Çoklu programlama} (multiprogramming, 1960'lar): bellekte birkaç iş; biri G/Ç beklerken işlemci başka bir işe geçer.
+  \item \textbf{Zaman paylaşımı} (time-sharing; MIT'de CTSS, 1961): her kullanıcı sırayla kısa bir \term{zaman dilimi} (time quantum) alır ve etkileşimli bir makine deneyimler.
+  \item IBM System/360 ve OS/360 (1964): bir makine ailesi için tek işletim sistemi. Multics (1965--69) \textbf{UNIX}'e ilham verdi (Bell Labs, 1969; 1973'te C ile yeniden yazıldı, bu yüzden taşınabilir).
+  \item Kişisel bilgisayarlar (Apple~II 1977, IBM PC ve MS-DOS 1981, Macintosh 1984, Windows~95), \textbf{Linux} (1991, özgür, UNIX benzeri çekirdek; GNU ile birlikte eksiksiz özgür bir işletim sistemi), akıllı telefonlar (iPhone 2007, Linux çekirdeği üzerinde Android 2008), bulut (AWS 2006, sanal makineler, konteynerler).
+\end{itemize}
+
+\begin{keyidea}[1. hafta formülleri]
+\[
+U = \frac{t_{\text{çalışma}}}{t_{\text{çalışma}} + t_{\text{hazırlık}}}, \qquad
+U(n) = 1 - p^{\,n}, \qquad
+T_{\text{bekleme}} \approx n\,q .
+\]
+$U$: işlemci kullanım oranı; $p$: bir işin G/Ç bekleyerek geçirdiği zaman kesri; $n$: bellekteki iş (ya da kullanıcı) sayısı; $q$: zaman dilimi.
+\end{keyidea}
+
+\subsection*{Tipik sorular}
+Dönüm noktalarını getirdikleri fikirle eşleştirmek (çoktan seçmeli); çoklu programlama (işlemci verimliliği) ile zaman paylaşımı (kullanıcı deneyimi) arasındaki farkı açıklamak; UNIX'in C ile yeniden yazılmasının neden önemli olduğunu açıklamak; küçük kullanım oranı hesapları.
+
+\begin{example}[Slaytlardaki 1(a) problemi: çoklu programlama]
+İşler zamanlarının $p = 0.6$ kesri kadar G/Ç bekliyor. O zaman $U(1) = 1 - 0.6 = 40\%$, $U(3) = 1 - 0.6^{3} = 1 - 0.216 = 78.4\%$ ve $U(6) = 1 - 0.6^{6} \approx 95.3\%$. $U \ge 95\%$ sağlayan en küçük $n$ için $0.6^{n} \le 0.05$, yani $n \ge \ln 0.05 / \ln 0.6 \approx 5.86$ gerekir; dolayısıyla $n = 6$ (sağlama: $0.6^{5} \approx 0.078 > 0.05$, $0.6^{6} \approx 0.047 \le 0.05$).
+
+\textbf{Toplu işleme:} $t_{\text{çalışma}} = 4$~dk ve $t_{\text{hazırlık}} = 6$~dk ise $U = 4/(4+6) = 40\%$; hazırlığı $1$~dk'ya indiren bir monitör $U = 4/5 = 80\%$ verir. \textbf{Zaman paylaşımı:} $q = 20$~ms ile $30$ kullanıcı en çok yaklaşık $n\,q = 30 \times 20\ \text{ms} = 600\ \text{ms}$ bekler.
+\end{example}
+
+% =====================================================================
+\section{2. Hafta: Tanımlar, Hedefler, Bileşenler ve Yapılar}
+\label{sec:w2}
+\subsection*{Özet}
+\begin{itemize}
+  \item \textbf{Çalışma tanımı:} işletim sistemi, donanımı yöneten ve programlara daha basit, daha güvenli bir makine sunan yazılım katmanıdır; bellekte sürekli duran özü \term{çekirdektir} (kernel). Çekirdek, sistem programları (kabuk, \cmd{ls}, derleyici) ve uygulama programları farklı katmanlardır.
+  \item \textbf{İki bakış açısı:} yukarıdan aşağı, işletim sistemi temiz soyutlamalar sunan bir \emph{genişletilmiş makinedir} (extended machine; kesimler yerine dosyalar, yazmaçlar yerine süreçler); aşağıdan yukarı, kaynakları zamanda (işlemci, yazıcı) ve uzayda (bellek, disk) çoğullayan bir \emph{kaynak yöneticisidir} (resource manager).
+  \item \textbf{Tasarım hedefleri:} kullanım kolaylığı, verimlilik ve gelişebilirlik; birbiriyle çatışırlar ve kişisel bilgisayarlarda, sunucularda, telefonlarda, gömülü ve gerçek zamanlı sistemlerde farklı ağırlıklar alırlar.
+  \item \textbf{Dört bileşen:} donanım, işletim sistemi, uygulama programları, kullanıcılar.
+  \item \textbf{Kesmeler:} bir aygıt denetleyicisi işlemciye sinyal verir; işlemci durumu kaydeder, \term{kesme vektöründe} (interrupt vector) bulunan işleyiciyi çalıştırır ve kaldığı yerden sürdürür; işletim sistemi kesme güdümlüdür. Yoklama (polling) işlemci zamanını boşa harcar.
+  \item \textbf{Bellek hiyerarşisi:} yazmaçlar ($\approx 0.3$~ns), önbellek, RAM ($\approx 100$~ns), SSD ($\approx 50\ \mu$s), HDD ($\approx 5$~ms); yazmaçlar, önbellek ve RAM uçucudur.
+  \item \textbf{İkili mod çalışması} (dual-mode operation): mod biti $0$ = çekirdek modu, $1$ = kullanıcı modu; kullanıcı modunda ayrıcalıklı bir komut işletim sistemine tuzak (trap) üretir; bir \term{sistem çağrısı} çekirdek moduna geçer ve geri döner. Ölçtüğümüz bir sistem çağrısı $\approx 116$~ns, bir fonksiyon çağrısı $\approx 1.5$~ns sürdü.
+  \item \textbf{Yapılar:} basit (MS-DOS, koruma yok), monolitik (UNIX, Linux: hızlı, kırılgan), katmanlı (THE: hata ayıklaması kolay, yavaş), mikroçekirdek (MINIX~3, QNX, seL4: güvenilir, daha yavaş), modüler (Linux yüklenebilir çekirdek modülleri), hibrit (Windows, macOS, Android).
+\end{itemize}
+
+\begin{keyidea}[2. hafta formülleri]
+\[
+\text{yoklama payı} = f \cdot t_{\text{check}}, \qquad
+T_{\text{mono}} = 2t_{s} + t_{w}, \qquad
+T_{\mu} = 4t_{s} + 2t_{c} + t_{w}.
+\]
+$t_s$: bir mod geçişi; $t_c$: bir ileti kopyası; $t_w$: yararlı iş.
+\end{keyidea}
+
+\subsection*{Tipik sorular}
+İki bakış açısını birer örnekle açıklamak; bir telefon, bir sunucu ve bir fren denetleyicisi için hangi tasarım hedefinin en önemli olduğu; bir kullanıcı programı ayrıcalıklı bir komut yürüttüğünde ne olduğu; \cmd{printf()} ile \cmd{write()} arasındaki fark; monolitik çekirdeğin ve mikroçekirdeğin birer üstünlüğü ve birer zayıflığı.
+
+\begin{example}[Mikroçekirdek maliyeti ve yoklama]
+$t_s = 0.1\ \mu$s, $t_c = 0.15\ \mu$s ve $t_w = 2\ \mu$s için: $T_{\text{mono}} = 0.2 + 2 = 2.2\ \mu$s, $T_{\mu} = 0.4 + 0.3 + 2 = 2.7\ \mu$s; dolayısıyla mikroçekirdek bu istek için $2.7/2.2 \approx 1.23$ kat yavaştır; yararlı iş uzadıkça oran $1$'e yaklaşır. Bir aygıtı saniyede $f = 200$ kez, $t_{\text{check}} = 5\ \mu$s ile yoklamak işlemcinin $200 \times 5\times10^{-6} = 10^{-3} = 0.1\%$'ine mal olur.
+\end{example}
+
+% =====================================================================
+\section{3. Hafta: İşletim Sistemi Hizmetleri, Sistem Çağrıları ve Süreçler}
+\label{sec:w3}
+\subsection*{Özet}
+\begin{itemize}
+  \item Kullanıcı için \textbf{hizmetler}: kullanıcı arayüzü, program yürütme, G/Ç işlemleri, dosya sistemi işlemleri, iletişim (ortak bellek ya da ileti aktarımı), hata algılama. Sistemin kendisi için: kaynak ayırma, hesap tutma ve kayıt, koruma ve güvenlik.
+  \item \textbf{API, sarmalayıcı, sistem çağrısı:} \cmd{printf()} bir API fonksiyonudur; \cmd{write()} sarmalayıcısı (wrapper) sistem çağrısı numarasını \texttt{rax}'a, parametreleri yazmaçlara koyar ve \texttt{syscall} komutunu yürütür; çekirdek numarayı denetler, \term{sistem çağrısı tablosunda} (system-call table) bulur ve \cmd{sys\_write()} fonksiyonunu çağırır. \cmd{strlen()} hiçbir zaman sistem çağrısı yapmaz.
+  \item \textbf{Parametreler} yazmaçlarda, adresi bir yazmaçta duran bir bellek bloğunda ya da yığıtta aktarılır. Altı tür: süreç denetimi, dosya yönetimi, aygıt yönetimi, bilgi bakımı, iletişim, koruma.
+  \item \term{Süreç} (process), yürütülmekte olan bir programdır; metin, veri, bss, yığın (heap) ve yığıt (stack) bölgeleri vardır. Beş durum: yeni, hazır, çalışıyor, bekliyor, sonlandı; bekliyor durumundan çalışıyor durumuna ok yoktur.
+  \item \term{PCB} (süreç denetim bloğu) durumu, PID/PPID'yi, program sayacını, yazmaçları, zamanlama, bellek yönetimi ve hesap bilgilerini ve G/Ç durumunu tutar. Bir \term{bağlam değişimi} (context switch) eski PCB'yi kaydeder ve yenisini yükler; saf ek yüktür.
+  \item \cmd{fork()} çocukta $0$, ebeveynde çocuğun PID'sini döndürür; \cmd{exec()} programı değiştirir (PID aynı kalır); \cmd{wait()} çocuğu toplar. Bir \term{zombi} (zombie) sonlanmış ama henüz beklenmemiştir; bir \term{yetimin} (orphan) ebeveyni önce sonlanmıştır (Linux onu PID~1'e bağlar).
+\end{itemize}
+
+\begin{keyidea}[3. hafta formülleri]
+\[
+\text{bağlam değişimi ek yükü} = \frac{s}{q+s};
+\]
+her biri var olan her süreç tarafından yürütülen $n$ \cmd{fork()} çağrısı $2^{n}$ süreç verir (bunların $2^{n}-1$'i yeni oluşturulur).
+\end{keyidea}
+
+\subsection*{Tipik sorular}
+Beş durumlu diyagramı çizip her geçişin ardındaki olayı adlandırmak; PCB alanlarını saymak; sistem çağrılarını altı türe ayırmak; \cmd{fork()}'un ne döndürdüğü; zombi ve yetim; ek yük ve \cmd{fork()} sayma.
+
+\begin{example}[Slaytlardaki 1(b) ve 1(c) problemleri]
+\textbf{Ek yük.} $s = 4\ \mu$s ile: $q = 2\ \text{ms} = 2000\ \mu$s için ek yük $4/2004 \approx 0.20\%$; $q = 50\ \mu$s için $4/54 \approx 7.4\%$'tür. Çok küçük zaman dilimleri işlemciyi boşa harcar.
+
+\textbf{fork().} \cmd{fork(); fork(); printf("A\textbackslash n"); fork(); printf("B\textbackslash n");} Var olan her süreç sonraki her \cmd{fork()}'u yürütür. İlk \cmd{printf}'ten önce $2 \times 2 = 4$ süreç vardır, dolayısıyla \texttt{A} $4$ kez yazılır; üçüncü fork onları $8$'e katlar ve \texttt{B} $8$ kez yazılır; toplam $8$ süreç, $7$'si yeni oluşturulan. (\texttt{review\_problems.py} içinde \cmd{os.fork()} ile yapılan gerçek bir çalıştırma tam olarak $4$ \texttt{A} ve $8$ \texttt{B} yazdı. Sınav soruları çıktının terminale gittiğini varsayar; çıktı bir dosyaya yönlendirilirse, 3.~haftada gösterildiği gibi, \cmd{printf}'in tamponu \cmd{fork()} tarafından kopyalanır.)
+\end{example}
+
+% =====================================================================
+\section{4. Hafta: İş Parçacıkları ve İşlemci Zamanlamanın Temelleri}
+\label{sec:w4}
+\subsection*{Özet}
+\begin{itemize}
+  \item Bir \term{iş parçacığının} (thread) kendi iş parçacığı kimliği, program sayacı, yazmaçları ve yığıtı vardır; sürecinin kodunu, global verisini, yığınını (heap) ve açık dosyalarını paylaşır. Yararları: tepki verebilirlik, kaynak paylaşımı, ekonomi (makinemizde bir iş parçacığı oluşturmak bir süreç oluşturmaktan yaklaşık $4$ kat ucuzdu), ölçeklenebilirlik.
+  \item \term{Eşzamanlılık} (concurrency): birkaç görev birlikte ilerler; \term{paralellik} (parallelism): birkaç görev aynı anda çalışır (en az iki çekirdek gerekir).
+  \item Kullanıcı düzeyi iş parçacıkları (hızlı, ama bloklayan bir çağrı bütün süreci bloklar) ve çekirdek düzeyi iş parçacıkları. Modeller: çoktan bire, birebir (Linux, Windows), çoktan çoğa (Go, Java sanal iş parçacıkları).
+  \item Süreçler CPU ve G/Ç patlamaları arasında gidip gelir (işlemci yoğun ve G/Ç yoğun). Kısa vadeli zamanlayıcı hazır kuyruğundan dört karar noktasında seçim yapar (çalışıyor$\to$bekliyor, çalışıyor$\to$hazır, bekliyor$\to$hazır, sonlanma); kesintisiz zamanlama yalnızca ilkini ve sonuncusunu kullanır. \term{Dağıtıcı} (dispatcher) bağlamı değiştirir, kullanıcı moduna geçer ve kaydedilmiş PC'ye atlar; süresi dağıtım gecikmesidir (dispatch latency).
+\end{itemize}
+
+\Needspace{12\baselineskip}
+\begin{keyidea}[4. hafta formülleri]
+\[
+\text{hızlanma}(N) \le \frac{1}{S + \dfrac{1-S}{N}}, \qquad \lim_{N\to\infty} \text{hızlanma} = \frac{1}{S};
+\]
+\begin{align*}
+T_{\text{dönüş}} &= T_{\text{tamamlanma}} - T_{\text{geliş}}, &
+T_{\text{bekleme}} &= T_{\text{dönüş}} - T_{\text{patlama}}, &
+T_{\text{yanıt}} &= T_{\text{ilk çalışma}} - T_{\text{geliş}},
+\end{align*}
+\[
+\text{işlemci kullanımı} = \frac{B}{T}, \qquad \text{üretilen iş} = \frac{n}{T}.
+\]
+Kullanımı ve üretilen işi en büyük; dönüş, bekleme ve yanıt süresini en küçük yap. (5. hafta notları aynı büyüklükleri $T_{\text{bitiş}}$ ve $T_{\text{varış}}$ diye yazar: $T_{\text{dönüş}} = T_{\text{bitiş}} - T_{\text{varış}}$.)
+\end{keyidea}
+
+\subsection*{Tipik sorular}
+Hangi öğelerin ortak, hangilerinin özel olduğu (yığıt özeldir, yığın ortaktır); Linux'un hangi modeli kullandığı; eşzamanlılık ve paralellik; Amdahl hızlanmaları; dört karar noktası; bir Gantt şemasından ölçütleri hesaplamak.
+
+\begin{example}[Slaytlardaki 1(d) problemi: Amdahl yasası]
+$S = 0.2$ ile: $N = 2$: $1/(0.2 + 0.4) \approx 1.67$; $N = 4$: $1/(0.2 + 0.2) = 2.5$; $N = 8$: $1/(0.2 + 0.1) \approx 3.33$; sınır $1/0.2 = 5$'tir. Sekiz çekirdek yalnızca 3,33 verir. Tersine, $4$ çekirdekte en az $3$ kat hızlanma $S + (1-S)/4 \le 1/3$, yani $S \le 1/9 \approx 0.11$ gerektirir.
+\end{example}
+
+% =====================================================================
+\section{5. Hafta: Zamanlama Algoritmaları ve Eşzamanlama}
+\label{sec:w5}
+\subsection*{Özet: zamanlama}
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}l >{\raggedright\arraybackslash}X c >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Algoritma} & \textbf{Kural} & \textbf{Kesintili} & \textbf{Hatırlayın} \\
+\midrule
+FCFS & FIFO hazır kuyruğu; bitene kadar çalışır & hayır & konvoy etkisi \\
+SJF & en kısa sonraki CPU patlaması önce & hayır & hepsi hazırken en iyi ortalama bekleme; patlama tahmin edilmeli \\
+SRTF & \emph{kalan} süreden kısa olan yeni gelen işlemciyi alır & evet & en küçük ortalama bekleme; uzun işler aç kalabilir \\
+Öncelikli & en yüksek öncelik (en küçük sayı) önce & ikisi de & açlık; çaresi: yaşlandırma \\
+Döngüsel (RR) & zaman dilimi $q$; kesilen süreç kuyruğun sonuna & evet & $q$ çok büyük $\to$ FCFS; çok küçük $\to$ ek yük \\
+\bottomrule
+\end{tabularx}
+\end{center}
+Linux sıradan görevleri adalet için zamanlar (CFS, 6.6 çekirdeğinden beri EEVDF), nice değeriyle ağırlıklandırarak; çok düzeyli geri beslemeli kuyruklar davranışı izleyerek SJF'ye yaklaşır.
+
+\subsection*{Özet: eşzamanlama}
+\begin{itemize}
+  \item Birkaç iş parçacığı aynı veriye eşzamanlı eriştiğinde, en az biri yazdığında ve sonuç sıraya bağlı olduğunda bir \term{yarış durumu} (race condition) oluşur; \texttt{counter++} oku--ekle--yaz demektir.
+  \item \term{Kritik bölge problemi} (critical-section problem): giriş, kritik, çıkış ve kalan bölümler; bir çözüm \emph{karşılıklı dışlama} (mutual exclusion), \emph{ilerleme} (progress) ve \emph{sınırlı bekleme} (bounded waiting) sağlamalıdır.
+  \item Kesmeleri kapatmak çok işlemcide işe yaramaz ve ayrıcalıklıdır; Peterson çözümü (iki iş parçacığı; modern işlemcilerde bellek bariyerleri gerektirir); atomik \texttt{test\_and\_set} ve karşılaştır-ve-değiştir (CAS); \term{muteks kilitleri} (mutex locks: \texttt{acquire}/\texttt{release}; döner kilit ya da uyuyarak bekleme).
+  \item Bir \term{semafor} $S$'ye yalnızca \texttt{wait(S)} (P: \texttt{while (S <= 0); S--;}) ve \texttt{signal(S)} (V: \texttt{S++}) ile erişilir; ikili (başlangıç $1$, muteks gibi) ya da sayan (başlangıç $N$). Sınırlı tampon: \texttt{empty} $= n$, \texttt{full} $= 0$, \texttt{mutex} $= 1$; \texttt{wait(empty)}, \texttt{wait(mutex)}'ten \emph{önce} gelir.
+  \item \term{Kilitlenme} (deadlock): bir gruptaki her iş parçacığı yalnızca grubun başka bir üyesinin yol açabileceği bir olayı bekler; kilitleri tek bir genel sırayla alarak önlenir. Açlık farklıdır: başkaları ilerlemeye devam eder.
+\end{itemize}
+
+\Needspace{12\baselineskip}
+\begin{keyidea}[5. hafta formülleri]
+\[
+\tau_{n+1} = \alpha\, t_n + (1-\alpha)\, \tau_n, \qquad
+\text{RR: sonraki sıra için bekleme} \le (n-1)\,q, \qquad
+\text{geçiş ek yükü} = \frac{s}{q+s}.
+\]
+\end{keyidea}
+
+\subsection*{Tipik sorular}
+İki üç algoritma için Gantt şeması ve bitiş, dönüş, bekleme, yanıt süreleriyle ortalamalarını içeren bir tablo; üstel ortalama; \texttt{counter++} için kaybettiren bir iç içe geçme; üç gereksinim; semafor izleri; üreticideki iki \texttt{wait} çağrısının sırasının neden önemli olduğu.
+
+\subsection{Slaytlardaki 2. problem: tek iş kümesi, beş zamanlayıcı}
+İşler (süreler ms): P1 (varış $0$, patlama $7$, öncelik $2$), P2 ($2$, $4$, $1$), P3 ($3$, $2$, $4$), P4 ($5$, $5$, $3$). Toplam iş $18$~ms'dir ve işlemci hiç boşta kalmaz. Üretilmiş tablolar:
+
+\textbf{FCFS}\\[0.2em]
+\gen{rv_gantt_fcfs}\\[0.3em]
+{\small\gen{rv_sched_fcfs}}
+
+\textbf{SJF (kesintisiz)}\\[0.2em]
+\gen{rv_gantt_sjf}\\[0.3em]
+$t=7$'de hazır kuyruğunda P2 (4), P3 (2) ve P4 (5) vardır: en kısası P3'tür.\\
+{\small\gen{rv_sched_sjf}}
+
+\Needspace{14\baselineskip}
+\textbf{SRTF}\\[0.2em]
+\gen{rv_gantt_srtf}\\[0.3em]
+$t=2$: P2'nin ihtiyacı $4 <$ P1'in kalanı $5$: kesme. $t=3$: P3'ün ihtiyacı $2 <$ P2'nin kalanı $3$: kesme. $t=5$: kalanlar P1 $5$, P2 $3$, P4 $5$: P2 çalışır. $t=8$: P1 ve P4'ün ikisi de $5$ ister: eşitlik erken gelen P1'in lehine bozulur.\\
+{\small\gen{rv_sched_srtf}}
+
+\Needspace{14\baselineskip}
+\textbf{Öncelikli (kesintili)}\\[0.2em]
+\gen{rv_gantt_prio}\\[0.3em]
+P2 (öncelik $1$) $t=2$'de işlemciyi P1'den (öncelik $2$) alır; P3'ün önceliği en düşüktür ve en son çalışır.\\
+{\small\gen{rv_sched_prio}}
+
+\Needspace{16\baselineskip}
+\textbf{Round Robin, $q = 3$}\\[0.2em]
+\gen{rv_gantt_rr3}\\[0.3em]
+$t=3$: P3 tam P1'in zaman dilimi biterken gelir; dolayısıyla kuyruk P2, P3, P1'dir. $t=6$: P4 ($5$'te geldi) P1'in arkasındadır ve P2 ($1$~ms kaldı) sona katılır: P3, P1, P4, P2. $t=8$: P3 biter; P1 $8$--$11$ arası çalışır ve $1$~ms'si kalır; sonra P4 $11$--$14$, P2 $14$--$15$ (biter), P1 $15$--$16$ (biter), P4 $16$--$18$.\\
+{\small\gen{rv_sched_rr3}}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Algoritma} & \textbf{Kesintili} & \textbf{Ort. bekleme} & \textbf{Ort. dönüş} & \textbf{Ort. yanıt} & \textbf{Geçiş}\\
+\midrule
+FCFS & hayır & $5.25$ & $9.75$ & $5.25$ & 3\\
+SJF & hayır & $4.75$ & $9.25$ & $4.75$ & 3\\
+SRTF & evet & $4$ & $8.5$ & $2$ & 5\\
+Öncelikli & evet & $5.75$ & $10.25$ & $4.75$ & 4\\
+RR, $q=3$ & evet & $7.25$ & $11.75$ & $2.5$ & 7\\
+\bottomrule
+\end{tabular}
+\end{center}
+SRTF, kuramın söylediği gibi en küçük ortalama bekleme süresini verir; öncelikli zamanlama öneme hizmet eder (P3 $13$~ms bekler); RR'nin ortalama beklemesi en büyüktür ama ortalama yanıt süresi iyidir.
+
+\begin{example}[Üstel ortalama]
+$\alpha = 0.5$, $\tau_0 = 8$~ms, ölçülen patlamalar $t_0, t_1, t_2 = 6, 10, 4$~ms: $\tau_1 = 0.5\cdot6 + 0.5\cdot8 = 7$, $\tau_2 = 0.5\cdot10 + 0.5\cdot7 = 8.5$, $\tau_3 = 0.5\cdot4 + 0.5\cdot8.5 = 6.25$~ms.
+\end{example}
+
+\subsection{Slaytlardaki 3. problem: bir yarış ve bir semafor}
+\texttt{counter} $= 10$; A iş parçacığı \texttt{counter++}, B iş parçacığı \texttt{counter--} yürütür; her biri kendi yazmacına oku--ekle--yaz yapar. Talihsiz bir sıra:
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}cllc@{}}
+\toprule
+\textbf{Adım} & \textbf{A iş parçacığı} & \textbf{B iş parçacığı} & \textbf{counter}\\
+\midrule
+1 & oku (yazmaç $=10$) & & 10\\
+2 & & oku (yazmaç $=10$) & 10\\
+3 & $1$ ekle (yazmaç $=11$) & & 10\\
+4 & & $-1$ ekle (yazmaç $=9$) & 10\\
+5 & yaz & & 11\\
+6 & & yaz & 9 (10 olmalı)\\
+\bottomrule
+\end{tabular}
+\end{center}
+İç içe geçmeler (her iş parçacığı kendi sırasını korur) $\binom{6}{3} = 20$ tanedir. \texttt{review\_problems.py} betiği hepsini sayar: son değer $9$ sırada $9$, $2$ sırada $10$ ve $9$ sırada $11$'dir: $20$ sıranın yalnızca $2$'si doğrudur. Çözüm, bir muteksle korunan kritik bölgedir.
+
+\textbf{Sayan semafor $S = 2$} (iki yazıcı), T1, T2, T3 iş parçacıkları: T1 \texttt{wait} $\to$ girer, $S=1$; T2 \texttt{wait} $\to$ girer, $S=0$; T3 \texttt{wait} $\to$ bloklanır; T1 \texttt{signal} $\to S=1$ ve T3 hemen \texttt{wait}'ini geçer, $S=0$; T2 \texttt{signal} $\to S=1$; T3 \texttt{signal} $\to S=2$. Herhangi bir anda en çok iki iş parçacığı yazıcı kullanır.
+
+% =====================================================================
+\section{6. Hafta: Bellek Yönetimi}
+\label{sec:w6}
+\subsection*{Özet}
+\begin{itemize}
+  \item \textbf{Adres bağlama} (address binding) derleme zamanında (mutlak kod), yükleme zamanında (yeri değiştirilebilir kod) ya da yürütme zamanında (\term{MMU} gerekir; bütün modern sistemler) yapılır. Mantıksal (sanal) adresleri işlemci üretir; fiziksel adresleri bellek görür.
+  \item \textbf{Taban ve sınır:} MMU $0 \le a < \text{sınır}$ koşulunu denetler ve tabanı ekler; değilse tuzak üretir. Bu yazmaçları yüklemek ayrıcalıklıdır.
+  \item Bütün süreçleri \textbf{takas} (swapping) etmek saniyeler sürer; modern sistemler sayfaları takas eder.
+  \item Değişken bölümlerle \textbf{bitişik yer ayırma}: ilk uyan, en iyi uyan, en kötü uyan. \term{Dış parçalanma}: yeterince boş bellek var ama bitişik değil (yüzde 50 kuralı: üçte bire kadar kayıp); \term{iç parçalanma}: ayrılmış bir bloğun içindeki kullanılmayan bellek. Sıkıştırma (compaction) yürütme zamanında bağlama gerektirir.
+  \item \textbf{Sayfalama:} eşit boyda ($2^{n}$) çerçeveler (fiziksel) ve sayfalar (mantıksal); sayfa tablosu $p \to f$ eşlemesini tutar; dış parçalanma yok, süreç başına ortalama yarım sayfa iç parçalanma; geçerli--geçersiz ve koruma bitleri; paylaşılan (yeniden girilebilir) kod sayfaları; çok düzeyli sayfa tabloları.
+  \item \textbf{TLB:} $(p, f)$ çiftlerinin küçük, ilişkili (associative) bir önbelleği; yerellik sayesinde isabet oranı yüksektir.
+  \item \textbf{Bölütleme} (segmentation): adres $\langle s, d\rangle$, (taban, sınır) çiftlerinden oluşan bölüt tablosu; değişken boylar dış parçalanmayı geri getirir. x86-64 Linux düz bölütler kullanır ve bütün çeviriyi sayfalamayla yapar.
+\end{itemize}
+
+\Needspace{12\baselineskip}
+\begin{keyidea}[6. hafta formülleri]
+\begin{gather*}
+0 \le a_{\text{mant}} < \text{sınır} \;\Rightarrow\; a_{\text{fiz}} = \text{taban} + a_{\text{mant}}, \text{ değilse tuzak}; \qquad
+t_{\text{takas}} = \frac{\text{boyut}}{\text{aktarım hızı}};\\
+p = \left\lfloor \frac{a}{2^{n}} \right\rfloor, \quad d = a \bmod 2^{n}, \quad a_{\text{fiz}} = f\cdot 2^{n} + d; \qquad
+\text{girdi sayısı} = \frac{2^{m}}{2^{n}};\\
+\text{EAT} = \alpha\,(t_{\text{TLB}} + t_{m}) + (1-\alpha)\,(t_{\text{TLB}} + 2t_{m}) = t_{\text{TLB}} + (2-\alpha)\,t_{m};\\
+\text{sadeleştirilmiş } (t_{\text{TLB}}\approx 0)\text{: } \text{EAT} = \alpha\,t_m + (1-\alpha)\,2t_m;\\
+0 \le d < \text{sınır}[s] \;\Rightarrow\; a_{\text{fiz}} = \text{taban}[s] + d, \text{ değilse tuzak}.
+\end{gather*}
+$\alpha$: TLB isabet oranı (hit ratio); $t_m$: bir bellek erişiminin süresi.
+\end{keyidea}
+
+\subsection*{Tipik sorular}
+Üç bağlama zamanı; mantıksal ve fiziksel adresleri kimin gördüğü; onluk ve onaltılık tabanda taban/sınır çevirisi; takas süreleri; üç uyan stratejisiyle yerleştirme; iç ve dış parçalanma; bir sayfa tablosu üzerinden adres çevirisi; sayfa tablosu boyutu; TLB ile EAT ve hedef bir EAT için gereken isabet oranı; bölüt tablosuyla çeviri; sayfalama ve bölütleme karşılaştırması.
+
+\begin{example}[Taban ve sınır, takas]
+Taban $12000$, sınır $2500$: $a = 100 \to 12100$; $a = 2499 \to 14499$ (son geçerli bayt); $a = 2500$: \textbf{tuzak} (denetim katıdır). $200$~MB'lık bir süreci $80$~MB/s hızla takas etmek her yön için $200/80 = 2.5$~s, dışarı artı içeri $5$~s sürer.
+\end{example}
+
+\subsection{Slaytlardaki 4. problem: ilk uyan, en iyi uyan, en kötü uyan}
+Delikler (boyut@başlangıç, KB, adres sırasında): $300@100$, $600@500$, $200@1300$, $450@1700$, $350@2400$ (toplam $1900$~KB). Sırayla istekler: A $= 340$, B $= 180$, C $= 420$, D $= 500$~KB. Üretilmiş tablo:
+\begin{center}\small\gen{rv_fits}\end{center}
+İlk uyan: $960$~KB boş olduğu hâlde D beklemek zorundadır, çünkü en büyük delik yalnızca $350$~KB'tır (dış parçalanma). En iyi uyan dördünü de yerleştirir. En kötü uyan iki kez başarısız olur ($1380$~KB boş, en büyük delik $350$~KB). Tek bir örnek genel bir şey kanıtlamaz: örnek kâğıtta ilk uyan kazanır, en iyi uyan başarısız olur.
+
+\subsection{Slaytlardaki 5. problem: sayfalama ve TLB}
+$16$ bitlik adresler, $4$~KB'lık sayfalar ($n = 12$): $p$ ilk onaltılık basamak, $d$ son üç basamaktır. Sayfa tablosu: $0\to3$, $1\to8$, $2\to6$, $4\to10$, $5\to2$; $3$. sayfa ve $6$--$15$ arası sayfalar geçersiz.
+\begin{itemize}
+  \item $\texttt{0x1C3B} = 7227$: $p = 1$, $d = \texttt{0xC3B} = 3131$; $8$. çerçeve: $8 \times 4096 + 3131 = 35899 = \texttt{0x8C3B}$.
+  \item $\texttt{0x4F0E} = 20238$: $p = 4$, $d = \texttt{0xF0E} = 3854$; $10 = \texttt{0xA}$. çerçeve: $\texttt{0xAF0E} = 44814$.
+  \item $\texttt{0x2010}$: $p = 2$, $6$. çerçeve: $\texttt{0x6010} = 24592$.
+  \item $\texttt{0x3004}$: $p = 3$ geçersizdir: \textbf{tuzak}, fiziksel adres yok.
+\end{itemize}
+$9000$~B'lık bir süreç $\lceil 9000/4096\rceil = 3$ çerçeveye ihtiyaç duyar ($9000 = 2\times4096 + 808$); dolayısıyla $4096 - 808 = 3288$~B iç parçalanmaya gider. $32$ bitlik adresler, $8$~KB'lık sayfalar ve $4$ baytlık girdilerle düz bir sayfa tablosunda $2^{32}/2^{13} = 2^{19} = 524\,288$ girdi, yani $2^{21}$~B $= 2$~MB vardır.
+
+\textbf{TLB:} $t_{\text{TLB}} = 10$~ns, $t_m = 80$~ns, $\alpha = 0.95$:
+\[
+\text{EAT} = 0.95 \times 90 + 0.05 \times 170 = 85.5 + 8.5 = 94\ \text{ns} = 10 + (2 - 0.95)\times 80 .
+\]
+TLB olmadan her erişim $2t_m = 160$~ns sürer; sadeleştirilmiş formül $0.95\times80 + 0.05\times160 = 84$~ns verir. $\text{EAT} = 100$~ns için: $10 + (2-\alpha)\,80 = 100 \Rightarrow 2 - \alpha = 1.125 \Rightarrow \alpha = 0.875$.
+
+\begin{example}[Bölüt tablosu]
+$0$. bölüt: taban $1000$, sınır $800$; $1$. bölüt: taban $5200$, sınır $300$; $2$. bölüt: taban $2400$, sınır $1500$.
+$\langle 2, 1499\rangle$: $1499 < 1500 \Rightarrow 2400 + 1499 = 3899$.
+$\langle 1, 300\rangle$: $300 \ge 300 \Rightarrow$ \textbf{tuzak}.
+$\langle 0, 799\rangle$: $799 < 800 \Rightarrow 1000 + 799 = 1799$.
+\end{example}
+
+% =====================================================================
+\section{7. Hafta: Sanal Bellek ve Dosya Sistemleri}
+\label{sec:w7}
+\subsection*{Özet: sanal bellek}
+\begin{itemize}
+  \item \term{Sanal bellek} (virtual memory) RAM'de yalnızca kullanılan sayfaları tutar; geri kalanlar yedek depoda (backing store) durur. \term{Başvuru yerelliği} (locality of reference) sayesinde çalışır.
+  \item \term{İsteğe bağlı sayfalama} (demand paging) bir sayfayı ilk kullanıldığında yükler; geçerli--geçersiz biti sayfanın bellekte olup olmadığını söyler. Bir \term{sayfa hatası} (page fault) altı adımda işlenir: başvuru, tuzak, bulma (diskteki sayfa ve boş bir çerçeve), okuma, sayfa tablosunu güncelleme, komutu yeniden başlatma. Küçük hatalar (minor) disk G/Ç'si gerektirmez, büyük hatalar (major) gerektirir.
+  \item \term{Yazınca kopyala} (copy-on-write): \cmd{fork()}'tan sonra sayfalar, bir süreç yazana kadar salt okunur olarak paylaşılır; yalnızca yazılan sayfa kopyalanır.
+  \item \textbf{Sayfa değiştirme}: FIFO (en önce yüklenen; Belady anomalisi olabilir), OPT (en uzak gelecekte kullanılacak; en az hata; geleceği ister), LRU (en uzun süredir kullanılmayan; başvuru bitiyle saat / ikinci şans algoritmasıyla yaklaşılır). Değişiklik (kirli) biti, temiz kurbanların diske geri yazılmasını önler.
+  \item \term{Boşa çalışma} (thrashing): süreçler yürütmekten çok sayfalamaya zaman harcar; çaresi çoklu programlama derecesini düşürmektir. \term{Çalışma kümesi} (working set) $\text{WS}(t,\Delta)$, son $\Delta$ başvurudaki farklı sayfaların kümesidir.
+\end{itemize}
+\subsection*{Özet: dosya sistemleri}
+\begin{itemize}
+  \item Bir \term{dosyanın} öznitelikleri (ad, kimlik, tür, konum, boyut, koruma, zaman damgaları) dosya denetim bloğunda tutulur (Linux'ta \term{düğüm}, inode; ad dizindedir). İşlemler: create, open, read, write, seek, close, delete (\cmd{unlink}), truncate. \cmd{open()} bir dosya tanımlayıcısı (file descriptor) döndürür; süreç başına tablolar dosya işaretçisini, sistem geneli tablo açılma sayısını tutar.
+  \item \textbf{Erişim yöntemleri}: sıralı (teyp modeli), doğrudan (herhangi bir $n$. blok; disk modeli), indeksli (küçük bir indekste ara, sonra tek bir blok oku).
+  \item \textbf{Dizinler}: tek düzeyli, iki düzeyli (UFD/MFD), ağaç (mutlak ve göreli yollar, \texttt{.} ve \texttt{..}), döngüsüz çizge (bağlantılar), genel çizge (döngüler; uygulamada kaçınılır).
+  \item Bir \term{sabit bağlantı} (hard link), aynı düğüm için başka bir dizin girdisidir (bağlantı sayısı, link count); bir \term{sembolik bağlantı} (symbolic link) bir yol içeren küçük bir dosyadır ve hedef silinirse boşta kalır (dangling).
+\end{itemize}
+
+\Needspace{12\baselineskip}
+\begin{keyidea}[7. hafta formülleri]
+\[
+\text{EAT} = (1-p)\,t_m + p\,t_{\text{fault}};
+\]
+\[
+\text{bayt konumu} = k\,R, \quad \text{blok} = \left\lfloor \frac{kR}{B} \right\rfloor, \quad \text{blok içi konum} = kR - \text{blok}\cdot B;
+\]
+\[
+D = \sum_i \text{WSS}_i > m \;\Rightarrow\; \text{boşa çalışma}.
+\]
+$p$: sayfa hatası oranı; $t_{\text{fault}}$: sayfa hatası hizmet süresi; $k$: kayıt numarası ($0$'dan başlar); $R$: kayıt boyu; $B$: blok boyu; $m$: kullanılabilir çerçeve sayısı. Kaydın \emph{son} baytını, $kR + R - 1$'i de her zaman denetleyin.
+\end{keyidea}
+
+\subsection*{Tipik sorular}
+Sayfa hatasının altı adımı; komutun neden yeniden başlatıldığı; yazınca kopyala ve \cmd{fork()}; FIFO, LRU ve OPT için çerçeve tabloları; Belady anomalisi; boşa çalışma ve çalışma kümesi; sayfa hatalarıyla EAT ve belirli bir yavaşlama için en büyük hata oranı; blok hesabı; erişim yöntemlerini, dizin yapılarını, sabit ve sembolik bağlantıları karşılaştırmak.
+
+\subsection{Slaytlardaki 6. problem: sayfa değiştirme}
+$3$ çerçeve, başlangıçta boş, başvuru dizisi $1, 2, 0, 4, 2, 3, 2, 1, 2, 4, 0, 2, 0, 1$. Nane: yeni yüklenen sayfa; soluk: hata sütunu; gri: isabet. Üretilmiş tablolar:
+
+\begin{center}
+\begin{minipage}{\linewidth}\centering\textbf{FIFO: 11 hata}\\[0.2em]\gen{rv_frames_FIFO}\end{minipage}\\[0.8em]
+\begin{minipage}{\linewidth}\centering\textbf{LRU: 9 hata}\\[0.2em]\gen{rv_frames_LRU}\end{minipage}\\[0.8em]
+\begin{minipage}{\linewidth}\centering\textbf{OPT: 7 hata}\\[0.2em]\gen{rv_frames_OPT}\end{minipage}
+\end{center}
+FIFO: bir isabet ($5$. konumdaki $2$ başvurusu) geliş sırasını değiştirmez. LRU, $3$'e başvuruda: çerçevelerde $4, 2, 0$ vardır ve en uzun süredir kullanılmayan $0$'dır; böylece sık kullanılan $2$ kalır. OPT, $4$'e başvuruda: sonraki kullanımlar $2$ ($5$. konum), $1$ ($8$. konum), $0$ ($11$. konum); dolayısıyla $0$ çıkar. Dizide $5$ farklı sayfa vardır; bu yüzden her algoritmanın en az $5$ (zorunlu, compulsory) hatası olur. $4$ çerçeveyle: FIFO $8$, LRU $7$, OPT $6$ hata --- bu dizide anomali yok.
+
+\subsection{Slaytlardaki 7. problem: sayfa hatalı EAT ve blok hesabı}
+\textbf{(a)} $t_m = 100$~ns, $t_{\text{fault}} = 6\ \text{ms} = 6\,000\,000$~ns, $p = 0.0002$:
+\[
+\text{EAT} = 0.9998 \times 100 + 0.0002 \times 6\,000\,000 = 99.98 + 1200 = 1299.98\ \text{ns},
+\]
+yani $5000$ erişimde yalnızca bir hatayla RAM'den yaklaşık $13$ kat yavaş. Yavaşlamanın \%5'in altında kalması için: $100 + p\,(6\,000\,000 - 100) < 105 \Rightarrow p < 5/5\,999\,900 \approx 8.3\times10^{-7}$; yani en çok yaklaşık 1,2 milyon erişimde bir hata.
+
+\textbf{(b)} Kayıtlar $R = 120$~B, bloklar $B = 4096$~B, kayıt $k = 750$: bayt konumu $750 \times 120 = 90\,000$; blok $\lfloor 90\,000/4096\rfloor = 21$; blok içi konum $90\,000 - 21 \times 4096 = 3984$. Son bayt $90\,119$'dur ve $\lfloor 90\,119/4096\rfloor = 22$: kayıt bir blok sınırını \emph{aşar} ($21$. bloğun $3984$--$4095$ baytları ve $22$. bloğun $0$--$7$ baytları); dolayısıyla iki blok okuması gerekir. $40$. kayıt $4800$. baytta, $1$. blokta $704$ konumunda başlar ve tamamen sığar.
+
+\begin{example}[Çalışma kümesi]
+Çalışma kümesi boyutları $4, 6, 3, 5$ olan dört süreç $D = 18$ çerçeveye ihtiyaç duyar. Yalnızca $m = 16$ çerçeve varsa $D > m$ olur: boşa çalışma başlayacaktır ve işletim sistemi bir süreci askıya almalıdır.
+\end{example}
+
+% =====================================================================
+\section{Sık Yapılan Hatalar ve Sınav Stratejisi}
+\label{sec:mistakes}
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.0cm} X@{}}
+\toprule
+\textbf{Konu} & \textbf{Puanların genellikle kaybedildiği yer} \\
+\midrule
+Zamanlama & Bekleme süresi dönüş eksi patlamadır, başlama zamanı değil; SRTF \emph{kalan} süreyle karşılaştırır; RR'de yeni gelenler kesilen süreçten önce girer; ortalamaları unutmak. \\
+Birimler & $8\ \text{ms} = 8\,000\,000\ \text{ns}$; $2\ \text{ms} = 2000\ \mu\text{s}$; sayfalama sorularında KB $= 1024$~B. \\
+Sayfalama & Ofset hiçbir zaman çevrilmez; geçersiz bir sayfa tuzak üretir ve fiziksel adresi yoktur; $a = \text{sınır}$ zaten tuzaktır (katı $<$). \\
+Çerçeve tabloları & FIFO: isabet sırayı değiştirmez; LRU: isabet sayfayı en yeni yapar; OPT: ileriye bak. Hataları iki kez sayın. \\
+Semboller & $p$, 1.~haftada G/Ç bekleme kesri, 7.~haftada sayfa hatası oranıdır; $\alpha$, 5.~haftada ortalama ağırlığı, 6.~haftada TLB isabet oranıdır. \\
+\cmd{fork()} & Var olan her süreç sonraki her \cmd{fork()}'u yürütür. \\
+Tanımlar & Eşzamanlılık $\ne$ paralellik; karşılıklı dışlama $\ne$ ilerleme $\ne$ sınırlı bekleme; açlık $\ne$ kilitlenme; sabit bağlantı $\ne$ sembolik bağlantı. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+\textbf{Strateji.} Önce bütün kâğıdı okuyun ($5$~dk). En iyi bildiğinizle başlayın. Her sayısal yanıtta formülü yazın, sayıları birimleriyle yerine koyun, hesaplayın ve sonucu kutu içine alın: aritmetik kaysa bile yöntem kısmi puan kazandırır. Gantt şemalarını ve çerçeve tablolarını zamanlarıyla düzgünce çizin. Takılırsanız ilgili formülü yazın ve geçin. Sonda birimleri ve ortalamaları denetlemek için $5$~dakika ayırın.
+
+% =====================================================================
+\newpage
+\section{Formül Kâğıdı}
+\label{sec:sheet}
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.55}
+\begin{tabularx}{\linewidth}{@{}c >{\raggedright\arraybackslash}p{4.3cm} >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Hf.} & \textbf{Büyüklük} & \textbf{Formül} \\
+\midrule
+1 & Toplu işlemede kullanım & $U = \dfrac{t_{\text{çalışma}}}{t_{\text{çalışma}} + t_{\text{hazırlık}}}$ \\
+1 & Çoklu programlamada kullanım & $U(n) = 1 - p^{\,n}$ \quad ($p$: G/Ç bekleme kesri) \\
+1 & Zaman paylaşımında en kötü bekleme & $T_{\text{bekleme}} \approx n\,q$ \\
+2 & Yoklamanın maliyeti & $f \cdot t_{\text{check}}$ \\
+2 & Monolitik ve mikroçekirdek & $T_{\text{mono}} = 2t_s + t_w$; \quad $T_{\mu} = 4t_s + 2t_c + t_w$ \\
+3, 5 & Bağlam değişimi ek yükü & $\dfrac{s}{q+s}$ \\
+3 & Art arda $n$ fork & $2^{n}$ süreç, $2^{n}-1$'i yeni \\
+4 & Amdahl yasası & $\text{hızlanma}(N) \le \dfrac{1}{S + (1-S)/N}$; \quad sınır $\dfrac{1}{S}$ \\
+4 & Dönüş, bekleme & $T_{\text{dönüş}} = T_{\text{tamamlanma}} - T_{\text{geliş}}$; \quad $T_{\text{bekleme}} = T_{\text{dönüş}} - T_{\text{patlama}}$ \\
+4 & Yanıt & $T_{\text{yanıt}} = T_{\text{ilk çalışma}} - T_{\text{geliş}}$ \\
+4 & Kullanım, üretilen iş & $\dfrac{B}{T}$ (meşgul / toplam); \quad $\dfrac{n}{T}$ \\
+5 & Üstel ortalama & $\tau_{n+1} = \alpha\, t_n + (1-\alpha)\, \tau_n$ \\
+5 & Round Robin sınırı & sonraki sıra için bekleme $\le (n-1)\,q$ \\
+6 & Taban ve sınır & $0 \le a < \text{sınır} \Rightarrow a_{\text{fiz}} = \text{taban} + a$, değilse tuzak \\
+6 & Takas süresi & boyut / aktarım hızı \\
+6 & Yüzde 50 kuralı & belleğin $\dfrac{0.5N}{N + 0.5N} = \dfrac13$'ü kaybolabilir \\
+6 & Sayfalama & $p = \lfloor a / 2^{n}\rfloor$, \ $d = a \bmod 2^{n}$, \ $a_{\text{fiz}} = f\cdot 2^{n} + d$ \\
+6 & Sayfa tablosu boyutu & $2^{m}/2^{n}$ girdi $\times$ girdi boyu \\
+6 & TLB (ders uzlaşımı) & $\text{EAT} = \alpha(t_{\text{TLB}} + t_m) + (1-\alpha)(t_{\text{TLB}} + 2t_m) = t_{\text{TLB}} + (2-\alpha)\,t_m$ \\
+6 & TLB (sadeleştirilmiş) & $\text{EAT} = \alpha\,t_m + (1-\alpha)\,2t_m$ \\
+6 & Bölütleme & $0 \le d < \text{sınır}[s] \Rightarrow \text{taban}[s] + d$, değilse tuzak \\
+7 & Sayfa hatalı EAT & $\text{EAT} = (1-p)\,t_m + p\,t_{\text{fault}}$ \quad ($p$: hata oranı) \\
+7 & Doğrudan erişim, $k$. kayıt & konum $= kR$; \ blok $= \lfloor kR/B \rfloor$; \ blok içi $= kR - \text{blok}\cdot B$; $kR + R - 1$. baytı denetle \\
+7 & Çalışma kümesi & $D = \sum_i \text{WSS}_i > m \Rightarrow$ boşa çalışma \\
+\bottomrule
+\end{tabularx}
+\end{center}
+\textbf{İkinin kuvvetleri:} $2^{10} = 1024$, $2^{12} = 4096$, $2^{16} = 65\,536$, $2^{20} \approx 10^{6}$. \textbf{Onaltılık:} bir onaltılık basamak $= 4$ bit; $4$~KB'lık sayfalarda ofset son üç onaltılık basamaktır. \textbf{Zaman:} $1\ \text{ms} = 10^{3}\ \mu\text{s} = 10^{6}\ \text{ns}$.
+\newpage
+
+% =====================================================================
+\section{Deneme Sınavı}
+\label{sec:practice}
+\textbf{Yönerge.} $90$ dakika, $100$ puan. Kısım~\ref{sec:exam}'deki ders uzlaşımlarını kullanın. Her hesabın her adımını gösterin. Çözümler Kısım~\ref{sec:solutions}'tedir; bitirmeden bakmayın.
+
+\subsection*{A Bölümü --- Çoktan seçmeli \hfill (10 $\times$ 2 = 20 puan)}
+\begin{enumerate}[leftmargin=2.0em,label=A\arabic*.,itemsep=0.3em]
+  \item GM-NAA~I/O (1956) sık sık ilk işletim sistemi sayılır, çünkü \quad (a) zaman paylaşımını getirdi \quad (b) işleri art arda çalıştıran bir yerleşik monitörü vardı \quad (c) C ile yazılmıştı \quad (d) grafik arayüzü vardı
+  \item İkili mod çalışmasında çekirdek modunu gösteren mod biti değeri \quad (a) $0$ \quad (b) $1$ \quad (c) $2$ \quad (d) $3$
+  \item Aşağıdakilerden hangisi bir sürecin her iş parçacığına \emph{özeldir}? \quad (a) global değişkenler \quad (b) yığın (heap) \quad (c) yığıt (stack) \quad (d) açık dosyalar
+  \item Bekleyen bir sürecin istediği disk okuması tamamlandığında süreç hangi duruma geçer? \quad (a) çalışıyor \quad (b) hazır \quad (c) yeni \quad (d) sonlandı
+  \item Konvoy etkisi hangisinin zayıflığıdır? \quad (a) FCFS \quad (b) SRTF \quad (c) Round Robin \quad (d) yaşlandırmalı öncelikli zamanlama
+  \item $3$ ile başlatılmış sayan bir semafor üç özdeş yazıcıyı koruyor. Aynı anda kaç iş parçacığı bir yazıcı kullanabilir? \quad (a) $1$ \quad (b) $2$ \quad (c) $3$ \quad (d) sınırsız
+  \item Sayfalama neyi ortadan kaldırır? \quad (a) iç parçalanmayı \quad (b) dış parçalanmayı \quad (c) ikisini de \quad (d) hiçbirini
+  \item Hangi sayfa değiştirme algoritması Belady anomalisi gösterebilir? \quad (a) FIFO \quad (b) LRU \quad (c) OPT \quad (d) hiçbiri
+  \item Sabit bağlantı \quad (a) bir yol içeren dosyadır \quad (b) aynı düğüm için başka bir dizin girdisidir \quad (c) dosyanın bir kopyasıdır \quad (d) asıl ad silinince boşta kalan bir bağlantıdır
+  \item \cmd{getpid()} hangi sistem çağrısı türüne aittir? \quad (a) süreç denetimi \quad (b) dosya yönetimi \quad (c) bilgi bakımı \quad (d) koruma
+\end{enumerate}
+
+\subsection*{B Bölümü --- Kısa yanıt \hfill (4 $\times$ 5 = 20 puan)}
+\begin{enumerate}[leftmargin=2.0em,label=B\arabic*.,itemsep=0.4em]
+  \item Program ile süreç arasındaki farkı açıklayın. Bir süreç denetim bloğunda saklanan dört tür bilgiyi sayın.
+  \item Bir bağlam değişimi sırasında ne kaydedilir ve geri yüklenir; buna neden ek yük denir? Geçiş süresi $s = 5\ \mu$s ve zaman dilimi $q = 10$~ms için ek yükü hesaplayın.
+  \item Kritik bölge problemine bir çözümün üç gereksinimini ifade edin. İki iş parçacığının yürüttüğü \texttt{counter++} işleminin neden bir güncellemeyi kaybettirebileceğini kısaca açıklayın.
+  \item İşletim sisteminin bir sayfa hatasını işlemek için yaptığı altı adımı sayın. Hataya yol açan komut neden yeniden başlatılmalıdır?
+\end{enumerate}
+
+\subsection*{C Bölümü --- Problemler \hfill (60 puan)}
+\begin{enumerate}[leftmargin=2.0em,label=C\arabic*.,itemsep=0.6em]
+  \item \pts{16} Tek işlemcili bir sisteme dört süreç geliyor (süreler ms): P1 (varış $0$, patlama $8$), P2 ($1$, $4$), P3 ($2$, $2$), P4 ($4$, $5$). (a) FCFS, (b) SRTF ve (c) $q = 4$ ile Round Robin için Gantt şemasını çizin; her sürecin dönüş ve bekleme süresini ve ortalama bekleme süresini hesaplayın. (d) Hangi algoritma en küçük ortalama bekleme süresini verir ve bu neden beklenen bir sonuçtur?
+  \item \pts{12} Bir sistem $16$ bitlik mantıksal adresler ve $1$~KB'lık sayfalar kullanıyor. Bir sürecin sayfa tablosu: $0$. sayfa $\to$ $7$. çerçeve, $1 \to 2$, $2 \to 9$, $4 \to 5$; diğer bütün sayfalar geçersiz.
+  (a) Ofset için ve sayfa numarası için kaçar bit kullanılır? Adres uzayında kaç sayfa olabilir?
+  (b) $2100$, $4500$, $3100$ ve $1023$ (onluk) mantıksal adreslerini çevirin.
+  (c) $t_{\text{TLB}} = 5$~ns, $t_m = 100$~ns ve isabet oranı $0.9$ iken etkin erişim süresini hesaplayın. Hangi isabet oranı $\text{EAT} = 110$~ns verir?
+  \item \pts{12} $4, 1, 2, 4, 3, 5, 1, 3, 2, 4, 3, 5$ başvuru dizisi ve başlangıçta boş $3$ çerçeve için FIFO, LRU ve OPT çerçeve tablolarını çizin ve sayfa hatalarını sayın.
+  \item \pts{10} Bellekte şu delikler var (boyut@başlangıç, KB, adres sırasında): $250@200$, $500@600$, $150@1300$, $400@1600$, $300@2200$. A $=210$, B $=380$, C $=290$, D $=450$~KB süreçleri bu sırayla geliyor. Her birinin ilk uyan, en iyi uyan ve en kötü uyan ile nereye yerleştirildiğini gösterin. Hangi istekler karşılanamaz ve neden?
+  \item \pts{10} (a) $t_m = 150$~ns, $t_{\text{fault}} = 5$~ms ve sayfa hatası oranı $p = 0.0004$. Etkin erişim süresini hesaplayın. Yavaşlamayı \%20'nin altında tutan en büyük $p$ nedir?
+  (b) Bir programın seri kesri $S = 0.3$. $4$ ve $10$ çekirdekteki en büyük hızlanmasını ve sonsuz sayıda çekirdek için sınırı hesaplayın.
+\end{enumerate}
+
+% =====================================================================
+\newpage
+\section{Deneme Sınavı: Çözümler}
+\label{sec:solutions}
+\subsection*{A Bölümü}
+A1 (b) \quad A2 (a) \quad A3 (c) \quad A4 (b) \quad A5 (a) \quad A6 (c) \quad A7 (b) \quad A8 (a) \quad A9 (b) \quad A10 (c).
+
+Kısa gerekçeler: A3 her iş parçacığının kendi fonksiyon çağrıları zinciri vardır; A4 bekliyor durumundan çalışıyor durumuna ok yoktur; A7 herhangi bir boş çerçeve herhangi bir sayfayı tutabilir, ama son sayfa genellikle dolu değildir; A8 LRU ve OPT yığıt algoritmalarıdır.
+
+\subsection*{B Bölümü}
+\textbf{B1.} Program diskte duran, komutlardan oluşan edilgen bir dosyadır; süreç ise yürütülmekte olan bir programdır: program sayacı, yazmaçları, kendi belleği (metin, veri, yığın, yığıt) ve kaynakları olan etkin bir varlık. Tek bir program birçok sürecin temeli olabilir. PCB içeriği (herhangi dördü): süreç durumu; PID ve ebeveyn PID; program sayacı; işlemci yazmaçları; zamanlama bilgisi (öncelik, kuyruk işaretçileri); bellek yönetimi bilgisi (taban/sınır ya da sayfa tablosu); hesap bilgisi; G/Ç durumu (açık dosyalar).
+
+\textbf{B2.} Çalışan sürecin bağlamı (program sayacı, yazmaçlar, yığıt işaretçisi, durum, bellek yönetimi bilgisi) PCB'sine kaydedilir ve sıradaki sürecin bağlamı onun PCB'sinden yüklenir. Geçiş sırasında hiçbir süreç yararlı iş yapmaz; bu yüzden saf ek yüktür. $q = 10\ \text{ms} = 10\,000\ \mu$s ile ek yük $s/(q+s) = 5/10\,005 \approx 0.05\%$'tir.
+
+\textbf{B3.} Karşılıklı dışlama (kritik bölgesinde en çok bir iş parçacığı), ilerleme (içeride kimse yoksa yalnızca girmek isteyen iş parçacıkları karar verir ve bu karar sonsuza kadar ertelenmez), sınırlı bekleme (bekleyen bir iş parçacığından önce başkalarının kaç kez girebileceğine bir sınır: açlık yok). \texttt{counter++} üç komuttur: özel bir yazmaca oku, ekle, yaz. İki iş parçacığı da herhangi biri yazmadan önce aynı eski değeri okursa ikinci yazma birincinin üzerine yazar ve bir güncelleme kaybolur.
+
+\textbf{B4.} (1) süreç, girdisi geçersiz olan bir sayfaya başvurur; (2) MMU işletim sistemine tuzak üretir, işletim sistemi adresin geçerli olduğunu denetler; (3) işletim sistemi sayfayı yedek depoda bulur ve boş bir çerçeve bulur (ya da bir sayfayı değiştirir); (4) sayfayı diskten çerçeveye okur (bu arada başka süreçler çalışır); (5) sayfa tablosunu günceller (çerçeve numarası, bit v); (6) komutu yeniden başlatır. Hata oluştuğunda komut tamamlanmamıştı; bu yüzden, bu kez sayfa bellekteyken, baştan yeniden yürütülmelidir.
+
+\subsection*{C Bölümü}
+\textbf{C1.} \textit{(Üretilmiş tablolar; uzlaşımlar: geçiş süresi $0$, eşitlikte varışa göre.)}
+
+\textbf{(a) FCFS}\\[0.2em]
+\gen{pr_gantt_fcfs}\\[0.3em]
+{\small\gen{pr_sched_fcfs}}
+
+\textbf{(b) SRTF}\\[0.2em]
+\gen{pr_gantt_srtf}\\[0.3em]
+$t=1$: P2'nin ihtiyacı $4 <$ P1'in kalanı $7$: kesme. $t=2$: P3'ün ihtiyacı $2 <$ P2'nin kalanı $3$: kesme. $t=4$: P3 biter; P4 $5$ ihtiyacıyla gelir; kalanlar P1 $7$, P2 $3$: P2 $7$'ye kadar çalışır, sonra P4 ($5 < 7$) $12$'ye kadar, sonra P1 $19$'a kadar.\\
+{\small\gen{pr_sched_srtf}}
+
+\Needspace{12\baselineskip}
+\textbf{(c) Round Robin, $q = 4$}\\[0.2em]
+\gen{pr_gantt_rr4}\\[0.3em]
+$t=4$: kuyruk P2, P3, sonra P4 (tam P1'in zaman dilimi biterken gelir), sonra P1. P2 $4$--$8$ (biter), P3 $8$--$10$ (biter), P4 $10$--$14$ ($1$ kaldı), P1 $14$--$18$ (biter), P4 $18$--$19$.\\
+{\small\gen{pr_sched_rr4}}
+
+\textbf{(d)} SRTF: ortalama bekleme süresi $4$~ms; FCFS'de $6.75$, RR'de $7.25$~ms. Bağlam değişimleri bedava olduğunda SRTF her zaman en küçük ortalama bekleme süresini verir, çünkü kısa bir işi önce çalıştırmak toplam bekleme süresini hiçbir zaman artırmaz (yer değiştirme argümanı). Bedeli: patlama uzunluklarını önceden bilmeyi gerektirir ve uzun iş P1 $11$~ms bekler.
+
+\textit{Puanlama:} her algoritma $5$ puan (Gantt şeması $2$, süreç başına süreler $2$, ortalama $1$); (d) $1$ puan.
+
+\textbf{C2.} (a) $1\ \text{KB} = 2^{10}$~B, dolayısıyla ofset $n = 10$ bit, sayfa numarası $16 - 10 = 6$ bittir: $2^{6} = 64$ sayfa.
+(b) $p = \lfloor a/1024 \rfloor$, $d = a - 1024\,p$:
+\begin{itemize}
+  \item $2100$: $p = 2$, $d = 2100 - 2048 = 52$; $9$. çerçeve: $9 \times 1024 + 52 = 9268$.
+  \item $4500$: $p = 4$, $d = 4500 - 4096 = 404$; $5$. çerçeve: $5 \times 1024 + 404 = 5524$.
+  \item $3100$: $p = 3$ ($d = 28$): $3$. sayfa geçersiz $\Rightarrow$ \textbf{tuzak}.
+  \item $1023$: $p = 0$, $d = 1023$; $7$. çerçeve: $7 \times 1024 + 1023 = 8191$ ($7$. çerçevenin son baytı).
+\end{itemize}
+(c) $\text{EAT} = 0.9 \times 105 + 0.1 \times 205 = 94.5 + 20.5 = 115$~ns $= 5 + (2 - 0.9)\times100$. $110$~ns için: $5 + (2-\alpha)\,100 = 110 \Rightarrow 2 - \alpha = 1.05 \Rightarrow \alpha = 0.95$.
+\textit{Puanlama:} (a) $3$, (b) adres başına $1.5$, (c) $3$.
+
+\textbf{C3.} \textit{(Üretilmiş tablolar.)}
+\begin{center}
+\begin{minipage}{\linewidth}\centering\textbf{FIFO: 10 hata}\\[0.2em]\gen{pr_frames_FIFO}\end{minipage}\\[0.8em]
+\begin{minipage}{\linewidth}\centering\textbf{LRU: 9 hata}\\[0.2em]\gen{pr_frames_LRU}\end{minipage}\\[0.8em]
+\begin{minipage}{\linewidth}\centering\textbf{OPT: 7 hata}\\[0.2em]\gen{pr_frames_OPT}\end{minipage}
+\end{center}
+Sağlama: dizide $5$ farklı sayfa var, dolayısıyla en az $5$ hata; burada $\text{OPT} \le \text{LRU} \le \text{FIFO}$. \textit{Puanlama:} algoritma başına $4$ puan (tablo $3$, sayı $1$).
+
+\Needspace{12\baselineskip}
+\textbf{C4.} \textit{(Üretilmiş tablo.)}
+\begin{center}\small\gen{pr_fits}\end{center}
+İlk uyan: $720$~KB boş olduğu hâlde D ($450$) beklemek zorundadır --- en büyük delik $300$~KB'tır. En kötü uyan: D yine beklemek zorundadır ($720$~KB boş, en büyük delik $290$~KB). En iyi uyan dördünü de yerleştirir ve küçük deliklerde $270$~KB bırakır. Bu dış parçalanmadır: toplamda yeterince boş bellek var, ama bitişik değil. \textit{Puanlama:} strateji başına $3$ puan, açıklama için $1$.
+
+\textbf{C5.} (a) $t_{\text{fault}} = 5\ \text{ms} = 5\,000\,000$~ns:
+\[
+\text{EAT} = 0.9996 \times 150 + 0.0004 \times 5\,000\,000 = 149.94 + 2000 = 2149.94\ \text{ns} \approx 14.3\,t_m .
+\]
+Yavaşlama \%20'nin altında: $\text{EAT} < 180$~ns, dolayısıyla $150 + p\,(5\,000\,000 - 150) < 180 \Rightarrow p < 30/4\,999\,850 \approx 6.0\times10^{-6}$; yani en çok yaklaşık $166\,700$ erişimde bir hata.
+
+(b) $N = 4$: $1/(0.3 + 0.7/4) = 1/0.475 \approx 2.11$; $N = 10$: $1/(0.3 + 0.07) = 1/0.37 \approx 2.70$; sınır $1/0.3 \approx 3.33$.
+\textit{Puanlama:} (a) $6$ ($3$ EAT, $3$ sınır), (b) $4$.
+
+% =====================================================================
+\section{Sayılar Nasıl Denetlendi?}
+\label{sec:check}
+Bu kılavuzdaki, slaytlardaki ve örnek kâğıttaki her sayı göz kararı değil, hesapla bulundu. \texttt{code/} klasöründe şunlar var:
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily}l X@{}}
+\toprule
+\textrm{\textbf{Dosya}} & \textbf{Amaç} \\
+\midrule
+osim.py & tam olarak ders uzlaşımlarıyla küçük benzeticiler: FCFS, SJF, SRTF, öncelikli, RR; FIFO, LRU, OPT; ilk/en iyi/en kötü uyan; 1--7. haftaların formülleri \\
+review\_problems.py & slaytlardaki çözümlü problemler ve Kısım~\ref{sec:w1}--\ref{sec:w7}'deki örnekler (çıktı: \texttt{out\_review.txt}) \\
+practice\_exam.py & Kısım~\ref{sec:practice}'teki deneme sınavı (çıktı: \texttt{out\_practice.txt}) \\
+sample\_exam.py & ayrı örnek kâğıt ve cevap anahtarı (çıktı: \texttt{out\_sample.txt}) \\
+gen\_tables.py & ``üretilmiş'' diye işaretlenen Gantt şemalarını ve tabloları yazar (\texttt{tex/*.tex}) \\
+make\_tex\_tr.py & bu tabloların Türkçe başlıklı kopyalarını yazar (\texttt{tex\_tr/*.tex}) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+Örneğin 2. problemin SRTF kısmı, \cmd{python3 review\_problems.py} çıktısında (program çıktısı İngilizcedir: \texttt{arr} = varış, \texttt{burst} = patlama, \texttt{prio} = öncelik, \texttt{first} = ilk çalışma, \texttt{done} = bitiş, \texttt{TAT} = dönüş, \texttt{wait} = bekleme, \texttt{resp} = yanıt):
+\lstinputlisting[style=term,linerange={46-54}]{../code/out_review.txt}
+Kendi alıştırma problemlerinizi üretmek için betiklerdeki iş kümelerini, başvuru dizilerini ya da delikleri değiştirin ve el hesaplarınızı onlarla denetleyin.
+
+% =====================================================================
+\section{İleriye Bakış: 9. Hafta}
+Vizeden sonra ders uygulamalı hâle geliyor. 9. haftadan 14. haftaya kadar her hafta Linux kabuğunda (shell) çalışacağız ve bu yarının fikirlerinin çoğu komut olarak geri dönecek.
+\begin{itemize}
+  \item \textbf{9. hafta: Linux Kabuğuna Giriş ve Dosya Sisteminde Gezinme.} Linux edinmek (laboratuvar bilgisayarları, \cmd{wsl --install} ile WSL, bir Ubuntu sanal makinesi); terminal, kabuk ve çekirdek (kabuk bir sistem programıdır, 2.~hafta); ilk komutlar; \cmd{pwd}, \cmd{ls}, \cmd{cd}; 7.~haftanın dizin ağacında mutlak ve göreli yollar; yardım almak.
+  \item 10.~hafta: dosya işlemleri ve bağlantılar (yine düğümler); 11.~hafta: izinler; 12.~hafta: yönlendirme ve borular; 13.~hafta: süreçler ve iş denetimi (\cmd{ps}, sinyaller; 3. ve 5.~haftalar); 14.~hafta: kabuk betikleri; 15.~hafta: final sınavı.
+\end{itemize}
+9.~haftadan önce bir laboratuvar bilgisayarında, WSL'de ya da bir sanal makinede Linux terminali açabildiğinizden emin olun.
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley: Bölüm~1--2 (giriş, yapılar), 3 (süreçler), 4 (iş parçacıkları), 5 (işlemci zamanlama), 6 (eşzamanlama araçları), 9 (ana bellek), 10 (sanal bellek), 13 (dosya sistemi arayüzü).
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}, bölüm PDF'leri:
+  \begin{itemize}[itemsep=0em]
+    \item Süreçler: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf}
+    \item Zamanlama: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched.pdf}
+    \item Eşzamanlılık ve iş parçacıkları: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf}
+    \item Sayfalama: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf}
+    \item TLB'ler: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-tlbs.pdf}
+    \item Değiştirme politikaları: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys-policy.pdf}
+    \item Dosyalar ve dizinler: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf}
+  \end{itemize}
+\end{itemize}

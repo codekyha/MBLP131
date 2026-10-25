@@ -1,0 +1,809 @@
+% ============================ Hafta 9 gövdesi ============================
+% Terminal kayıtları doğrudan ../code/out_*.txt dosyalarından okunur (İngilizce haftanın gerçek çıktıları, değiştirilmeden).
+\newcommand{\outl}[3]{\Needspace{5\baselineskip}\lstinputlisting[style=term,firstline=#2,lastline=#3]{../code/#1}}
+\newcommand{\tl}{\textasciitilde}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}, basicstyle=\ttfamily\footnotesize\color{light}}
+\sloppy
+
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 9 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Linux Kabuğuna Giriş ve Dosya Sisteminde Gezinme}\par\smallskip
+{\small\itshape\color{white!70} Kuramdan terminale: neredeyim, burada ne var ve nasıl hareket ederim?}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Bir laboratuvar bilgisayarında, Windows'ta WSL ile ya da bir VirtualBox sanal makinesinde Linux terminali açmak ve dersin laboratuvar klasörü \texttt{\tl/lab}'ı oluşturmak.
+  \item Terminal, kabuk ve çekirdek arasındaki farkı açıklamak; bir komut yazdığınızda neler olduğunu (fork, exec, wait, sistem çağrıları) anlatmak.
+  \item İstemi okumak ve bir komut satırını komut, seçenekler ve argümanlar olarak ayırmak.
+  \item \cmd{whoami}, \cmd{hostname}, \cmd{date}, \cmd{echo}, \cmd{uname}, \cmd{pwd} ve en kullanışlı seçenekleriyle \cmd{ls} komutlarını kullanmak; \cmd{ls -l} çıktısının her sütununu okumak.
+  \item Linux dizin ağacını (\texttt{/}, \texttt{/home}, \texttt{/etc}, \texttt{/bin}, \texttt{/usr}, \texttt{/var}, \texttt{/tmp}, \texttt{/dev}, \texttt{/proc}) tanımlamak.
+  \item \cmd{cd} ile mutlak ve göreli yollar ve \texttt{\tl}\ \texttt{.}\ \texttt{..}\ \texttt{-} özel adlarıyla dolaşmak; \cmd{cd}'nin neden bir kabuk yerleşiği olduğunu açıklamak.
+  \item Yardım bulmak (\cmd{--help}, \cmd{man}, \cmd{help}, \cmd{type}); sekme tamamlama, komut geçmişi ve klavye kısayollarıyla verimli çalışmak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{Vizeden Terminale}
+
+Dersin ilk yarısı (1--7.\ haftalar; 8.\ haftadaki vizede sınandı) \emph{fikirlerle} ilgiliydi: kaynak yöneticisi ve genişletilmiş makine olarak işletim sistemi; çekirdek modunda çalışan çekirdek ve kullanıcı modunda çalışan geri kalan her şey; çekirdeğe açılan tek kapı olarak \term{sistem çağrıları} (system calls; 2--3.\ haftalar); PID'si, durumu ve PCB'siyle, \cmd{fork()} ve \cmd{exec()} ile oluşturulan ve işlemci zamanlayıcısı tarafından sıralanan \term{süreçler} (processes; 3--5.\ haftalar); ve son olarak bellek, sanal bellek, dosyalar ve ağaç yapılı dizinler (6--7.\ haftalar).
+
+Bu haftadan 14.\ haftaya kadar Linux kabuğunda \emph{uygulamalı} çalışıyoruz. Aynı fikirleri iş başında göreceksiniz: yazdığınız her komut bir sürece dönüşür; her dosya listesi bir dizinden bir sistem çağrısıyla okunur; 7.\ haftanın dizin ağacı, \cmd{cd} ile içinde yürüdüğünüz ağaçtır. 10.\ hafta dosya işlemlerini, 11.\ hafta izinleri, 12.\ hafta metin işleme ve boruları (pipes), 13.\ hafta süreçleri ve iş denetimini, 14.\ hafta kabuk betiklerini (shell scripting) işleyecek.
+
+\paragraph{Bu notlardaki çıktılar hakkında.} Bütün terminal çıktıları Ubuntu 24.04 LTS üzerinde, \texttt{student} adlı normal bir kullanıcıyla, \texttt{okan-lab} adlı bir bilgisayarda ve \texttt{LC\_ALL=C.UTF-8} yerel ayarıyla (locale) alındı. Sizin makinenizde kullanıcı adı, bilgisayar adı, tarihler, saatler, sistem dosyalarının boyutları ve süreç numaraları (PID'ler) farklı olacaktır; başka bir yerel ayarla \cmd{ls}'nin sıralaması da biraz değişebilir (örneğin büyük harfle başlayan adların önce gelip gelmemesi). \texttt{\tl/lab} içindeki dosyalar ise herkes için aynıdır. Ubuntu ayrıca \cmd{ls} çıktısını renklendirir (dizinler mavi); bizim kaydettiğimiz çıktıda renk yoktur. Her gösterim \texttt{code/} klasöründe bir \texttt{demo\_*.sh} dosyası olarak, çıktısıyla birlikte \texttt{out\_*.txt} dosyasında durur.
+
+\paragraph{Türkçe sistemler.} Türkçe yerel ayarlı bir sistemde (\texttt{LANG=tr\_TR.UTF-8}) birçok program mesajlarını Türkçe yazar: örneğin \texttt{No such file or directory} yerine \texttt{Böyle bir dosya ya da dizin yok}, \texttt{Permission denied} yerine \texttt{Erişim engellendi} görebilirsiniz; \cmd{date} Türkçe gün ve ay adları kullanır, \cmd{ls}'nin sıralaması da farklı olabilir. Bu notlardaki çıktılar \texttt{LC\_ALL=C.UTF-8} ile, yani İngilizce mesajlarla alınmıştır; İngilizce mesajlar internette arama yaparken de daha çok sonuç verir. Bir komutu tek seferlik İngilizce çalıştırmak için başına \texttt{LC\_ALL=C.UTF-8} yazabilirsiniz: \cmd{LC\_ALL=C.UTF-8 ls nowhere}.
+
+% =====================================================================
+\section{Linux Terminaline Ulaşmak}
+\label{sec:getlinux}
+
+Dönemin geri kalanı için bir Linux kabuğuna ihtiyacınız var. Ona ulaşmanın üç iyi yolu vardır; komutlar üçünde de aynıdır.
+
+\subsection{1.\ seçenek: laboratuvar bilgisayarları}
+Oturum açın, \emph{Terminal} uygulamasını başlatın ve Bölüm~\ref{sec:labsetup} ile devam edin. \emph{[Laboratuvar bilgisayarlarındaki derslik, hesap ve sistem öğretim üyesi tarafından duyurulacaktır.]}
+
+\subsection{2.\ seçenek: Windows 10/11'de WSL}
+\term{Linux için Windows Alt Sistemi} (Windows Subsystem for Linux, WSL), Windows'un yönettiği hafif bir sanal makinede gerçek bir Linux çekirdeği çalıştırır; varsayılan dağıtım Ubuntu'dur.
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item Başlat düğmesine sağ tıklayın ve \emph{Terminal (Yönetici)} ya da \emph{Windows PowerShell (Yönetici)} seçeneğini seçin.
+  \item Aşağıdaki komutu yazıp Enter'a basın:
+\begin{lstlisting}[style=term]
+PS C:\Windows\system32> wsl --install
+\end{lstlisting}
+  Komut gerekli Windows özelliklerini etkinleştirir, WSL~2'yi kurar ve Ubuntu'yu indirir.
+  \item Windows isteyince bilgisayarı yeniden başlatın.
+  \item Başlat menüsünden \emph{Ubuntu}'yu açın. İlk açılışta yeni bir \emph{Linux} kullanıcı adı ve parolası ister (Windows hesabınızla aynı olmaları gerekmez). Parolayı yazarken ekranda \emph{hiçbir şey görünmez}, yıldız bile --- Linux'ta bu normaldir. Bu kullanıcı daha sonra \cmd{sudo} ile yönetici komutları çalıştırabilir.
+  \item Bundan sonra kabuğa ihtiyaç duyduğunuzda \emph{Ubuntu}'yu açın (ya da PowerShell'de \cmd{wsl} yazın).
+\end{enumerate}
+
+Yararlı bilgiler: \cmd{wsl -l -v} (PowerShell'de) kurulu dağıtımları ve WSL sürümlerini listeler; \cmd{wsl --install -d Ubuntu-24.04} belirli bir Ubuntu sürümünü kurar. Linux içinde Windows \texttt{C:} sürücünüz \texttt{/mnt/c} olarak görünür; dolayısıyla Windows'taki indirme klasörünüz \texttt{/mnt/c/Users/<Windows adınız>/Downloads}'tır. Kurulum sanallaştırmayla ilgili bir mesajla başarısız olursa bilgisayarınızın BIOS/UEFI ayarlarında sanallaştırmayı açın (Intel VT-x, AMD-V ya da SVM adıyla geçer).
+
+\subsection{3.\ seçenek: VirtualBox ve Ubuntu}
+\term{Sanal makine} (virtual machine), işletim sistemindeki sanallaştırma fikrini bütün bir bilgisayara uygular: bir \emph{hipervizör} (burada VirtualBox) konuk işletim sistemine sanal işlemciler, bellek ve sanal bir disk verir; Ubuntu donanımın sahibiymiş gibi çalışır.
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item VirtualBox'ı indirip kurun ve \emph{Ubuntu Desktop 24.04 LTS} ISO kalıbını indirin (yaklaşık 6\,GB).
+  \item VirtualBox'ta \emph{New} (Yeni) düğmesine tıklayın: makineye bir ad verin, ISO kalıbını seçin, tür olarak Linux / Ubuntu (64-bit).
+  \item Makineye $4096$\,MB bellek, $2$ işlemci ve $25$\,GB'lık bir sanal disk verin (dinamik olarak ayrılan: dosya yalnızca gerektikçe büyür). Dizüstü bilgisayarınızda yalnızca 4\,GB RAM varsa WSL'yi tercih edin.
+  \item Sanal makineyi başlatın ve \emph{Install Ubuntu} adımlarını izleyin. ``Erase disk and install Ubuntu'' seçeneği yalnızca \emph{sanal} diski, yani bilgisayarınızdaki bir dosyayı siler --- Windows diskinizi değil. (VirtualBox~7, kullanıcı bilgilerini sizin yerinize dolduran bir ``gözetimsiz kurulum'' da yapabilir.)
+  \item Oturum açın ve \texttt{Ctrl+Alt+T} ile (ya da \emph{Etkinlikler} $\to$ \emph{Terminal}) bir terminal açın.
+\end{enumerate}
+
+\paragraph{Mac kullananlar.} macOS Terminali (\cmd{zsh} kabuğuyla) bu haftanın komutlarının çoğunu anlar, ancak macOS'taki BSD araçlarının birçok seçeneği Linux'taki GNU araçlarından farklıdır. Önümüzdeki haftalar için bir Linux sanal makinesi kullanın (Apple Silicon Mac'lerde UTM ücretsiz bir seçenektir; VirtualBox desteği orada sınırlıdır).
+
+\subsection{Laboratuvar klasörünü oluşturmak}
+\label{sec:labsetup}
+
+Bütün uygulamalı haftalar aynı alıştırma klasörünü, \texttt{\tl/lab}'ı kullanır. Bu klasörü \texttt{mcmp117\_lab\_setup.sh} betiği (script) oluşturur; betiği her Linux haftasının \texttt{code/} klasöründe ve dersin Telegram kanalında bulursunuz \emph{[indirme bağlantısı: öğretim üyesi tarafından teyit edilecek]}. Betiği \cmd{bash} ile \emph{bir kez} çalıştırın; betiğin kendisi nerede olursa olsun, \texttt{lab} klasörünü her zaman ev dizininizde kurar:
+
+\begin{lstlisting}[style=term]
+# Ubuntu / sanal makine: betik indirme klasörünüzde
+student@okan-lab:~$ bash ~/Downloads/mcmp117_lab_setup.sh
+# WSL: betik Windows'taki indirme klasörünüzde (Windows adınızı yazın)
+student@okan-lab:~$ bash /mnt/c/Users/ayse/Downloads/mcmp117_lab_setup.sh
+\end{lstlisting}
+
+Betik ev dizinindeyken gerçek çıktı şöyledir (\cmd{ls} bir dizini listeler; Bölüm~\ref{sec:ls}):
+\outl{out_setup.txt}{1}{12}
+
+Betikte rastgelelik yoktur: herkes bu notlardakiyle tıpatıp aynı dosyaları elde eder. Yeniden çalıştırmak güvenlidir --- \emph{yalnızca} \texttt{lab} klasörünü silip yeniden oluşturur --- bu yüzden lab klasörünüz karıştığında betiği yeniden çalıştırmanız yeter. Aynı nedenle kendi çalışmalarınızı asla \texttt{\tl/lab} içinde tutmayın.
+
+\begin{tryit}[Betik hata verirse]
+\texttt{line 2: \$'\textbackslash r': command not found} gibi bir hata görürseniz dosya Windows satır sonlarını almıştır (örneğin Not Defteri'nde açılıp kaydedildikten sonra). Dosyayı yeniden indirin ya da \cmd{sed -i 's/\textbackslash r\$//' mcmp117\_lab\_setup.sh} ile onarın. \texttt{No such file or directory} görürseniz önce yolu \cmd{ls} ile kontrol edin (Bölüm~\ref{sec:errors}).
+\end{tryit}
+
+% =====================================================================
+\section{Terminal, Kabuk ve Çekirdek}
+
+\subsection{Üç program, üç görev}
+
+İnsanlar ``terminal'', ``kabuk'', ``komut satırı'' ve ``Linux'' sözcüklerini çoğu zaman aynı şeyi kastediyormuş gibi kullanır. Oysa bunlar farklı katmanlardır:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[l/.style={rectangle,rounded corners=2pt,minimum width=11.5cm,minimum height=0.85cm,align=center,font=\small}]
+\node[l,fill=light] (u) at (0,0) {\textbf{Siz} --- klavye ve ekran};
+\node[l,fill=mint!25] (t) at (0,-1.1) {\textbf{Terminal (öykünücü)} --- tuşlarınızı gönderen ve karakterleri çizen bir pencere\\{\footnotesize GNOME Terminal, Windows Terminal, WSL'nin Ubuntu uygulaması}};
+\node[l,fill=mint] (s) at (0,-2.2) {\textbf{Kabuk: bash} --- bir satır okur, yorumlar, programları başlatır\\{\footnotesize kullanıcı modunda çalışan bir sistem programı (2--3.\ haftalar)}};
+\node[l,fill=charcoal,text=white] (k) at (0,-3.5) {\textbf{Çekirdek: Linux} --- dosyalar, süreçler, bellek, aygıtlar (çekirdek modu)};
+\node[l,fill=slate,text=white] (h) at (0,-4.6) {\textbf{Donanım} --- işlemci, RAM, disk, ağ};
+\draw[<->,slate,thick] (u) -- (t); \draw[<->,slate,thick] (t) -- (s); \draw[<->,slate,thick] (k) -- (h);
+\draw[<->,slate,thick] (s) -- (k);
+\draw[dashed,red!70!black,thick] (-6,-2.85) -- (6,-2.85) node[right,font=\scriptsize,align=left] {sistem çağrısı\\sınırı};
+\end{tikzpicture}
+\caption{Sizinle donanım arasındaki katmanlar. Kesikli çizginin üstündeki her şey kullanıcı modunda çalışır.}
+\end{figure}
+
+\begin{itemize}
+  \item \term{Terminal} yalnızca girdi ve çıktıyla ilgilenir; komutları anlamaz. (Tarihsel olarak terminal fiziksel bir aygıttı --- bir teleks makinesi ya da VT100 gibi bir video terminali; bugün onu taklit eden, yani ona \emph{öykünen} bir programdır.)
+  \item \term{Kabuk} (shell), 3.\ haftadaki \emph{komut yorumlayıcısıdır} (command interpreter). Linux birkaç kabuk sunar: \cmd{bash} (Ubuntu'da varsayılan), \cmd{zsh}, \cmd{sh}, \cmd{fish}. 2.\ haftada vurguladığımız gibi kabuk çekirdeğin bir parçası \emph{değildir}; sıradan bir sistem programıdır.
+  \item \term{Çekirdek} (kernel), her komut için asıl işi yapar ve ona yalnızca sistem çağrılarıyla ulaşılır.
+  \item Tam anlamıyla ``Linux'' yalnızca çekirdektir; Ubuntu bir \emph{dağıtımdır} (distribution): Linux çekirdeği artı GNU araçları (\cmd{bash}, \cmd{ls}, \ldots) ve binlerce başka program.
+\end{itemize}
+
+\subsection{Bir komut yazdığınızda ne olur?}
+\label{sec:forkexec}
+
+\cmd{ls} yazıp Enter'a bastığınızda \cmd{bash}, 3.\ haftadaki \emph{fork--exec--wait} kalıbını izler:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[b/.style={rectangle,rounded corners=2pt,minimum width=2.8cm,minimum height=1.0cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=2.5mm]},thick,mintdeep}]
+\node[b,fill=mint] (p) at (0,0) {\textbf{bash}\\{\scriptsize kabuk (ebeveyn)}};
+\node[b,fill=mint!25] (c) at (4.4,0) {\textbf{bash (kopya)}\\{\scriptsize fork() sonrası çocuk}};
+\node[b,fill=charcoal,text=white] (l) at (8.8,0) {\textbf{ls}\\{\scriptsize exec() sonrası çocuk}};
+\draw[arr] (p) -- node[above,font=\scriptsize\bfseries]{fork()} (c);
+\draw[arr] (c) -- node[above,font=\scriptsize\bfseries]{exec()} (l);
+\draw[arr,slate] (l.south) -- ++(0,-0.6) -| node[pos=0.25,below,font=\scriptsize\itshape]{ls exit() çağırır; ebeveynin wait() çağrısı döner; yeni istem} (p.south);
+\end{tikzpicture}
+\caption{Kabuk her harici komut için yeni bir süreç oluşturur.}
+\end{figure}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Oku:} \cmd{bash} terminalden \texttt{ls} satırını okur.
+  \item \textbf{Bul:} \cmd{ls} bir yerleşik değildir; bu yüzden \cmd{bash}, \texttt{\$PATH} değişkeninde listelenen dizinleri arar ve \texttt{/usr/bin/ls} program dosyasını bulur.
+  \item \textbf{fork():} \cmd{bash} yeni bir PID'si olan bir çocuk süreç, yani kendinin bir kopyasını oluşturur.
+  \item \textbf{exec():} çocuk kendi programını \texttt{/usr/bin/ls} ile değiştirir; \cmd{ls} çalışır, yazar ve sonlanır.
+  \item \textbf{wait():} ebeveyn kabuk çocuğun bitmesini bekler, sonra yeni istemi yazar.
+\end{enumerate}
+
+\term{Yerleşik} (builtin) denen bazı komutları ise \cmd{bash} yeni bir süreç oluşturmadan kendisi yürütür: \cmd{cd}, \cmd{pwd}, \cmd{echo}, \cmd{history}, \cmd{type} ve diğerleri. Bölüm~\ref{sec:cdbuiltin}, \cmd{cd}'nin neden yerleşik \emph{olmak zorunda} olduğunu açıklıyor.
+
+\subsection{Komutlar sistem çağrısına dönüşür}
+
+2.\ haftada bir C programının sistem çağrılarını listelemek için \cmd{strace} kullanmıştık. Araç her komutla çalışır. Burada yalnızca üç tür sistem çağrısını izliyoruz; \texttt{> /dev/null} ise \cmd{ls}'nin normal çıktısını atıyor, böylece yalnızca \cmd{strace}'in raporu kalıyor (yönlendirme --- redirection --- 12.\ haftanın konusu):
+
+\outl{out_syscalls.txt}{2}{7}
+
+\begin{itemize}
+  \item \texttt{execve}: çocuk süreç, \texttt{["ls", "docs"]} argüman listesiyle \texttt{/usr/bin/ls}'ye dönüşür --- yukarıdaki 4.\ adım.
+  \item \texttt{getdents64} (``get directory entries'', dizin girdilerini al) dizini okur. $9$ girdi buldu: $6$ görünür dosya, gizli \texttt{.settings} dosyası ve her dizinin içerdiği \texttt{.} ve \texttt{..} girdileri. İkinci çağrı $0$ girdi döndürür: dizinin sonu. 7.\ haftadan hatırlayın: dizin, (ad, düğüm numarası) çiftlerini içeren bir dosyadır; bu çiftleri okuyan sistem çağrısı budur.
+  \item \texttt{write(1, \ldots, 86)}, $1$ numaralı dosya tanımlayıcısına (file descriptor), yani standart çıktıya $86$ bayt yazar.
+\end{itemize}
+\cmd{ls} diski kendi başına okuyamaz; kullanıcı modundaki her program gibi çekirdekten istemek zorundadır (ikili mod, 2.\ hafta). Süzgeç olmadan \cmd{ls} birkaç düzine sistem çağrısı yapar (kitaplıkları yükleme, yerel ayar dosyalarını okuma, bellek eşleme). \cmd{strace} kurulu değilse: \cmd{sudo apt install strace}.
+
+% =====================================================================
+\section{İstem ve İlk Komutlar}
+
+\subsection{İstemi okumak}
+
+Kabuk bir komuta hazır olduğunda bir \term{istem} (prompt) yazar. Ubuntu'nun varsayılan istemi \texttt{kullanıcı@bilgisayar:dizin\$} biçimindedir:
+
+\begin{center}
+\begin{tikzpicture}[p/.style={rectangle,rounded corners=1.5pt,fill=charcoal,text=mint,font=\ttfamily,minimum height=0.6cm},
+  q/.style={font=\ttfamily}, lab/.style={font=\scriptsize\itshape,text=muted}]
+\node[p] (a) at (0,0) {student}; \node[q] at (1.05,0) {@};
+\node[p] (b) at (2.15,0) {okan-lab}; \node[q] at (3.2,0) {:};
+\node[p] (c) at (4.0,0) {\textasciitilde/lab}; \node[p] (d) at (5.0,0) {\$};
+\node[lab,below=2pt of a] {kullanıcı}; \node[lab,below=2pt of b] {bilgisayar adı};
+\node[lab,below=2pt of c] {geçerli dizin}; \node[lab,below=14pt of d] {normal kullanıcı};
+\end{tikzpicture}
+\end{center}
+
+Tilde işareti \texttt{\tl}, \term{ev dizininizin} (home directory) kısaltmasıdır; burada \texttt{/home/student}. \texttt{\$} yerine \texttt{\#} ile biten bir istem, yönetici olan \texttt{root} kullanıcısı olduğunuzu gösterir --- o zaman dikkatli olun. Bu notlarda istemden sonraki metin sizin yazdığınız şeydir; istemsiz satırlar çıktıdır.
+
+\subsection{Bir komutun anatomisi}
+
+Bir komut satırı boşluklardan \emph{sözcüklere} bölünür:
+\begin{center}
+\texttt{\textbf{komut}\ \ -seçenekler\ \ argümanlar}\qquad örneğin\qquad \texttt{ls -l -a docs}
+\end{center}
+\begin{itemize}
+  \item İlk sözcük \term{komuttur}: bir program dosyası ya da bir yerleşik.
+  \item \term{Seçenekler} (options) komutun \emph{nasıl} çalışacağını değiştirir. Kısa seçenekler bir tireden sonra tek harftir ve birleştirilebilir: \cmd{ls -l -a} $=$ \cmd{ls -la} $=$ \cmd{ls -al}. Uzun seçenekler iki tireyle başlar ve açık yazılır: \cmd{ls --all}. Bazı seçenekler bir değer alır: \cmd{head -n 4}.
+  \item \term{Argümanlar} (arguments) komutun \emph{ne} üzerinde çalışacağını söyler: dosyalar, dizinler, metin.
+\end{itemize}
+Linux \emph{büyük-küçük harfe duyarlıdır}: \cmd{ls} ile \cmd{LS} farklı sözcüklerdir, \texttt{docs} ile \texttt{Docs} da öyle. Boşluklar da önemlidir: \cmd{ls-l} tek bir sözcüktür, yani var olmayan bir komut.
+
+\begin{center}
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Örnek} & \textbf{Komut} & \textbf{Seçenekler} & \textbf{Argümanlar}\\
+\midrule
+\texttt{pwd} & \texttt{pwd} & --- & ---\\
+\texttt{ls -la docs} & \texttt{ls} & \texttt{-l -a} (birleşik) & \texttt{docs}\\
+\texttt{ls --all docs} & \texttt{ls} & \texttt{--all} (uzun biçim) & \texttt{docs}\\
+\texttt{cd ../src} & \texttt{cd} & --- & \texttt{../src}\\
+\texttt{head -n 4 file} & \texttt{head} & \texttt{-n}, değeri $4$ & \texttt{file}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{İlk komutlar}
+\label{sec:first}
+
+\outl{out_first.txt}{1}{16}
+
+\begin{itemize}
+  \item \cmd{whoami} kullanıcı adınızı, \cmd{hostname} bilgisayarın adını, \cmd{date} tarihi ve saati yazar (test makinemizde UTC; sizinki yerel saati gösterir).
+  \item \cmd{echo} argümanlarını yazar. Dikkat edin: \cmd{echo} hiçbir zaman \texttt{\$SHELL} ya da \texttt{\tl} görmedi; komut başlamadan önce \emph{kabuk} onların yerine \texttt{/bin/bash} ve \texttt{/home/student} koydu. Kabuğun yaptığı bu \emph{genişletme} (expansion), 10.\ hafta (joker karakterler) ve 14.\ hafta (değişkenler) için temel bir fikirdir.
+  \item \cmd{uname} çekirdeğin adını yazar; \cmd{-r} çekirdek sürümünü; \cmd{-a} her şeyi (çekirdek adı, bilgisayar adı, sürüm, derleme bilgisi, makine mimarisi \texttt{x86\_64}). Normal bir Ubuntu~24.04 bilgisayarda sürüm \texttt{6.8.0-\ldots-generic} gibi görünür; WSL'de \texttt{microsoft-standard-WSL2} ile biter.
+  \item \cmd{clear} (ya da \texttt{Ctrl+L}) ekranı temizler.
+\end{itemize}
+
+% =====================================================================
+\section{Neredeyim? Burada Ne Var?}
+\label{sec:ls}
+
+Her sürecin --- dolayısıyla her kabuğun --- bir \term{geçerli çalışma dizini} (current working directory) vardır. Göreli yollar (Bölüm~\ref{sec:paths}) buradan başlar. \cmd{pwd} (\emph{print working directory}, çalışma dizinini yaz) onu gösterir; \cmd{ls} (\emph{list}, listele) içinde ne olduğunu gösterir.
+
+\subsection{pwd ve ls}
+
+\outl{out_ls.txt}{1}{13}
+
+\begin{itemize}
+  \item \cmd{pwd} her zaman kök \texttt{/} ile başlayan \emph{mutlak} bir yol yazar.
+  \item Argümansız \cmd{ls} geçerli dizini listeler; \cmd{ls docs} başka bir dizini listeler. Adlar sıralanır ve sütunlara dizilir.
+  \item \cmd{-F} türü belirten bir işaret ekler: dizinler için \texttt{/} (ayrıca çalıştırılabilir dosyalar için \texttt{*}, sembolik bağlantılar için \texttt{@}).
+  \item \cmd{-a} (\emph{all}, tümü) \term{gizli} adları da gösterir; bunlar yalnızca nokta ile başlayan adlardır: burada \texttt{.settings}. Yapılandırma dosyaları genellikle gizlidir, örneğin \texttt{\tl/.bashrc}. Ayrıca \texttt{.} (dizinin kendisi) ve \texttt{..} (üst dizini) girdilerini de görürsünüz --- tam olarak 7.\ haftadaki özel girdiler. \cmd{-A} gizli dosyaları \texttt{.} ve \texttt{..} olmadan gösterir.
+  \item \texttt{'final report.txt'} adı tırnak içinde gösterilir, çünkü bir boşluk içerir. Tırnaklar adın parçası \emph{değildir}; GNU \cmd{ls} onları adın nerede başlayıp bittiğini görebilmeniz için ekler.
+\end{itemize}
+
+\subsection{Uzun liste: ls -l}
+
+\outl{out_ls.txt}{25}{32}
+
+\cmd{ls -l} çıktısının her satırı bir dosyayı tanımlar. Sütunlar şunlardır:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[f/.style={rectangle,fill=dark,text=mint,font=\ttfamily\small,minimum height=0.6cm,inner sep=4pt},
+  n/.style={font=\scriptsize,align=center,text width=1.9cm,anchor=north}]
+\node[f] (a) at (0,0) {-rw-rw-r--};
+\node[f,right=4pt of a] (b) {1};
+\node[f,right=4pt of b] (c) {student};
+\node[f,right=4pt of c] (d) {student};
+\node[f,right=4pt of d] (e) {578};
+\node[f,right=4pt of e] (g) {Oct 12 08:49};
+\node[f,right=4pt of g] (h) {syllabus.txt};
+\foreach \x/\t/\dy in {a/{tür ve izinler (11.\ hafta)}/0,b/{bağlantı sayısı (7.\ hafta)}/0.75,c/sahip/0,d/grup/0.75,e/{bayt cinsinden boyut}/0,g/{son değiştirilme (mtime)}/0.75,h/ad/0} {
+  \draw[mintdeep] (\x.south) -- ++(0,-0.15-\dy);
+  \node[n] at ($(\x.south)+(0,-0.2-\dy)$) {\t};}
+\end{tikzpicture}
+\caption{\cmd{ls -l} çıktısındaki bir satırın yedi sütunu.}
+\label{fig:lsl}
+\end{figure}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Tür ve izinler.} İlk karakter türdür: \texttt{-} normal dosya, \texttt{d} dizin, \texttt{l} sembolik bağlantı, \texttt{c} karakter aygıtı. Sonraki dokuz karakter sahip, grup ve diğer herkes için okuma/yazma/çalıştırma izinleridir (permissions); 11.\ hafta tamamen bunlara ayrılmıştır.
+  \item \textbf{Bağlantı sayısı} (link count). Bir dosya için: dosyanın düğümünü (inode) gösteren sabit bağlantıların (adların) sayısı (7.\ hafta). Bir dizin için: $2 + {}$alt dizinlerinin sayısı (aşağıya bakın).
+  \item Dosyanın \textbf{sahibi} ve \textbf{grubu}.
+  \item Bayt cinsinden \textbf{boyut}. Bir dizin kendi girdi tablosunun boyutunu gösterir; bu genellikle $4096$ baytlık tek bir bloktur.
+  \item \textbf{Değiştirilme zamanı} (mtime): \emph{içeriğin} son değişimi. Altı aydan eski dosyalarda saat yerine yıl görünür (Bölüm~\ref{sec:fhs}'deki \texttt{Apr 22 2024}).
+  \item \textbf{Ad.}
+\end{enumerate}
+
+\begin{keyidea}[ls -l düğümü gösterir]
+Ad dışında \cmd{ls -l} çıktısının her sütunu dosyanın \emph{düğümünün} (inode, 7.\ hafta) bir alanıdır: tür, izinler, bağlantı sayısı, sahip, grup, boyut ve zamanlar. Ad ise dizin girdisinden gelir. 10.\ hafta \cmd{stat} ile düğümün tamamını gösterecek.
+\end{keyidea}
+
+\paragraph{Dizinlerin bağlantı sayıları.} \texttt{projects} dizininin bağlantı sayısı neden $4$, \texttt{docs} dizininki neden yalnızca $2$? Bir dizine üst dizindeki girdisi, kendi \texttt{.} girdisi ve her alt dizinindeki \texttt{..} girdisi ad verir. Dolayısıyla
+\[
+\text{bir dizinin bağlantı sayısı} = 2 + s,
+\]
+burada $s$ alt dizin sayısıdır: \texttt{projects} için $s = 2$ (\texttt{alpha} ve \texttt{beta}), yani $2 + 2 = 4$; \texttt{docs} için $s=0$, yani $2$. (\texttt{code/check\_numbers.py} ile denetlendi.)
+
+\paragraph{\texttt{total} satırı.} İlk satır, \texttt{total 24}, listelenen dosyaların $1$\,KiB birimleriyle kullandığı disk alanıdır. $16$ baytlık bir dosya bile dosya sisteminde koca bir $4$\,KiB'lık blok kaplar; bu yüzden altı küçük dosya $6 \times 4 = 24$\,KiB kullanır (7.\ haftadaki blok fikri). \texttt{\tl/lab} dizininin kendisinde \cmd{ls -l} \texttt{total 36} gösterir: dokuz girdi, $9 \times 4 = 36$.
+
+\subsection{İnsan tarafından okunabilir boyutlar: ls -lh}
+
+\outl{out_ls.txt}{33}{42}
+
+\cmd{-h} seçeneğiyle boyutlar K, M, G ekleriyle yazılır; bunlar burada $1024$'ün kuvvetleri demektir: $1\,\text{K} = 2^{10} = 1024$ bayt, $1\,\text{M} = 2^{20}$ bayt. \cmd{ls} \emph{yukarı} yuvarlar ve $10$'dan küçük değerlerde bir ondalık basamak gösterir:
+
+\begin{example}[Çözümlü örnek: bayttan ls -h'ye]
+\begin{align*}
+\texttt{access.log}:&\quad 23\,604 / 1024 \approx 23.05 \ \longrightarrow\ \texttt{24K}\ (\text{yukarı yuvarlanır})\\
+\texttt{system.log}:&\quad 5\,207 / 1024 \approx 5.085 \ \longrightarrow\ \texttt{5.1K}\\
+\texttt{students.csv}:&\quad 1\,208 / 1024 \approx 1.180 \ \longrightarrow\ \texttt{1.2K}
+\end{align*}
+$1024$ bayttan küçük dosyalar (örneğin $227$ baytlık \texttt{cities.txt}) bayt olarak gösterilir. Tam bayt sayıları \cmd{ls -l} çıktısından gelir (Laboratuvar Föyü, B7 alıştırması). Programın kendisi ondalık nokta kullanır (\texttt{5.1K}); Türkçe yerel ayarlı bir sistemde \texttt{5,1K} görebilirsiniz.
+\end{example}
+
+\subsection{Bütün alt ağaçlar: ls -R ve tree}
+
+\cmd{ls -R} (\emph{recursive}, özyinelemeli) bir dizini ve ardından altındaki her alt dizini listeler; her dizin için bir blok. \cmd{tree} programı aynı bilgiyi resim olarak çizer --- 7.\ haftanın ağacı. (\cmd{tree} kurulmayı gerektirebilir: \cmd{sudo apt install tree}.)
+
+\outl{out_tree.txt}{2}{13}
+\vspace{-0.4em}{\small\color{muted}\quad \ldots\ (\texttt{projects/beta} için de aynısı; çıktının tamamı \texttt{code/out\_tree.txt} içinde)}
+
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,left=6pt,right=6pt,top=4pt,bottom=4pt,coltext=light,fontupper=\footnotesize]
+\begin{verbatim}
+student@okan-lab:~/lab$ tree projects
+projects
+├── alpha
+│   ├── README.md
+│   ├── docs
+│   │   └── design.txt
+│   └── src
+│       └── main.c
+└── beta
+    ├── README.md
+    ├── docs
+    │   └── design.txt
+    └── src
+        └── main.c
+
+7 directories, 6 files
+\end{verbatim}
+\end{tcolorbox}
+
+\cmd{tree} \texttt{projects} dizininin kendisini de sayar; ``7 directories'' bundandır. \textbf{Dikkat:} \cmd{ls -R /} bütün dosya sistemini listeler --- yüz binlerce satır. Çok uzun süren bir komutu durdurmak için \texttt{Ctrl+C}'ye basın.
+
+\subsection{En kullanışlı ls seçenekleri}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{>{\ttfamily}l >{\raggedright\arraybackslash}X >{\ttfamily}l}
+\toprule
+\normalfont\textbf{Seçenek} & \textbf{Anlamı} & \normalfont\textbf{Örnek}\\
+\midrule
+-l & uzun liste (Şekil~\ref{fig:lsl}) & ls -l docs\\
+-a / -A & gizliler dâhil bütün adlar (-A: \texttt{.} ve \texttt{..} olmadan) & ls -a \tl\\
+-h & insan tarafından okunabilir boyutlar (-l ile) & ls -lh logs\\
+-R & özyinelemeli: her alt dizini de & ls -R projects\\
+-F & türü işaretle: \texttt{/} dizin, \texttt{*} çalıştırılabilir, \texttt{@} bağlantı & ls -F\\
+-d & içeriği değil, dizinin kendisi & ls -ld projects\\
+-S & boyuta göre sırala, en büyük önce & ls -lS docs\\
+-t & değiştirilme zamanına göre sırala, en yeni önce & ls -lt\\
+-r & sıralamayı ters çevir & ls -ltr\\
+-1 & her satırda bir ad & ls -1 photos\\
+-i & düğüm numaralarını göster (7.\ hafta) & ls -i\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Ubuntu'nun varsayılan \texttt{\tl/.bashrc} dosyası ayrıca şu kısayolları (\emph{takma adlar}, aliases) tanımlar: \cmd{ll} $=$ \cmd{ls -alF}, \cmd{la} $=$ \cmd{ls -A} ve \cmd{l} $=$ \cmd{ls -CF}.
+
+% =====================================================================
+\section{Linux Dizin Ağacı}
+\label{sec:fhs}
+
+Linux'ta \emph{tek} bir ağaç ve \emph{tek} bir kök, \texttt{/}, vardır. Sürücü harfleri yoktur: başka diskler ve USB bellekler ağaca \emph{bağlanır} (mount; genellikle \texttt{/media} ya da \texttt{/mnt} altına). \term{Dosya Sistemi Hiyerarşi Standardı} (Filesystem Hierarchy Standard, FHS) hangi dizinin neyi tuttuğunu belirler; böylece bütün dağıtımlar birbirine benzer.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[d/.style={rectangle,rounded corners=2pt,fill=mint!25,minimum width=1.25cm,minimum height=0.5cm,font=\footnotesize\ttfamily},
+  v/.style={d,fill=light}, s/.style={font=\tiny,text=muted,align=center}]
+\node[d,fill=charcoal,text=white] (r) at (6.0,0) {/};
+\foreach \n/\t/\st [count=\i from 0] in {bin/{$\to$ usr/bin}/d,etc/ayarlar/d,home/kullanıcılar/d,tmp/geçici/d,usr/programlar/d,var/{değişen veri}/d,dev/aygıtlar/v,proc/{çekirdek\\bilgisi}/v,root/{root'un evi}/d} {
+  \node[\st] (n\i) at (1.5*\i,-1.3) {\n};
+  \node[s,below=1pt of n\i] {\t};
+  \draw[slate] (r.south) -- (n\i.north);
+}
+\node[d,fill=mint] (st) at (3.0,-2.6) {student}; \draw[slate] (n2.south) ++(0,-0.3) -- (st.north);
+\node[d,fill=mint] (lab) at (3.0,-3.4) {lab}; \draw[slate] (st) -- (lab);
+\foreach \n/\x in {bin/5.2,lib/6.0,share/6.8} { \node[d,minimum width=0.75cm] (u\n) at (\x,-2.6) {\n}; \draw[slate] (n4.south) ++(0,-0.3) -- (u\n.north); }
+\node[d,minimum width=0.75cm] (vl) at (8.0,-2.6) {log}; \draw[slate] (n5.south) ++(0,-0.3) -- (vl.north);
+\end{tikzpicture}
+\caption{Linux dizin ağacının üst kısmı. Gri: çekirdeğin ürettiği sanal dosya sistemleri.}
+\end{figure}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{>{\ttfamily}l >{\raggedright\arraybackslash}X >{\ttfamily\raggedright\arraybackslash}p{4.1cm}}
+\toprule
+\normalfont\textbf{Dizin} & \textbf{İçerik} & \normalfont\textbf{Deneyin}\\
+\midrule
+/ & bütün ağacın kökü & ls /\\
+/home & her kullanıcı için bir ev dizini: \texttt{/home/student} & ls \tl\\
+/root & yönetici \texttt{root}'un ev dizini (\texttt{/} ile aynı şey değildir) & ---\\
+/etc & sistem genelindeki yapılandırma, çoğunlukla düz metin dosyaları & head -n 4 /etc/os-release\\
+/usr & kurulu yazılımlar: \texttt{/usr/bin} programlar, \texttt{/usr/lib} kitaplıklar, \texttt{/usr/share} veriler & ls -l /usr/bin/ls\\
+/bin, /sbin, /lib & Ubuntu 24.04'te \texttt{/usr/bin}, \texttt{/usr/sbin}, \texttt{/usr/lib}'e sembolik bağlantılar & ls -ld /bin\\
+/var & büyüyen değişken veriler: günlükler (\texttt{/var/log}), önbellekler, posta, kuyruklar & ls /var\\
+/tmp & geçici dosyalar; herkes yazabilir; açılışta sıkça boşaltılır & ls -ld /tmp\\
+/dev & aygıt dosyaları: diskler, terminaller, \texttt{/dev/null} & ls -l /dev/null\\
+/proc & sanal: süreçler ve çekirdek hakkında anında üretilen bilgi & head /proc/meminfo\\
+/media, /mnt & çıkarılabilir ve diğer diskler için bağlama noktaları & ---\\
+/boot & çekirdek kalıbı ve önyükleyici dosyaları & ---\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Bir tur}
+
+Aşağıdaki \texttt{/} listesinden yalnızca test makinemizde bulunan iki girdi çıkarıldı. \texttt{.usr-is-merged} ile biten dizinler Ubuntu'nun ``birleşik \texttt{/usr}'' yapısına geçişinden kalan zararsız artıklardır.
+
+\outl{out_fhs.txt}{1}{23}
+
+\begin{itemize}
+  \item \cmd{type ls}, \cmd{ls}'nin sıradan bir program dosyası olduğunu gösterir: \texttt{/usr/bin/ls} ($142\,312$ bayt). Komutların çoğu bunun gibi dosyalardır.
+  \item \texttt{/bin}, \texttt{/sbin} ve \texttt{/lib}, \texttt{/usr} içindeki karşılıklarına giden \term{sembolik bağlantılardır} (symbolic links; tür \texttt{l}, ok \texttt{->}; 7.\ hafta). İki ad da aynı programlara götürür.
+  \item \texttt{/etc/os-release} dağıtımın adını verir. UNIX yapılandırmayı düzenlenebilir metin olarak tutar; 11.\ hafta \texttt{/etc/passwd} ve \texttt{/etc/group} dosyalarını okuyacak.
+  \item \texttt{/tmp}'nin izin dizgesi \texttt{drwxrwxrwt}'dir: orada herkes dosya oluşturabilir; sondaki \texttt{t} (\emph{yapışkan bit}, sticky bit, 11.\ hafta) ise kullanıcıların birbirlerinin dosyalarını silmesini engeller.
+\end{itemize}
+
+\subsection{/dev ve /proc: her şey bir dosyadır}
+
+\outl{out_fhs.txt}{24}{41}
+
+\begin{itemize}
+  \item \texttt{/dev} içindeki \texttt{c}, \emph{karakter aygıtlarını} (character devices) işaretler. \cmd{ls -l} boyut yerine iki sürücü numarası (büyük, küçük; major, minor) gösterir, örneğin \texttt{1, 3}. \texttt{/dev/null} kendisine yazılan her şeyi atar (onu \cmd{strace} ile kullandık); \texttt{/dev/zero} sıfır baytları üretir; \texttt{/dev/tty} terminalinizdir. Programlar bu aygıtları sıradan dosyalarla aynı \texttt{open/read/write} sistem çağrılarıyla kullanır (2.\ hafta, G/Ç).
+  \item \texttt{/proc} hiçbir diskte saklanmaz. Dosyalarından birini okuduğunuzda metni çekirdek anında yazar. \texttt{/proc/meminfo}, test makinemizde yaklaşık $8$\,GB RAM olduğunu gösteriyor ($8\,222\,320$\,kB).
+  \item Kabuk \texttt{\$\$} yerine kendi PID'sini koyar. \texttt{/proc/<PID>/status}, o sürecin PCB'sinin (3.\ hafta) bir kısmını gösterir: adı (\texttt{bash}), durumu \texttt{S} (sleeping, uyuyor --- \cmd{head}'in bitmesini bekliyor), PID'si ve ebeveyninin PID'si (\texttt{PPid}). 13.\ hafta \texttt{/proc}'a ve \cmd{ps}'ye geri dönecek.
+\end{itemize}
+
+% =====================================================================
+\section{Dolaşmak: cd ve Yollar}
+\label{sec:paths}
+
+\subsection{Mutlak ve göreli yollar}
+
+7.\ haftadaki gibi bir dosya ya da dizin iki biçimde adlandırılabilir:
+\begin{itemize}
+  \item \term{Mutlak yol} (absolute path) \texttt{/} ile başlar ve kökten aşağı yürür. Her yerden aynı anlama gelir: \texttt{/home/student/lab/projects/beta/docs}.
+  \item \term{Göreli yol} (relative path) \texttt{/} ile başlamaz; geçerli dizinden yürür. \texttt{..} ``bir düzey yukarı'' demektir.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[level distance=1.1cm,
+  dir/.style={rectangle,rounded corners=2pt,fill=mint!25,minimum width=1.6cm,minimum height=0.5cm,font=\footnotesize\ttfamily},
+  level 1/.style={sibling distance=5.5cm}, level 2/.style={sibling distance=6cm}, level 3/.style={sibling distance=4.2cm}, level 4/.style={sibling distance=2.0cm},
+  edge from parent/.style={draw,slate},
+  r/.style={-{Stealth[length=2.5mm]},very thick,red!70!black}]
+\node[dir,fill=charcoal,text=white] {/home/student}
+  child {node[dir] {lab}
+    child {node[dir] {docs}}
+    child {node[dir] (pr) {projects}
+      child {node[dir] (al) {alpha} child {node[dir,fill=mint] (as) {src}} child {node[dir] {docs}}}
+      child {node[dir] (be) {beta} child {node[dir] {src}} child {node[dir,fill=mint] (bd) {docs}}}}};
+\draw[r] (as.north west) to[bend left=35] node[left,font=\small\bfseries]{..} (al.west);
+\draw[r] (al.north west) to[bend left=35] node[left,font=\small\bfseries]{..} (pr.west);
+\draw[r] (pr.east) to[bend left=35] node[right,font=\small\bfseries]{beta} (be.north east);
+\draw[r] (be.east) to[bend left=35] node[right,font=\small\bfseries]{docs} (bd.north east);
+\end{tikzpicture}
+\caption{\texttt{projects/alpha/src}'den \texttt{projects/beta/docs}'a: \texttt{../../beta/docs} (yukarı, yukarı, aşağı, aşağı).}
+\label{fig:paths}
+\end{figure}
+
+\subsection{Uygulamada cd}
+
+\outl{out_cd.txt}{1}{22}
+
+Nelere dikkat etmeli:
+\begin{itemize}
+  \item Her \cmd{cd}'den sonra istem yeni geçerli dizini gösterir.
+  \item \cmd{cd} başarılı olduğunda \emph{hiçbir şey} yazmaz (``haber yoksa iyi haber'' bir UNIX kuralıdır). Tek istisna \cmd{cd -}'dir; geri döndüğü dizini yazar.
+  \item \texttt{\tl/lab/projects/alpha}'dan \cmd{cd ../../docs} iki kez yukarı çıkar (\texttt{\tl/lab}'a), sonra \texttt{docs}'a iner.
+  \item \texttt{/home/student/lab/projects/beta} mutlak yolu nerede olursanız olun çalışır.
+  \item Argümansız \cmd{cd} sizi eve, \cmd{cd /} köke götürür.
+\end{itemize}
+
+\subsection{Beş özel ad}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{>{\ttfamily}l >{\raggedright\arraybackslash}X >{\ttfamily}l >{\raggedright\arraybackslash}p{5.3cm}}
+\toprule
+\normalfont\textbf{Ad} & \textbf{Anlamı} & \normalfont\textbf{Örnek} & \textbf{\texttt{\tl/lab/projects/alpha}'dan sonuç}\\
+\midrule
+/ & ağacın kökü & cd / & \texttt{/}\\
+\tl & ev dizininiz & cd \tl/lab & \texttt{/home/student/lab}\\
+. & geçerli dizin & ls . & \texttt{alpha}'yı listeler (\cmd{ls} ile aynı)\\
+.. & üst dizin & cd ../beta & \texttt{\tl/lab/projects/beta}\\
+- & bir önceki dizin (yalnızca \cmd{cd}) & cd - & önceki yerinize döner\\
+\bottomrule
+\end{tabularx}
+\end{center}
+\texttt{.} ve \texttt{..} gerçek dizin girdileridir (\cmd{ls -a} onları gösterir); \texttt{\tl} ve \texttt{-} ise kabuğun kısayollarıdır: \texttt{\tl} yerine \texttt{\$HOME} değişkeninin değeri konur, \cmd{cd -} ise \cmd{help cd}'nin açıkladığı gibi \texttt{\$OLDPWD} değişkenini kullanır (Bölüm~\ref{sec:help}). \texttt{/}'nin \texttt{..} girdisi yine \texttt{/}'dir: kökün üstüne çıkamazsınız. \texttt{.} adı 11.\ ve 14.\ haftalarda önem kazanacak: \texttt{./script.sh} geçerli dizindeki bir betiği çalıştırır.
+
+\subsection{cd neden bir kabuk yerleşiği olmak zorunda?}
+\label{sec:cdbuiltin}
+
+\outl{out_syscalls.txt}{8}{18}
+
+\begin{itemize}
+  \item \texttt{/bin/pwd} ayrı bir programdır (yerleşik \cmd{pwd} değil); geçerli dizini çekirdeğe \texttt{getcwd} sistem çağrısıyla sorar. \texttt{/home/student/lab} yazar: çocuk süreç ebeveyninin geçerli dizinini devralır.
+  \item \cmd{bash -c 'cd /tmp'}, \cmd{cd /tmp} komutunu çalıştıran bir \emph{çocuk} kabuk başlatır. Çekirdeğin \texttt{chdir("/tmp")} çağrısı başarılı olur --- ama sonrasında bizim kabuğumuz hâlâ \texttt{\tl/lab} içindedir.
+\end{itemize}
+
+\begin{keyidea}[Geçerli dizin sürece aittir]
+Geçerli çalışma dizini, çekirdeğin her süreç için PCB'sinin yanında tuttuğu durumun bir parçasıdır (3.\ hafta). Bir süreç yalnızca \emph{kendi} geçerli dizinini değiştirebilir, ebeveyninkini asla. \cmd{cd} \texttt{/usr/bin} içinde bir program olsaydı kabuk bir çocuk oluşturur, çocuk \emph{kendi} dizinini değiştirip sonlanırdı --- kabuk ise olduğu yerde kalırdı. Bu nedenle \cmd{cd} kabuğun içine yerleşiktir: \cmd{bash}, \texttt{chdir()} çağrısını kendi üzerinde yapar. \cmd{type cd} bunu doğrular: ``cd is a shell builtin''. Aynı gerekçe \cmd{exit} ve kabuk değişkenlerini ayarlayan komutlar için de geçerlidir.
+\end{keyidea}
+
+% =====================================================================
+\section{Yardım Almak}
+\label{sec:help}
+
+Kimse her seçeneği hatırlamaz. Nereye bakacağınızı bilin:
+
+\begin{description}[leftmargin=0pt,itemsep=0.25em]
+  \item[\cmd{komut --help}] Seçeneklerin özeti; çoğu program yazar.
+  \item[\cmd{man komut}] Tam \emph{kılavuz sayfası} (manual page); NAME, SYNOPSIS, DESCRIPTION, OPTIONS ve EXAMPLES gibi bölümlere ayrılır. Ok tuşları ya da Boşluk (sonraki sayfa) ile ilerleyin, \texttt{/sözcük} ve Enter ile arayın (sonraki eşleşme için \texttt{n}), \texttt{q} ile çıkın. \cmd{man man}, \cmd{man}'in kendisini açıklar.
+  \item[\cmd{help komut}] Kabuk yerleşikleri (\cmd{cd}, \cmd{pwd}, \cmd{history}) için yardım; bunların program dosyası ve çoğu zaman kendi kılavuz sayfası yoktur.
+  \item[\cmd{type komut}] Bir komutun yerleşik mi, takma ad mı, yoksa (nerede duran) bir program dosyası mı olduğunu söyler.
+  \item[\cmd{whatis} / \cmd{apropos}] \cmd{whatis ls}, kılavuzdaki tek satırlık açıklamayı yazar; \cmd{apropos directory} bütün kılavuz açıklamalarında bir anahtar sözcük arar --- komutun adını bilmediğinizde işe yarar.
+  \item[\cmd{tldr komut}] (isteğe bağlı, \cmd{sudo apt install tldr}) yaygın kullanımlar için topluluğun yazdığı kısa örnekler.
+\end{description}
+
+\outl{out_help.txt}{1}{8}
+\outl{out_help.txt}{14}{23}
+
+Bir SYNOPSIS satırını okumak: \texttt{ls [OPTION]... [FILE]...} ``herhangi sayıda seçenek, ardından herhangi sayıda dosya, hepsi isteğe bağlı'' demektir --- köşeli parantezler isteğe bağlı kısımları işaretler, \texttt{...} ise ``tekrarlanabilir'' anlamına gelir. \cmd{ls --help} çıktısı \texttt{| head -n 12} ile kısaltıldı (yalnızca ilk $12$ satır; borular 12.\ haftanın konusu). Türkçe yerel ayarlı bir sistemde \cmd{--help} çıktısı da büyük olasılıkla Türkçe olacaktır.
+
+Test makinemiz kılavuz sayfaları olmayan \emph{küçültülmüş} (minimised) bir Ubuntu olduğundan bu notlar \cmd{man} çıktısı yerine \cmd{--help} çıktısı gösteriyor; normal kurulumlarda, WSL'de ve laboratuvar bilgisayarlarında kılavuzlar vardır (küçültülmüş bir sistemde \cmd{sudo unminimize} onları geri yükler).
+
+% =====================================================================
+\section{Akıllı Çalışma: Tamamlama, Geçmiş, Kısayollar}
+
+\subsection{Sekme tamamlama}
+Bir komutun, dosyanın ya da dizinin adının ilk harflerinden sonra \texttt{Tab}'a basın; kabuk adı tamamlar (tab completion). Aşağıdaki oturumda kullanıcı \texttt{cd pro}\,\texttt{Tab}\,\texttt{al}\,\texttt{Tab} yazdı ve kabuk bunu \texttt{cd projects/alpha/} olarak tamamladı; \texttt{ls \tl/lab/docs/sy}\,\texttt{Tab} ise \texttt{ls \tl/lab/docs/syllabus.txt} oldu (tamamlanan adın sonuna bir boşluk eklenerek). Başlangıç birden çok ada uyuyorsa (\texttt{notes\_0} üç dosya olabilir) hiçbir şey olmuyor gibi görünür: adayların listesini görmek için \texttt{Tab}'a \emph{iki kez} basın. Sekme tamamlama hem yazmaktan kurtarır \emph{hem de} yazım hatalarını önler.
+
+\subsection{Komut geçmişi}
+
+\outl{out_keys.txt}{1}{24}
+
+Kabuk komutlarınızı hatırlar (history). \cmd{history} onları numaralarıyla yazar; \cmd{!!} son komutu, \cmd{!5} ise $5$ numaralı komutu tekrarlar (kabuk önce çalıştıracağı komutu yazar). \texttt{↑}/\texttt{↓} ok tuşları geçmişte gezinir, \texttt{Ctrl+R} ise siz yazdıkça geçmişte geriye doğru arar. Geçmiş, kabuk kapanırken \texttt{\tl/.bash\_history} dosyasına kaydedilir.
+
+\subsection{Klavye kısayolları}
+
+\begin{center}
+\begin{tabular}{>{\ttfamily}l l}
+\toprule
+\normalfont\textbf{Tuş} & \textbf{Etkisi}\\
+\midrule
+Tab / Tab Tab & bir adı tamamla / adayları listele\\
+↑ / ↓ & geçmişteki önceki / sonraki komut\\
+Ctrl+R & geçmişte geriye doğru ara\\
+Ctrl+C & çalışan komutu kes (durdur) --- SIGINT sinyalini gönderir (13.\ hafta)\\
+Ctrl+L & ekranı temizle (\cmd{clear} gibi)\\
+Ctrl+A / Ctrl+E & satırın başına / sonuna atla\\
+Ctrl+D & girdinin sonu; boş istemde kabuğu kapatır (\cmd{exit} gibi)\\
+\bottomrule
+\end{tabular}
+\end{center}
+Çoğu terminal penceresinde kopyalama ve yapıştırma \texttt{Ctrl+Shift+C} ve \texttt{Ctrl+Shift+V} ile yapılır, çünkü \texttt{Ctrl+C} zaten ``kes'' anlamına gelir.
+
+% =====================================================================
+\section{Komut Başvurusu: 9. Hafta}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{>{\ttfamily\raggedright\arraybackslash}p{6.4cm} >{\raggedright\arraybackslash}X}
+\toprule
+\normalfont\textbf{Komut} & \textbf{Amaç}\\
+\midrule
+whoami & kullanıcı adınızı yazar\\
+hostname & bilgisayarın adını yazar\\
+date & tarihi ve saati yazar\\
+echo metin & argümanlarını yazar (kabuk onları genişlettikten sonra)\\
+uname [-r|-a] & çekirdek adı / sürümü / bütün bilgiler\\
+clear & ekranı temizler (\texttt{Ctrl+L})\\
+pwd & geçerli çalışma dizinini yazar (mutlak yol)\\
+ls [-laAhRFdStr1i] [dizin...] & dizin içeriğini listeler (Bölüm~\ref{sec:ls})\\
+tree [dizin] & dizin ağacını çizer\\
+cd [dizin] & dizin değiştirir; \texttt{\tl\ . .. - /}; argümansız: eve\\
+cat dosya & küçük bir dosyayı yazar (10.\ hafta \cmd{cat}, \cmd{less}, \cmd{head}, \cmd{tail}'i işler)\\
+head -n N dosya & bir dosyanın ilk $N$ satırını yazar\\
+type komut & yerleşik mi, takma ad mı, program dosyası mı?\\
+komut --help & bir programın kısa yardımı\\
+man komut & kılavuz sayfası (\texttt{q} çıkar, \texttt{/sözcük} arar)\\
+help komut & bir kabuk yerleşiğinin yardımı\\
+whatis komut / apropos sözcük & tek satırlık açıklama / kılavuzlarda arama\\
+history, !!, !n & önceki komutları listeler / tekrarlar\\
+strace komut & bir komutun sistem çağrılarını gösterir (2.\ hafta)\\
+bash dosya.sh & bir kabuk betiğini çalıştırır (örneğin lab kurulum betiği)\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% =====================================================================
+\section{Sık Görülen Hatalar ve Anlamları}
+\label{sec:errors}
+
+Hata mesajları kesindir; okuyun. Aşağıdakilerin hepsi \texttt{\tl/lab} içinde üretildi:
+
+\outl{out_errors.txt}{2}{27}
+
+\begin{description}[leftmargin=0pt,itemsep=0.25em]
+  \item[\texttt{command not found}] Bir yazım hatası, yanlış harf büyüklüğü (\cmd{LS}) ya da kurulu olmayan bir program (\cmd{sl}). Normal bir Ubuntu'da kabuk ayrıca bir paket önerir; örneğin ``Command 'sl' not found, but can be installed with: sudo apt install sl''.
+  \item[\texttt{invalid option}] Komutun böyle bir seçeneği yok. Mesajın kendisi \cmd{ls --help}'i öneriyor.
+  \item[\texttt{No such file or directory}] Ad yanlış (harf büyüklüğünü unutmayın: \texttt{Docs} $\neq$ \texttt{docs}) ya da sandığınız dizinde değilsiniz. \cmd{pwd} ve \cmd{ls} çalıştırın, sekme tamamlamayı kullanın. (Türkçe sistemde: \texttt{Böyle bir dosya ya da dizin yok}.)
+  \item[\texttt{Not a directory}] \cmd{cd} bir dizin ister; \texttt{README.txt} ise bir dosyadır.
+  \item[Tek ad için iki hata] Kabuk komut satırını boşluklardan böler; bu yüzden \texttt{docs/final report.txt} \emph{iki} argüman olur: \texttt{docs/final} ve \texttt{report.txt}. Adı tırnak içine alın (\texttt{"docs/final report.txt"}) ya da boşluğu ters eğik çizgiyle kaçırın (\texttt{docs/final\textbackslash\ report.txt}). \cmd{cd} ile iki argüman \texttt{too many arguments} hatası verir.
+  \item[\texttt{Permission denied}] İçeri girmenize izin yok (\texttt{/root} yöneticiye aittir). Bu, koruma sisteminin tasarlandığı gibi çalışmasıdır (11.\ hafta). Buna komutların başına \cmd{sudo} koyarak karşılık \emph{vermeyin}.
+  \item[\texttt{\$'\textbackslash r': command not found}] Windows satır sonlarına sahip bir betik (Bölüm~\ref{sec:labsetup}).
+\end{description}
+
+\begin{tryit}[sudo hakkında bir uyarı]
+\cmd{sudo}, \emph{sizin} parolanızı sorduktan sonra tek bir komutu yönetici olan \texttt{root} olarak çalıştırır. Bu derste ona yalnızca yazılım kurmak için ihtiyacınız var (\cmd{sudo apt install tree}). \texttt{root} olarak çalışırken 2.\ ve 11.\ haftaların koruma mekanizmaları sizi kendi hatalarınızdan artık korumaz: tek bir yanlış komut sisteme zarar verebilir. Bir komut başarısız oldu diye asla \cmd{sudo} kullanmayın.
+\end{tryit}
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Yedi cümlede 9. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Bir Linux kabuğuna laboratuvar bilgisayarlarında, Windows'ta WSL ile (\cmd{wsl --install}) ya da bir VirtualBox sanal makinesinde ulaşılır; \texttt{mcmp117\_lab\_setup.sh} betiği alıştırma klasörü \texttt{\tl/lab}'ı oluşturur.
+  \item Terminal metni gösterir, kabuk (\cmd{bash}) komutları kullanıcı modunda yorumlar, çekirdek ise işi sistem çağrılarıyla yapar.
+  \item Harici bir komut için kabuk fork yapar, çocuk program dosyasını exec eder ve kabuk bekler (3.\ hafta); \cmd{cd} gibi yerleşikler kabuğun içinde çalışır.
+  \item Bir komut satırı \emph{komut -seçenekler argümanlar} biçimindedir; sözcükler boşluklarla ayrılır ve harf büyüklüğü önemlidir.
+  \item \cmd{pwd} nerede olduğunuzu, \cmd{ls} (\cmd{-l -a -h -R -F} ile) orada ne olduğunu gösterir; \cmd{ls -l} 7.\ haftanın düğüm alanlarını sergiler.
+  \item Linux'ta \texttt{/}'den başlayan tek bir ağaç vardır; \cmd{cd} mutlak ya da göreli yollarla ve \texttt{\tl\ . .. -} adlarıyla dolaşır.
+  \item \cmd{--help}, \cmd{man}, \cmd{help} ve \cmd{type} komutları açıklar; Tab, geçmiş ve \texttt{Ctrl+C}/\texttt{Ctrl+L} zaman kazandırır.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Sözlük}
+
+\begin{description}[leftmargin=0pt,itemsep=0.15em]
+  \item[Mutlak yol (absolute path)] Kök \texttt{/} ile başlayan yol; her dizinden geçerlidir.
+  \item[Yerleşik komut (builtin)] Kabuğun yeni bir süreç oluşturmadan kendisinin yürüttüğü komut (\cmd{cd}, \cmd{pwd}, \cmd{echo}, \cmd{history}).
+  \item[Geçerli çalışma dizini (current working directory)] Bir sürecin göreli yolları çözdüğü dizin; her sürecin durumunun parçasıdır.
+  \item[FHS] Dosya Sistemi Hiyerarşi Standardı (Filesystem Hierarchy Standard): hangi üst düzey dizinin neyi tuttuğu.
+  \item[Gizli dosya (hidden file)] Adı nokta ile başlayan dosya; yalnızca \cmd{ls -a} gösterir.
+  \item[Ev dizini (home directory)] Bir kullanıcının kendi dizini, \texttt{/home/<kullanıcı>}; kısaltması \texttt{\tl}.
+  \item[Seçenek (option)] Bir komutun nasıl çalışacağını değiştiren, \texttt{-} ya da \texttt{--} ile başlayan sözcük.
+  \item[İstem (prompt)] Kabuğun bir komuta hazır olduğunda yazdığı metin.
+  \item[Göreli yol (relative path)] Geçerli dizinden başlayan yol; \texttt{..} kullanabilir.
+  \item[Kabuk (shell)] Komut yorumlayıcısı: komutları okuyup çalıştıran, kullanıcı modunda bir sistem programı.
+  \item[Terminal (öykünücü; terminal emulator)] Tuş vuruşlarını kabuğa ileten ve onun çıktısını gösteren pencere programı.
+  \item[WSL] Linux için Windows Alt Sistemi (Windows Subsystem for Linux): gerçek bir Linux çekirdeğiyle bir Linux dağıtımını Windows içinde çalıştırır.
+\end{description}
+
+% =====================================================================
+\section{Laboratuvar Föyü}
+\label{sec:lab}
+
+Önce lab klasörünü yeniden oluşturun (\cmd{bash mcmp117\_lab\_setup.sh}); aksi belirtilmedikçe her alıştırmaya \texttt{\tl/lab} içinde başlayın. Kullandığınız \emph{komutları} ve yanıtları yazın. Toplam: $100$ puan. Çözümler Bölüm~\ref{sec:labsol}'de --- önce kendiniz deneyin! Bu laboratuvarda küçük bir dosyayı yazdırmak için \cmd{cat dosya}, ilk $N$ satırını yazdırmak için \cmd{head -n N dosya} kullanabilirsiniz.
+
+\subsection*{A Bölümü --- Başlangıç (13 puan)}
+\begin{enumerate}[label=\textbf{A\arabic*}, leftmargin=2.2em]
+  \item \textbf{(4 puan)} \cmd{whoami}, \cmd{hostname}, \cmd{date} ve \cmd{uname -r} komutlarını çalıştırın. Çıktıları yazın ve her komutun neyi bildirdiğini birer cümleyle söyleyin.
+  \item \textbf{(4 puan)} Lab kurulum betiğini çalıştırın. Lab klasörünüzün \emph{mutlak} yolu nedir? Bunu hangi komut kanıtlar?
+  \item \textbf{(5 puan)} Her komut satırı için komutu, seçenekleri ve argümanları belirtin: (a) \cmd{ls -l -a docs}, (b) \cmd{ls -lh /var/log /tmp}, (c) \cmd{head -n 3 data/cities.txt}, (d) \cmd{cd}, (e) \cmd{ls --all}.
+\end{enumerate}
+
+\subsection*{B Bölümü --- Etrafa bakmak (30 puan)}
+\begin{enumerate}[label=\textbf{B\arabic*}, leftmargin=2.2em, start=4]
+  \item \textbf{(6 puan)} \cmd{ls}, \texttt{\tl/lab} içinde kaç girdi gösteriyor? Bunların kaçı dizin? Hangi seçenek yanıtı apaçık hâle getirir?
+  \item \textbf{(6 puan)} \texttt{docs} gizli bir dosya içeriyor. Adını bulun ve içeriğini yazdırın.
+  \item \textbf{(6 puan)} \texttt{docs} içindeki en büyük dosya hangisi ve kaç bayt? \cmd{ls}'nin boyuta göre sıralayan seçeneğini kullanın (\cmd{ls --help} içinde bulun).
+  \item \textbf{(6 puan)} \texttt{logs/access.log} dosyasının bayt cinsinden tam boyutunu ve \cmd{ls -lh}'nin gösterdiği boyutu verin. İkisinin neden uyuştuğunu hesapla gösterin.
+  \item \textbf{(6 puan)} \texttt{photos} içinde kaç dosya var? Kaçı tam olarak \texttt{.jpg} (küçük harf) ile bitiyor? Hangileri bitmiyor?
+\end{enumerate}
+
+\subsection*{C Bölümü --- Dolaşmak (24 puan)}
+\begin{enumerate}[label=\textbf{C\arabic*}, leftmargin=2.2em, start=9]
+  \item \textbf{(6 puan)} \texttt{\tl/lab}'dan \emph{tek} bir göreli \cmd{cd} ile \texttt{projects/beta/docs}'a gidin ve geçerli dizini yazdırın.
+  \item \textbf{(6 puan)} Oradan tek bir göreli \cmd{cd} ile \texttt{projects/alpha/src}'ye gidin. Komutu yazın ve \cmd{pwd} ile kontrol edin.
+  \item \textbf{(6 puan)} \texttt{\tl/lab/projects} içinden başlayarak sırasıyla \cmd{cd alpha}, \cmd{cd ../beta/src}, \cmd{cd ..}, \cmd{cd -} yazıyorsunuz. Her komuttan sonraki dizini \emph{tahmin edin}, sonra kontrol edin.
+  \item \textbf{(6 puan)} \emph{Herhangi bir dizinden} sizi \texttt{\tl/lab/src}'ye götüren iki farklı komut yazın. \cmd{cd lab/src} neden yalnızca bazı dizinlerde çalışır?
+\end{enumerate}
+
+\subsection*{D Bölümü --- Sistem ve yardım (18 puan)}
+\begin{enumerate}[label=\textbf{D\arabic*}, leftmargin=2.2em, start=13]
+  \item \textbf{(6 puan)} \cmd{ls} programı nerede saklanıyor? Ubuntu 24.04'te \texttt{/bin} tam olarak nedir? Dağıtımın adını ve sürümünü hangi dosya söyler ve sizin sisteminizde ne yazıyor?
+  \item \textbf{(6 puan)} Kabuğunuzun PID'sini ve \texttt{/proc/<PID>/status} dosyasının \texttt{Name}, \texttt{State}, \texttt{Pid} ve \texttt{PPid} satırlarını yazdırın. Bu, 3.\ haftanın hangi veri yapısına bir bakıştır ve durum neden \texttt{S}'dir?
+  \item \textbf{(6 puan)} \cmd{ls --help} ile her satırda bir ad listeleyen seçeneği ve sıralamayı ters çeviren seçeneği bulun. İkisini birlikte \texttt{docs} üzerinde kullanın. Sonra \cmd{help cd} ile \cmd{cd -}'nin ne yaptığını açıklayın.
+\end{enumerate}
+
+\subsection*{E Bölümü --- Zorlu sorular (15 puan)}
+\begin{enumerate}[label=\textbf{E\arabic*}, leftmargin=2.2em, start=16]
+  \item \textbf{(5 puan) Hazine avı.} \texttt{\tl/lab}'da başlayın ve yalnızca \cmd{cd}, \cmd{ls}, \cmd{pwd} ve \cmd{cat} kullanın. (1) \texttt{README.txt}'yi okuyun: ``a small C program'' tutan dizine gidin. (2) O program ne yazar? (3) Tek bir göreli \cmd{cd} ile kısa metin belgelerinin dizinine geçin. (4) Oradaki bir dosyanın adında boşluk var; son satırı paroladır. (5) Tek bir göreli \cmd{cd} ile \texttt{projects/beta/src}'de bitirin ve \cmd{pwd} çalıştırın.
+  \item \textbf{(5 puan) Bağlantı sayıları.} \cmd{ls -ld}, \texttt{\tl/lab} için $10$, \texttt{projects} ve \texttt{projects/alpha} için $4$, \texttt{docs} için $2$ bağlantı sayısı gösteriyor. Dört sayıyı da 7.\ haftadaki sabit bağlantı fikriyle açıklayın ve \texttt{projects/beta}'nın bağlantı sayısını tahmin edin.
+  \item \textbf{(5 puan) Neden yerleşik?} \cmd{type cd}, \cmd{strace -e trace=chdir bash -c 'cd /tmp'} ve ardından \cmd{pwd} çalıştırın. 3.\ haftanın süreç kavramını kullanarak \cmd{cd}'nin neden sıradan bir program olamayacağını açıklayın.
+\end{enumerate}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item Terminal, kabuk ve çekirdek arasındaki farkı açıklayın. Bunlardan hangileri kullanıcı modunda çalışır?
+  \item \cmd{ls docs} yazdığınızda kabuğun attığı adımları sıralayın. 3.\ haftanın hangi sistem çağrıları işin içindedir?
+  \item Yerleşik bir komutla harici bir komut arasındaki fark nedir? Bir komutun hangisi olduğunu nasıl anlarsınız?
+  \item Gizli dosya nedir? Gizli dosyaları nasıl listelersiniz?
+  \item \texttt{drwxrwxr-x 4 student student 4096 Oct 12 08:49 projects} satırının her sütununu açıklayın.
+  \item Linux'un sürücü harflerine neden ihtiyacı yoktur? \texttt{/proc} nedir ve neden sanal dosya sistemi olarak adlandırılır?
+  \item Mutlak ve göreli yol arasındaki farkı, aynı dizini adlandıran birer örnekle açıklayın.
+  \item \texttt{\tl}, \texttt{.}, \texttt{..} ve \texttt{-} \cmd{cd} için ne anlama gelir? Bunlardan hangileri gerçek dizin girdileridir?
+  \item \cmd{ls docs/final report.txt} neden iki hata mesajı yazar? Komutu düzeltmenin iki yolunu verin.
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item Bir dosya $3\,500\,000$ bayttır. \cmd{ls -lh} ne gösterir?
+  \item Bir dosya $10\,300$ bayttır. \cmd{ls -lh} ne gösterir?
+  \item Bir dizinde $5$ alt dizin ve $12$ dosya var. Bağlantı sayısı kaçtır?
+  \item Bir dizinde her biri $4$\,KiB'tan küçük $7$ dosya var ve dosya sistemi $4$\,KiB'lık bloklar kullanıyor. \cmd{ls -l} çıktısının \texttt{total} satırı ne gösterir?
+  \item \texttt{/home/student/lab/projects/alpha/docs} içindesiniz. \texttt{/home/student/lab/data}'ya giden en kısa göreli yolu yazın. Kaç düzey yukarı çıkar?
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=10]
+  \item $3\,500\,000 / 2^{20} = 3\,500\,000 / 1\,048\,576 \approx 3.338$; bir ondalık basamak, yukarı yuvarlanır: \texttt{3.4M}.
+  \item $10\,300 / 1024 \approx 10.06$; $10$ ve üzerinde ondalık gösterilmez ve değer yukarı yuvarlanır: \texttt{11K}.
+  \item $2 + 5 = 7$ (dosyalar sayılmaz).
+  \item Her dosya bir blok kaplar: $7 \times 4 = 28$, yani \texttt{total 28}.
+  \item \texttt{../../../data}: üç düzey yukarı (\texttt{docs}'un üstü \texttt{alpha}'ya, sonra \texttt{projects}'e, sonra \texttt{lab}'a), sonra \texttt{data}'ya iner.
+\end{enumerate}
+
+% =====================================================================
+\section{Laboratuvar Föyü Çözümleri}
+\label{sec:labsol}
+
+Aşağıdaki çıktılar \texttt{code/out\_lab.txt} (betik: \texttt{code/demo\_lab.sh}) ve bu haftanın diğer kayıtlarından alınmıştır. Tarihler, PID'ler ve sistem ayrıntıları sizin bilgisayarınızda farklı olacaktır.
+
+\paragraph{A1.} Bkz.\ Bölüm~\ref{sec:first}: \texttt{student}, \texttt{okan-lab}, o anki tarih ve saat ve çekirdek sürümü (makinemizde \texttt{6.18.44-fc-v114}). \cmd{whoami}: kullanıcı adı; \cmd{hostname}: bilgisayar adı; \cmd{date}: tarih ve saat; \cmd{uname -r}: Linux çekirdeğinin sürümü.
+
+\paragraph{A2.} Betik \texttt{Lab folder ready: /home/student/lab} yazar (Bölüm~\ref{sec:labsetup}). \cmd{cd \tl/lab} ve ardından \cmd{pwd}, mutlak yolu \texttt{/home/student/lab} olarak yazar (sizin kullanıcı adınızla).
+
+\paragraph{A3.} (a) komut \cmd{ls}, seçenekler \texttt{-l -a}, argüman \texttt{docs}; (b) \cmd{ls}, seçenekler \texttt{-l -h} (birleşik), argümanlar \texttt{/var/log} ve \texttt{/tmp}; (c) \cmd{head}, \texttt{3} değerli \texttt{-n} seçeneği, argüman \texttt{data/cities.txt}; (d) \cmd{cd}, seçenek yok, argüman yok (eve gider); (e) \cmd{ls}, uzun seçenek \texttt{--all}, argüman yok.
+
+\paragraph{B4.} $9$ girdi: $8$ dizin ve \texttt{README.txt} dosyası. \cmd{ls -F} dizinleri \texttt{/} ile işaretler (\cmd{ls -l} \texttt{d} gösterir).
+
+\paragraph{B5.} \cmd{ls -a docs} \texttt{.settings} dosyasını ortaya çıkarır; \cmd{cat docs/.settings} \texttt{editor=nano} ve \texttt{color=on} yazar.
+
+\paragraph{B6.} \cmd{-S} boyuta göre, en büyük önce sıralar: \cmd{ls -lS docs} en üste \texttt{syllabus.txt}'yi ($578$ bayt), ardından \texttt{linux\_quotes.txt}'yi ($302$) ve \texttt{final report.txt}'yi ($53$) koyar.
+
+\paragraph{B7.} \cmd{ls -l logs} $23\,604$ bayt verir; \cmd{ls -lh} \texttt{24K} gösterir, çünkü $23\,604/1024 \approx 23.05$ ve \cmd{ls -h} yukarı yuvarlar.
+
+\paragraph{B8.} $15$ dosya. $12$'si \texttt{.jpg} ile biter (\texttt{img001.jpg} \ldots\ \texttt{img012.jpg}); diğer üçü \texttt{IMG\_014.JPG} (büyük harf --- Linux'ta farklı bir ad), \texttt{holiday.jpeg} ve \texttt{img013.png}'dir. (Gelecek hafta \texttt{*.jpg} gibi joker karakterler onları sizin için sayacak.) \cmd{ls photos} $15$ adın hepsini üç sütunda gösterir.
+
+\paragraph{C9 ve C10.} \cmd{cd projects/beta/docs}, sonra \cmd{cd ../../alpha/src} (\texttt{beta}'ya çık, \texttt{projects}'e çık, \texttt{alpha/src}'ye in); \cmd{pwd} önce \texttt{/home/student/lab/projects/beta/docs}, sonra \texttt{/home/student/lab/projects/alpha/src} yazar.
+
+\paragraph{C11.} \cmd{cd alpha} sonrasında: \texttt{\tl/lab/projects/alpha}; \cmd{cd ../beta/src} sonrasında: \texttt{\tl/lab/projects/beta/src}; \cmd{cd ..} sonrasında: \texttt{\tl/lab/projects/beta}; \cmd{cd -} ise \texttt{\tl/lab/projects/beta/src}'ye döner ve bu dizini yazar.
+
+\paragraph{C12.} \cmd{cd /home/student/lab/src} (mutlak; kendi kullanıcı adınızı yazın) ve \cmd{cd \tl/lab/src} (kabuk \texttt{\tl}'yi ev dizininizin mutlak yoluna genişletir). \cmd{cd lab/src} görelidir: yalnızca geçerli dizin \texttt{lab}'ı içeren \texttt{/home/student} olduğunda çalışır.
+
+\paragraph{D13.} \cmd{type ls} $\to$ \texttt{/usr/bin/ls}; \cmd{ls -ld /bin} $\to$ \texttt{usr/bin}'e bir sembolik bağlantı; \texttt{/etc/os-release} dağıtımın adını verir; makinemizde \texttt{PRETTY\_NAME="Ubuntu 24.04.4 LTS"} (Bölüm~\ref{sec:fhs}).
+
+\paragraph{D14.} \cmd{echo \$\$}, ardından \cmd{head -n 7 /proc/\$\$/status} (Bölüm~\ref{sec:fhs}; PID her seferinde farklıdır). Bu, kabuğun \emph{süreç denetim bloğuna} (PCB, 3.\ hafta) bir bakıştır: ad, durum, PID, ebeveyn PID. Durum \texttt{S}'dir (uyuyor), çünkü \cmd{head} çalışırken kabuk, çocuğunu beklemek için \texttt{wait()} içinde engellenmiştir.
+
+\paragraph{D15.} \cmd{-1} (her satırda bir) ve \cmd{-r} (ters):
+\outl{out_lab.txt}{64}{70}
+\cmd{help cd} şunu söyler: \emph{If DIR is ``-'', it is converted to \$OLDPWD}; yani \cmd{cd -} bir önceki dizine gider (Bölüm~\ref{sec:help}).
+
+\paragraph{E16 (hazine avı).} (1) \texttt{README.txt}, \texttt{src/} dizininin ``a small C program'' tuttuğunu söyler: \cmd{cd src}. (2) \cmd{cat hello.c}: program \texttt{Hello from the lab!} yazar. (3) \cmd{cd ../docs}. (4) \cmd{cat "final report.txt"}: parola \texttt{This file name contains a space.} (5) \cmd{cd ../projects/beta/src}; \cmd{pwd} \texttt{/home/student/lab/projects/beta/src} yazar.
+
+\paragraph{E17.} Bir dizinin bağlantı sayısı $= 2 + s$ ($s$ = alt dizin sayısı): üst dizindeki adı, kendi \texttt{.} girdisi ve her alt dizindeki bir \texttt{..}. \texttt{\tl/lab}: $s = 8$, $2+8 = 10$; \texttt{projects}: \texttt{alpha}, \texttt{beta}, $2+2 = 4$; \texttt{alpha}: \texttt{docs}, \texttt{src}, $4$; \texttt{docs}: $2$. \texttt{projects/beta} için tahmin: $4$.
+\outl{out_lab.txt}{71}{75}
+
+\paragraph{E18.} Bkz.\ Bölüm~\ref{sec:cdbuiltin}: \cmd{type cd} ``cd is a shell builtin'' yazar; çocuk \cmd{bash} \texttt{chdir("/tmp")} çağrısını başarıyla yapar, ama ardından \cmd{pwd} hâlâ \texttt{/home/student/lab} yazar. Geçerli dizin sürece özgü bir durumdur; bir çocuk ebeveyninin dizinini değiştiremez, dolayısıyla \cmd{cd} kabuk sürecinin kendi içinde çalışmak zorundadır.
+
+\paragraph{Puanlama ipuçları.} Tarihler, PID'ler ve sistem ayrıntıları farklı olsa da komutlar doğruysa tam puan verin. C9--C12 ve E16'da göreli yol istenen yerde mutlak yol kullanılmışsa puan kırın.
+
+% =====================================================================
+\section{İleriye Bakış: 10. Hafta}
+
+Gelecek hafta yalnızca bakmayı bırakıp \texttt{\tl/lab} içindeki dosya sistemini \emph{değiştirmeye} başlıyoruz:
+\begin{itemize}
+  \item oluşturmak ve silmek: \cmd{mkdir -p}, \cmd{touch}, \cmd{rm}, \cmd{rmdir} --- ve \cmd{rm}'nin neden geri dönüşüm kutusu olmadığı;
+  \item kopyalamak ve taşımak: \cmd{cp -r -i -v}, \cmd{mv};
+  \item joker karakterler (wildcards) \texttt{*}, \texttt{?}, \texttt{[abc]} ve küme parantezi genişletmesi (brace expansion) \texttt{\{a,b\}}, \texttt{\{1..5\}} --- komut değil kabuk tarafından genişletilir (bu haftaki \cmd{echo} ve \texttt{\tl} örneğini hatırlayın);
+  \item dosyaları görüntülemek: \cmd{cat}, \cmd{less}, \cmd{head}, \cmd{tail}, \cmd{wc}, \cmd{file}, \cmd{stat}, \cmd{du}, \cmd{df};
+  \item \cmd{ln} ve \cmd{ln -s} ile sabit ve sembolik bağlantılar (7.\ haftadaki düğümler).
+\end{itemize}
+Dersten önce kendi bilgisayarınızda çalışan bir terminal ve lab klasörü bulunduğundan emin olun.
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley: Bölüm~2.2 (User and Operating-System Interface: komut yorumlayıcıları) ve Bölüm~13.3 (Directory Structure).
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}:
+  \begin{itemize}
+    \item 5.\ bölüm, ``Interlude: Process API'' (bir kabuğun \cmd{fork}, \cmd{exec}, \cmd{wait}'i nasıl kullandığı): \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-api.pdf}
+    \item 39.\ bölüm, ``Interlude: Files and Directories'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf}
+  \end{itemize}
+  \item W.\ Shotts, \emph{The Linux Command Line} (ücretsiz kitap), 1.\ kısım, 1--5.\ bölümler: \url{https://linuxcommand.org/tlcl.php}
+  \item Microsoft, ``WSL ile Windows'a Linux yükleme'': \url{https://learn.microsoft.com/tr-tr/windows/wsl/install}
+  \item Filesystem Hierarchy Standard 3.0: \url{https://refspecs.linuxfoundation.org/FHS_3.0/fhs-3.0.html}
+\end{itemize}

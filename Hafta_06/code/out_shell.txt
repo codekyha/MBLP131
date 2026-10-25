@@ -1,0 +1,12 @@
+$ getconf PAGESIZE
+4096
+$ grep -E "Hugepagesize|MemTotal" /proc/meminfo
+MemTotal:        8223848 kB
+Hugepagesize:       2048 kB
+$ head -n 6 /proc/self/maps
+559948881000-559948883000 r--p 00000000 fe:00 270606                     /usr/bin/head
+559948883000-559948889000 r-xp 00002000 fe:00 270606                     /usr/bin/head
+559948889000-55994888b000 r--p 00008000 fe:00 270606                     /usr/bin/head
+55994888b000-55994888c000 r--p 00009000 fe:00 270606                     /usr/bin/head
+55994888c000-55994888d000 rw-p 0000a000 fe:00 270606                     /usr/bin/head
+559970df7000-559970e18000 rw-p 00000000 00:00 0                          [heap]

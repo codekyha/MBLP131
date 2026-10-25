@@ -1,0 +1,78 @@
+student@okan-lab:~$ cd ~/lab
+student@okan-lab:~/lab$ ls -F
+README.txt  backup/  data/  docs/  logs/  photos/  projects/  scripts/  src/
+student@okan-lab:~/lab$ ls -a docs
+ .    .settings           linux_quotes.txt   notes_02.txt   syllabus.txt
+ ..  'final report.txt'   notes_01.txt       notes_03.txt
+student@okan-lab:~/lab$ cat docs/.settings
+editor=nano
+color=on
+student@okan-lab:~/lab$ ls -lS docs
+total 24
+-rw-rw-r-- 1 student student 578 Oct 12 08:49  syllabus.txt
+-rw-rw-r-- 1 student student 302 Oct 12 08:49  linux_quotes.txt
+-rw-rw-r-- 1 student student  53 Oct 12 08:49 'final report.txt'
+-rw-rw-r-- 1 student student  16 Oct 12 08:49  notes_01.txt
+-rw-rw-r-- 1 student student  16 Oct 12 08:49  notes_02.txt
+-rw-rw-r-- 1 student student  16 Oct 12 08:49  notes_03.txt
+student@okan-lab:~/lab$ ls -l logs
+total 32
+-rw-rw-r-- 1 student student 23604 Oct 12 08:49 access.log
+-rw-rw-r-- 1 student student  5207 Oct 12 08:49 system.log
+student@okan-lab:~/lab$ ls photos
+IMG_014.JPG   img002.jpg  img005.jpg  img008.jpg  img011.jpg
+holiday.jpeg  img003.jpg  img006.jpg  img009.jpg  img012.jpg
+img001.jpg    img004.jpg  img007.jpg  img010.jpg  img013.png
+student@okan-lab:~/lab$ cd projects/beta/docs
+student@okan-lab:~/lab/projects/beta/docs$ pwd
+/home/student/lab/projects/beta/docs
+student@okan-lab:~/lab/projects/beta/docs$ cd ../../alpha/src
+student@okan-lab:~/lab/projects/alpha/src$ pwd
+/home/student/lab/projects/alpha/src
+student@okan-lab:~/lab/projects/alpha/src$ cd ~/lab/projects
+student@okan-lab:~/lab/projects$ cd alpha
+student@okan-lab:~/lab/projects/alpha$ cd ../beta/src
+student@okan-lab:~/lab/projects/beta/src$ cd ..
+student@okan-lab:~/lab/projects/beta$ cd -
+/home/student/lab/projects/beta/src
+student@okan-lab:~/lab/projects/beta/src$ cd ~/lab
+student@okan-lab:~/lab$ cat README.txt
+MCMP117 / MBLP131 Linux lab folder
+==================================
+docs/      short text documents
+data/      students.csv, cities.txt, numbers.txt
+logs/      access.log (web server) and system.log
+src/       a small C program
+photos/    empty "photo" files for wildcard practice
+projects/  a small directory tree for navigation practice
+backup/    empty -- you will copy files here
+scripts/   empty -- your shell scripts go here (Week 14)
+student@okan-lab:~/lab$ cat src/hello.c
+#include <stdio.h>
+
+int main(void)
+{
+    printf("Hello from the lab!\n");
+    return 0;
+}
+student@okan-lab:~/lab$ cd src
+student@okan-lab:~/lab/src$ cd ../docs
+student@okan-lab:~/lab/docs$ cat "final report.txt"
+Final report draft.
+This file name contains a space.
+student@okan-lab:~/lab/docs$ cd ~/lab
+student@okan-lab:~/lab$ ls -1 -r docs
+syllabus.txt
+notes_03.txt
+notes_02.txt
+notes_01.txt
+linux_quotes.txt
+'final report.txt'
+student@okan-lab:~/lab$ ls -ld ~/lab ~/lab/projects ~/lab/projects/alpha ~/lab/docs
+drwxrwxr-x 10 student student 4096 Oct 12 08:49 /home/student/lab
+drwxrwxr-x  2 student student 4096 Oct 12 08:49 /home/student/lab/docs
+drwxrwxr-x  4 student student 4096 Oct 12 08:49 /home/student/lab/projects
+drwxrwxr-x  4 student student 4096 Oct 12 08:49 /home/student/lab/projects/alpha
+student@okan-lab:~/lab$ head -n 2 /etc/os-release
+PRETTY_NAME="Ubuntu 24.04.4 LTS"
+NAME="Ubuntu"

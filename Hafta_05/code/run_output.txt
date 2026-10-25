@@ -1,0 +1,18 @@
+$ ./race          # run 4 times
+counter = 12250428 of 20000000  (lost 7749572)  0.052 s
+counter = 12005053 of 20000000  (lost 7994947)  0.100 s
+counter = 13797565 of 20000000  (lost 6202435)  0.110 s
+counter = 12046532 of 20000000  (lost 7953468)  0.080 s
+$ ./race_fixed    # run 3 times
+counter = 20000000 of 20000000  (lost       0)  1.122 s
+counter = 20000000 of 20000000  (lost       0)  1.115 s
+counter = 20000000 of 20000000  (lost       0)  0.749 s
+$ taskset -c 0 ./race   # pinned to ONE CPU
+counter = 14324099 of 20000000  (lost 5675901)  0.034 s
+counter = 12867601 of 20000000  (lost 7132399)  0.034 s
+$ ./prodcons
+consumed  5   running sum  15
+consumed 10   running sum  55
+consumed 15   running sum 120
+consumed 20   running sum 210
+sum of 1..20 = 210 (expected 210)

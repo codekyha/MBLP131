@@ -1,0 +1,16 @@
+1) directory link counts (2 + subdirectories)
+   lab                subdirs=8  2+8=10  st_nlink=10
+   lab/projects       subdirs=2  2+2=4  st_nlink=4
+   lab/projects/alpha subdirs=2  2+2=4  st_nlink=4
+   lab/docs           subdirs=0  2+0=2  st_nlink=2
+2) ls -h sizes
+   logs/access.log     23604 bytes =  23.051 KiB -> ls -h shows 24K
+   logs/system.log      5207 bytes =   5.085 KiB -> ls -h shows 5.1K
+   data/students.csv    1208 bytes =   1.180 KiB -> ls -h shows 1.2K
+   data/cities.txt       227 bytes =   0.222 KiB -> ls -h shows 227
+3) 'total' of ls -l (st_blocks are 512-byte units; ls shows 1 KiB units)
+   lab                total 36
+   lab/docs           total 24
+   lab/logs           total 32
+4) entries in docs/ including . and ..
+   7 names + . + .. = 9  (hidden: ['.settings'])

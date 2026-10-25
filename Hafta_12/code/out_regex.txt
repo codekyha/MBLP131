@@ -1,0 +1,34 @@
+student@okan-lab:~/lab$ grep "^Week [0-9] " docs/syllabus.txt
+Week 1  Introduction and history
+Week 2  Definitions, goals, components, structures
+Week 3  OS services, system calls, processes
+Week 4  Threads and CPU scheduling basics
+Week 5  Scheduling algorithms and synchronization
+Week 6  Memory management, paging, segmentation
+Week 7  Virtual memory and file systems
+Week 8  Midterm exam
+Week 9  Shell basics and navigation
+student@okan-lab:~/lab$ grep "s$" docs/syllabus.txt
+Week 2  Definitions, goals, components, structures
+Week 3  OS services, system calls, processes
+Week 4  Threads and CPU scheduling basics
+Week 7  Virtual memory and file systems
+Week 10 File and directory operations
+Week 11 Permissions, ownership and users
+student@okan-lab:~/lab$ grep "c.de" docs/linux_quotes.txt
+Talk is cheap. Show me the code.
+student@okan-lab:~/lab$ grep -c "5.38" logs/access.log
+39
+student@okan-lab:~/lab$ grep -c "5\.38" logs/access.log
+37
+student@okan-lab:~/lab$ grep "5.38" logs/access.log | grep -v "5\.38"
+10.0.6.45 - - [12/Oct/2026:15:53:47 +0300] "GET /courses/mcmp117 HTTP/1.1" 200 5438
+10.0.2.17 - - [12/Oct/2026:15:38:02 +0300] "GET /login HTTP/1.1" 200 1357
+student@okan-lab:~/lab$ grep ",ECT,[0-9]*,9[0-9]$" data/students.csv
+2026001,Elif Yilmaz,ECT,96,99
+2026015,Deniz Celik,ECT,95,96
+student@okan-lab:~/lab$ grep "^2026-10-12 1[0-1]:.*ERROR" logs/system.log
+2026-10-12 10:40:00 ERROR failed to mount /dev/sdb1
+2026-10-12 10:35:00 ERROR failed to mount /dev/sdb1
+2026-10-12 10:30:00 ERROR failed to mount /dev/sdb1
+2026-10-12 10:03:00 ERROR failed to mount /dev/sdb1

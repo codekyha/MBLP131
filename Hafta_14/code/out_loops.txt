@@ -1,0 +1,27 @@
+student@okan-lab:~/lab/scripts$ ./loops.sh
+City: Istanbul
+City: Ankara
+City: Izmir
+1 squared is 1; 2 squared is 4; 3 squared is 9; 4 squared is 16; 5 squared is 25; 
+final report.txt: 2 lines
+linux_quotes.txt: 5 lines
+notes_01.txt: 1 lines
+notes_02.txt: 1 lines
+notes_03.txt: 1 lines
+syllabus.txt: 15 lines
+student@okan-lab:~/lab/scripts$ ./while.sh
+Countdown: 3
+Countdown: 2
+Countdown: 1
+Go!
+20 numbers, sum = 11325, average = 566 (integer)
+student@okan-lab:~/lab/scripts$ ./functions.sh
+------------------------------------
+ERROR appears on 13 lines of system.log
+WARN appears on 28 lines of system.log
+------------------------------------
+7 is odd
+12 is even
+student@okan-lab:~/lab/scripts$ for f in ../photos/*.png ../photos/*.JPG; do echo "found $f"; done
+found ../photos/img013.png
+found ../photos/IMG_014.JPG

@@ -1,0 +1,33 @@
+student@okan-lab:~/lab$ cd docs
+student@okan-lab:~/lab/docs$ ln syllabus.txt plan.txt
+student@okan-lab:~/lab/docs$ cp syllabus.txt copy.txt
+student@okan-lab:~/lab/docs$ ln -s syllabus.txt shortcut.txt
+student@okan-lab:~/lab/docs$ ls -li syllabus.txt plan.txt copy.txt shortcut.txt
+804702 -rw-rw-r-- 1 student student 578 Oct 12 08:47 copy.txt
+804123 -rw-rw-r-- 2 student student 578 Oct 12 08:47 plan.txt
+804703 lrwxrwxrwx 1 student student  12 Oct 12 08:47 shortcut.txt -> syllabus.txt
+804123 -rw-rw-r-- 2 student student 578 Oct 12 08:47 syllabus.txt
+student@okan-lab:~/lab/docs$ echo "Week 16  Party" >> plan.txt
+student@okan-lab:~/lab/docs$ tail -n 1 syllabus.txt copy.txt
+==> syllabus.txt <==
+Week 16  Party
+
+==> copy.txt <==
+Week 15 Final exam
+student@okan-lab:~/lab/docs$ rm syllabus.txt
+student@okan-lab:~/lab/docs$ ls -li plan.txt shortcut.txt
+804123 -rw-rw-r-- 1 student student 593 Oct 12 08:47 plan.txt
+804703 lrwxrwxrwx 1 student student  12 Oct 12 08:47 shortcut.txt -> syllabus.txt
+student@okan-lab:~/lab/docs$ cat shortcut.txt
+cat: shortcut.txt: No such file or directory
+student@okan-lab:~/lab/docs$ cd ..
+student@okan-lab:~/lab$ ln -s projects/alpha/docs alpha_docs
+student@okan-lab:~/lab$ ls -l alpha_docs
+lrwxrwxrwx 1 student student 19 Oct 12 08:47 alpha_docs -> projects/alpha/docs
+student@okan-lab:~/lab$ ls alpha_docs/
+design.txt
+student@okan-lab:~/lab$ ln projects alpha_hard
+ln: projects: hard link not allowed for directory
+student@okan-lab:~/lab$ ls -ld projects projects/alpha
+drwxrwxr-x 4 student student 4096 Oct 12 08:47 projects
+drwxrwxr-x 4 student student 4096 Oct 12 08:47 projects/alpha

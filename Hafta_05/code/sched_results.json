@@ -1,0 +1,926 @@
+{
+ "jobs": [
+  [
+   "P1",
+   0,
+   7,
+   3
+  ],
+  [
+   "P2",
+   2,
+   4,
+   1
+  ],
+  [
+   "P3",
+   4,
+   1,
+   4
+  ],
+  [
+   "P4",
+   5,
+   4,
+   2
+  ]
+ ],
+ "convoy_long_first": {
+  "segs": [
+   [
+    "P1",
+    0,
+    24
+   ],
+   [
+    "P2",
+    24,
+    27
+   ],
+   [
+    "P3",
+    27,
+    30
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 24,
+    "priority": 0,
+    "first": 0,
+    "completion": 24,
+    "turnaround": 24,
+    "waiting": 0,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 0,
+    "burst": 3,
+    "priority": 0,
+    "first": 24,
+    "completion": 27,
+    "turnaround": 27,
+    "waiting": 24,
+    "response": 24
+   },
+   "P3": {
+    "arrival": 0,
+    "burst": 3,
+    "priority": 0,
+    "first": 27,
+    "completion": 30,
+    "turnaround": 30,
+    "waiting": 27,
+    "response": 27
+   }
+  },
+  "avg": {
+   "waiting": 17.0,
+   "turnaround": 27.0,
+   "response": 17.0
+  },
+  "switches": 2
+ },
+ "convoy_short_first": {
+  "segs": [
+   [
+    "P2",
+    0,
+    3
+   ],
+   [
+    "P3",
+    3,
+    6
+   ],
+   [
+    "P1",
+    6,
+    30
+   ]
+  ],
+  "per": {
+   "P2": {
+    "arrival": 0,
+    "burst": 3,
+    "priority": 0,
+    "first": 0,
+    "completion": 3,
+    "turnaround": 3,
+    "waiting": 0,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 0,
+    "burst": 3,
+    "priority": 0,
+    "first": 3,
+    "completion": 6,
+    "turnaround": 6,
+    "waiting": 3,
+    "response": 3
+   },
+   "P1": {
+    "arrival": 0,
+    "burst": 24,
+    "priority": 0,
+    "first": 6,
+    "completion": 30,
+    "turnaround": 30,
+    "waiting": 6,
+    "response": 6
+   }
+  },
+  "avg": {
+   "waiting": 3.0,
+   "turnaround": 13.0,
+   "response": 3.0
+  },
+  "switches": 2
+ },
+ "FCFS": {
+  "segs": [
+   [
+    "P1",
+    0,
+    7
+   ],
+   [
+    "P2",
+    7,
+    11
+   ],
+   [
+    "P3",
+    11,
+    12
+   ],
+   [
+    "P4",
+    12,
+    16
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 3,
+    "first": 0,
+    "completion": 7,
+    "turnaround": 7,
+    "waiting": 0,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 7,
+    "completion": 11,
+    "turnaround": 9,
+    "waiting": 5,
+    "response": 5
+   },
+   "P3": {
+    "arrival": 4,
+    "burst": 1,
+    "priority": 4,
+    "first": 11,
+    "completion": 12,
+    "turnaround": 8,
+    "waiting": 7,
+    "response": 7
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 4,
+    "priority": 2,
+    "first": 12,
+    "completion": 16,
+    "turnaround": 11,
+    "waiting": 7,
+    "response": 7
+   }
+  },
+  "avg": {
+   "waiting": 4.75,
+   "turnaround": 8.75,
+   "response": 4.75
+  },
+  "switches": 3
+ },
+ "SJF": {
+  "segs": [
+   [
+    "P1",
+    0,
+    7
+   ],
+   [
+    "P3",
+    7,
+    8
+   ],
+   [
+    "P2",
+    8,
+    12
+   ],
+   [
+    "P4",
+    12,
+    16
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 3,
+    "first": 0,
+    "completion": 7,
+    "turnaround": 7,
+    "waiting": 0,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 8,
+    "completion": 12,
+    "turnaround": 10,
+    "waiting": 6,
+    "response": 6
+   },
+   "P3": {
+    "arrival": 4,
+    "burst": 1,
+    "priority": 4,
+    "first": 7,
+    "completion": 8,
+    "turnaround": 4,
+    "waiting": 3,
+    "response": 3
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 4,
+    "priority": 2,
+    "first": 12,
+    "completion": 16,
+    "turnaround": 11,
+    "waiting": 7,
+    "response": 7
+   }
+  },
+  "avg": {
+   "waiting": 4.0,
+   "turnaround": 8.0,
+   "response": 4.0
+  },
+  "switches": 3
+ },
+ "SRTF": {
+  "segs": [
+   [
+    "P1",
+    0,
+    2
+   ],
+   [
+    "P2",
+    2,
+    4
+   ],
+   [
+    "P3",
+    4,
+    5
+   ],
+   [
+    "P2",
+    5,
+    7
+   ],
+   [
+    "P4",
+    7,
+    11
+   ],
+   [
+    "P1",
+    11,
+    16
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 3,
+    "first": 0,
+    "completion": 16,
+    "turnaround": 16,
+    "waiting": 9,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 2,
+    "completion": 7,
+    "turnaround": 5,
+    "waiting": 1,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 4,
+    "burst": 1,
+    "priority": 4,
+    "first": 4,
+    "completion": 5,
+    "turnaround": 1,
+    "waiting": 0,
+    "response": 0
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 4,
+    "priority": 2,
+    "first": 7,
+    "completion": 11,
+    "turnaround": 6,
+    "waiting": 2,
+    "response": 2
+   }
+  },
+  "avg": {
+   "waiting": 3.0,
+   "turnaround": 7.0,
+   "response": 0.5
+  },
+  "switches": 5
+ },
+ "PRIO_NP": {
+  "segs": [
+   [
+    "P1",
+    0,
+    7
+   ],
+   [
+    "P2",
+    7,
+    11
+   ],
+   [
+    "P4",
+    11,
+    15
+   ],
+   [
+    "P3",
+    15,
+    16
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 3,
+    "first": 0,
+    "completion": 7,
+    "turnaround": 7,
+    "waiting": 0,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 7,
+    "completion": 11,
+    "turnaround": 9,
+    "waiting": 5,
+    "response": 5
+   },
+   "P3": {
+    "arrival": 4,
+    "burst": 1,
+    "priority": 4,
+    "first": 15,
+    "completion": 16,
+    "turnaround": 12,
+    "waiting": 11,
+    "response": 11
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 4,
+    "priority": 2,
+    "first": 11,
+    "completion": 15,
+    "turnaround": 10,
+    "waiting": 6,
+    "response": 6
+   }
+  },
+  "avg": {
+   "waiting": 5.5,
+   "turnaround": 9.5,
+   "response": 5.5
+  },
+  "switches": 3
+ },
+ "PRIO_P": {
+  "segs": [
+   [
+    "P1",
+    0,
+    2
+   ],
+   [
+    "P2",
+    2,
+    6
+   ],
+   [
+    "P4",
+    6,
+    10
+   ],
+   [
+    "P1",
+    10,
+    15
+   ],
+   [
+    "P3",
+    15,
+    16
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 3,
+    "first": 0,
+    "completion": 15,
+    "turnaround": 15,
+    "waiting": 8,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 2,
+    "completion": 6,
+    "turnaround": 4,
+    "waiting": 0,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 4,
+    "burst": 1,
+    "priority": 4,
+    "first": 15,
+    "completion": 16,
+    "turnaround": 12,
+    "waiting": 11,
+    "response": 11
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 4,
+    "priority": 2,
+    "first": 6,
+    "completion": 10,
+    "turnaround": 5,
+    "waiting": 1,
+    "response": 1
+   }
+  },
+  "avg": {
+   "waiting": 5.0,
+   "turnaround": 9.0,
+   "response": 3.0
+  },
+  "switches": 4
+ },
+ "RR4": {
+  "segs": [
+   [
+    "P1",
+    0,
+    4
+   ],
+   [
+    "P2",
+    4,
+    8
+   ],
+   [
+    "P3",
+    8,
+    9
+   ],
+   [
+    "P1",
+    9,
+    12
+   ],
+   [
+    "P4",
+    12,
+    16
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 3,
+    "first": 0,
+    "completion": 12,
+    "turnaround": 12,
+    "waiting": 5,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 4,
+    "completion": 8,
+    "turnaround": 6,
+    "waiting": 2,
+    "response": 2
+   },
+   "P3": {
+    "arrival": 4,
+    "burst": 1,
+    "priority": 4,
+    "first": 8,
+    "completion": 9,
+    "turnaround": 5,
+    "waiting": 4,
+    "response": 4
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 4,
+    "priority": 2,
+    "first": 12,
+    "completion": 16,
+    "turnaround": 11,
+    "waiting": 7,
+    "response": 7
+   }
+  },
+  "avg": {
+   "waiting": 4.5,
+   "turnaround": 8.5,
+   "response": 3.25
+  },
+  "switches": 4
+ },
+ "RR2": {
+  "segs": [
+   [
+    "P1",
+    0,
+    2
+   ],
+   [
+    "P2",
+    2,
+    4
+   ],
+   [
+    "P1",
+    4,
+    6
+   ],
+   [
+    "P3",
+    6,
+    7
+   ],
+   [
+    "P2",
+    7,
+    9
+   ],
+   [
+    "P4",
+    9,
+    11
+   ],
+   [
+    "P1",
+    11,
+    13
+   ],
+   [
+    "P4",
+    13,
+    15
+   ],
+   [
+    "P1",
+    15,
+    16
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 3,
+    "first": 0,
+    "completion": 16,
+    "turnaround": 16,
+    "waiting": 9,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 2,
+    "completion": 9,
+    "turnaround": 7,
+    "waiting": 3,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 4,
+    "burst": 1,
+    "priority": 4,
+    "first": 6,
+    "completion": 7,
+    "turnaround": 3,
+    "waiting": 2,
+    "response": 2
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 4,
+    "priority": 2,
+    "first": 9,
+    "completion": 15,
+    "turnaround": 10,
+    "waiting": 6,
+    "response": 4
+   }
+  },
+  "avg": {
+   "waiting": 5.0,
+   "turnaround": 9.0,
+   "response": 1.5
+  },
+  "switches": 8
+ },
+ "RR1": {
+  "segs": [
+   [
+    "P1",
+    0,
+    2
+   ],
+   [
+    "P2",
+    2,
+    3
+   ],
+   [
+    "P1",
+    3,
+    4
+   ],
+   [
+    "P2",
+    4,
+    5
+   ],
+   [
+    "P3",
+    5,
+    6
+   ],
+   [
+    "P1",
+    6,
+    7
+   ],
+   [
+    "P4",
+    7,
+    8
+   ],
+   [
+    "P2",
+    8,
+    9
+   ],
+   [
+    "P1",
+    9,
+    10
+   ],
+   [
+    "P4",
+    10,
+    11
+   ],
+   [
+    "P2",
+    11,
+    12
+   ],
+   [
+    "P1",
+    12,
+    13
+   ],
+   [
+    "P4",
+    13,
+    14
+   ],
+   [
+    "P1",
+    14,
+    15
+   ],
+   [
+    "P4",
+    15,
+    16
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 3,
+    "first": 0,
+    "completion": 15,
+    "turnaround": 15,
+    "waiting": 8,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 2,
+    "completion": 12,
+    "turnaround": 10,
+    "waiting": 6,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 4,
+    "burst": 1,
+    "priority": 4,
+    "first": 5,
+    "completion": 6,
+    "turnaround": 2,
+    "waiting": 1,
+    "response": 1
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 4,
+    "priority": 2,
+    "first": 7,
+    "completion": 16,
+    "turnaround": 11,
+    "waiting": 7,
+    "response": 2
+   }
+  },
+  "avg": {
+   "waiting": 5.5,
+   "turnaround": 9.5,
+   "response": 0.75
+  },
+  "switches": 14
+ },
+ "RR8": {
+  "segs": [
+   [
+    "P1",
+    0,
+    7
+   ],
+   [
+    "P2",
+    7,
+    11
+   ],
+   [
+    "P3",
+    11,
+    12
+   ],
+   [
+    "P4",
+    12,
+    16
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 3,
+    "first": 0,
+    "completion": 7,
+    "turnaround": 7,
+    "waiting": 0,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 7,
+    "completion": 11,
+    "turnaround": 9,
+    "waiting": 5,
+    "response": 5
+   },
+   "P3": {
+    "arrival": 4,
+    "burst": 1,
+    "priority": 4,
+    "first": 11,
+    "completion": 12,
+    "turnaround": 8,
+    "waiting": 7,
+    "response": 7
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 4,
+    "priority": 2,
+    "first": 12,
+    "completion": 16,
+    "turnaround": 11,
+    "waiting": 7,
+    "response": 7
+   }
+  },
+  "avg": {
+   "waiting": 4.75,
+   "turnaround": 8.75,
+   "response": 4.75
+  },
+  "switches": 3
+ },
+ "expavg": {
+  "alpha": 0.5,
+  "tau0": 10,
+  "bursts": [
+   6,
+   4,
+   6,
+   4,
+   13,
+   13,
+   13
+  ],
+  "taus": [
+   10,
+   8.0,
+   6.0,
+   6.0,
+   5.0,
+   9.0,
+   11.0,
+   12.0
+  ]
+ },
+ "extras": {
+  "rr_overhead": {
+   "1": 0.09090909090909091,
+   "4": 0.02439024390243903,
+   "10": 0.009900990099009901,
+   "100": 0.0009990009990009992
+  },
+  "aging_s": 127,
+  "nice_share": [
+   0.9029982363315696,
+   0.09700176366843033
+  ]
+ }
+}

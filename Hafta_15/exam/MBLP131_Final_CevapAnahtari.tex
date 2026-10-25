@@ -1,0 +1,277 @@
+% =====================================================================
+%  MBLP131 -- İşletim Sistemleri Temelleri
+%  Hafta 15 Ders Notları: Final Sınavı Örnek Kâğıdı: Cevap Anahtarı
+%  XeLaTeX ile iki kez derleyin:  xelatex MBLP131_Hafta15_Notlar.tex
+%  ./figures/ ve ../code/ klasörlerine ihtiyaç duyar.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\newcommand{\weeknum}{15}
+% ---------- Page & fonts ---------------------------------------------
+\usepackage[a4paper,margin=2.3cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{turkish}
+\IfFontExistsTF{Calibri}{\setmainfont{Calibri}}{\setmainfont{Carlito}}
+\IfFontExistsTF{Cambria}{\newfontfamily\headfont{Cambria}}{\newfontfamily\headfont{Caladea}}
+\IfFontExistsTF{Consolas}{\setmonofont[Scale=0.95]{Consolas}}{\setmonofont[Scale=0.88]{DejaVu Sans Mono}}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\linespread{1.12}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+% ---------- Colours (course design system) ----------------------------
+\usepackage{xcolor}
+\definecolor{dark}{HTML}{212121}
+\definecolor{charcoal}{HTML}{36454F}
+\definecolor{slate}{HTML}{50808E}
+\definecolor{mint}{HTML}{02C39A}
+\definecolor{mintdeep}{HTML}{028090}
+\definecolor{light}{HTML}{F2F2F2}
+\definecolor{muted}{HTML}{6B7679}
+
+% ---------- Packages ---------------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{needspace}
+\graphicspath{{figures/}}
+\usepackage[font=small,labelfont={bf,color=mintdeep},justification=centering]{caption}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\setlist{itemsep=0.25em,topsep=0.3em}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=mintdeep,urlcolor=mintdeep,citecolor=mintdeep]{hyperref}
+
+% ---------- Headings ----------------------------------------------------
+\titleformat{\section}{\headfont\Large\bfseries\color{charcoal}}{\color{mint}\thesection}{0.7em}{}
+\titleformat{\subsection}{\headfont\large\bfseries\color{charcoal}}{\color{mintdeep}\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\headfont\normalsize\bfseries\color{mintdeep}}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+
+% ---------- Header / footer -----------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}MBLP131 --- İşletim Sistemleri Temelleri}
+\fancyhead[R]{\small\color{muted}Hafta \weeknum{} Ders Notları}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% ---------- Boxes ---------------------------------------------------------
+\newtcolorbox{keyidea}[1][Key idea]{enhanced,breakable,colback=charcoal,colframe=charcoal,
+  coltext=white,fonttitle=\headfont\bfseries\color{mint},title={#1},
+  attach title to upper={\par\smallskip},boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{example}[1][Worked example]{enhanced,colback=light,colframe=light,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{tryit}[1][Try it yourself]{enhanced,breakable,colback=white,colframe=mint,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.8pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{histnote}[1][Historical note]{enhanced,breakable,colback=white,colframe=slate!40,
+  fonttitle=\headfont\bfseries\color{slate},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.5pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt,fontupper=\small}
+
+% Photo helper: fits image inside a box, never distorted (keepaspectratio)
+\newcommand{\photo}[3]{\includegraphics[width=#1,height=#2,keepaspectratio]{#3}}
+
+\newcommand{\term}[1]{\textbf{\color{mintdeep}#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+
+% ---------- Code listings ----------------------------------------------------
+\usepackage{listings}
+\lstdefinestyle{course}{
+  basicstyle=\ttfamily\small, columns=fullflexible, keepspaces=true,
+  backgroundcolor=\color{dark}, rulecolor=\color{dark}, frame=single, framesep=6pt,
+  xleftmargin=8pt, xrightmargin=8pt, aboveskip=0.8em, belowskip=0.6em,
+  basicstyle=\ttfamily\small\color{light},
+  keywordstyle=\color{mint}\bfseries, commentstyle=\color{white!60}\itshape,
+  stringstyle=\color{orange!70!yellow}, numberstyle=\tiny\color{muted},
+  numbers=left, numbersep=10pt, showstringspaces=false, breaklines=true,
+  tabsize=4, upquote=true}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}}
+\lstset{style=course,language=C}
+\usepackage{textcomp}
+
+% listings 1.9 + XeLaTeX: Turkish letters above U+00FF (ı İ ğ Ğ ş Ş) must be declared as letters
+\makeatletter
+\lst@CCPut \lst@ProcessLetter {"130}{"131}{"11E}{"11F}{"15E}{"15F}\z@
+\lst@AddToHook{SelectCharTable}{\catcode"130=13 \catcode"131=13 \catcode"11E=13
+  \catcode"11F=13 \catcode"15E=13 \catcode"15F=13 }
+\makeatother
+
+\begin{document}
+% ===================== MBLP131 Final Sınavı -- ÖRNEK KÂĞIT: CEVAP ANAHTARI (öğretim üyesi) =====================
+% Sayılar: ../code/theory_check.py (out_theory_check.txt, S kısmı); komutlar: ../code/answers_sample.sh
+% (gerçek çıktı ../code/out_sf_*.txt; İngilizce haftada sıradan bir kullanıcı olarak yeni bir ~/lab'da kaydedildi).
+\setlength{\emergencystretch}{3em}\sloppy
+\fancyhead[R]{\small\color{muted}Final Sınavı --- Örnek Kâğıt: Cevap Anahtarı}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}, basicstyle=\ttfamily\footnotesize\color{light}}
+\lstdefinestyle{sh}{style=course,language=bash,basicstyle=\ttfamily\footnotesize\color{light},
+  morekeywords={elif,then,fi,do,done,in,exit,echo}}
+\definecolor{amber}{HTML}{C98A1B}
+\colorlet{colP1}{mint}\colorlet{txtP1}{dark}
+\colorlet{colP2}{slate}\colorlet{txtP2}{white}
+\colorlet{colP3}{amber}\colorlet{txtP3}{white}
+\colorlet{colP4}{charcoal}\colorlet{txtP4}{white}
+\newcommand{\gantt}[2]{%
+\begin{tikzpicture}[x=#1cm,y=1cm]
+\foreach \p/\a/\b in {#2} {
+  \fill[col\p] (\a,0) rectangle (\b,0.62);
+  \draw[white,line width=1.2pt] (\a,0) -- (\a,0.62);
+  \node[font=\small\bfseries,text=txt\p] at ({(\a+\b)/2},0.31) {\p};
+  \draw[muted] (\a,0) -- (\a,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1.5pt] {\a};
+  \draw[muted] (\b,0) -- (\b,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1.5pt] {\b};
+}
+\end{tikzpicture}}
+\newcommand{\nw}[1]{\textbf{\color{mintdeep}#1}}
+\newcommand{\F}{\textcolor{red!70!black}{\textbf{F}}}
+\newcommand{\rubric}[1]{\par\smallskip\noindent{\small\color{slate}\textbf{Puanlama.} #1}\par}
+
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=14pt,bottom=14pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, İşletim Sistemleri Temelleri \,·\, Öğretim üyesi kopyası}}\par\smallskip
+{\headfont\fontsize{22}{26}\selectfont\bfseries Final Sınavı (Yarıyıl Sonu) Örnek Kâğıdı --- Cevap Anahtarı}\par\smallskip
+{\small Çözümler ve puanlama ölçütleri. Her sayı \texttt{code/theory\_check.py} ile hesaplandı; her komut yeni oluşturulmuş bir \texttt{\textasciitilde/lab} içinde çalıştırıldı (\texttt{code/answers\_sample.sh}).}
+\end{tcolorbox}
+
+\textbf{Genel puanlama kuralları.} Yöntem puanı verin: doğru formülle yapılan bir aritmetik hata en çok bir puan götürür. Farklı ama doğru bir komut, seçenek sırası ya da boru hattı tam puan alır (yaygın seçenekler aşağıda listelendi). Farklı ama tutarlı bir uzlaşım kullanan (ör.\ sadeleştirilmiş TLB formülü) ve bunu belirten öğrenciler tam puan alır. [Puan ağırlıklarını gerçek final kâğıdına göre uyarlayın.]
+
+% ---------------------------------------------------------------------
+\section*{Bölüm A (20 puan: her biri 2, kısmi puan yok)}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|*{10}{c|}}
+\hline
+A1 & A2 & A3 & A4 & A5 & A6 & A7 & A8 & A9 & A10 \\ \hline
+b & c & d & c & b & b & b & a & b & c \\ \hline
+\end{tabular}
+\end{center}
+Notlar: A3 --- PCB durum, yazmaçlar, zamanlama, bellek ve dosya bilgilerini tutar; program metnini tutmaz. A8 --- $7 = rwx$, $5 = r{-}x$, $4 = r{-}{-}$.
+
+% ---------------------------------------------------------------------
+\section*{Bölüm B (12 puan)}
+\textbf{B1.} Program C kütüphanesindeki \texttt{write()} API fonksiyonunu çağırır; ince sarmalayıcı sistem çağrısı numarasını (x86-64 Linux'ta \texttt{rax} yazmacı) ve parametreleri (yazmaçlar) yerleştirir ve tuzak komutunu (\texttt{syscall}) çalıştırır. İşlemci mod bitini çekirdek moduna ($0$) çevirir, dönüş adresini kaydeder ve çekirdeğin tek sistem çağrısı giriş noktasına atlar; çekirdek numarayı sistem çağrısı tablosunda indeks olarak kullanır ve işleyiciyi (\texttt{sys\_write}) çalıştırır. Dönüşte sonuç bir yazmaca konur, mod biti yeniden kullanıcı moduna ($1$) çekilir ve yürütme tuzaktan sonraki komuttan devam eder.
+\rubric{API/sarmalayıcı 1; numara ve tablo 1; tuzak ve mod geçişi 1; sonuçla kullanıcı moduna dönüş 1.}
+
+\textbf{B2.} Yarış durumu, birden çok iş parçacığı ortak veriye eşzamanlı eriştiğinde, en az biri yazdığında ve sonuç zamanlamaya bağlı olduğunda ortaya çıkar. \texttt{counter++} üç adımdır (yazmaca yükle, topla, sakla); iki iş parçacığı da eski değeri, hiçbiri saklamadan önce yüklerse bir artırma kaybolur. Bir çözüm \emph{karşılıklı dışlamayı}, \emph{ilerlemeyi} ve \emph{sınırlı beklemeyi} güvence altına almalıdır.
+\rubric{tanım 1; counter++'ın yükle--topla--sakla olarak açıklanması ve kaybolan güncelleme 1; üç koşul 2 (her biri 1, en çok 2).}
+
+\textbf{B3.} Boşa çalışma: süreçlerin çerçeve sayısı etkin olarak kullandıkları sayfalardan (çalışma kümelerinden) azdır; bu yüzden sürekli sayfa hatası verir, diski beklerler ve işlemci kullanımı çöker; saf bir zamanlayıcı da bunun üzerine daha çok süreç kabul eder. Çalışma kümesi $WS(t,\Delta)$, son $\Delta$ başvuruda kullanılan farklı sayfaların kümesidir; işletim sistemi her sürece en az $|WS|$ çerçeve verir ve toplam talep $D = \sum |WS_i|$ çerçeve sayısını aşarsa yeni süreç başlatmak yerine bir süreci askıya alır.
+\rubric{nedeniyle birlikte boşa çalışma tanımı 2; çalışma kümesi tanımı 1; nasıl kullanıldığı ($D$ ile çerçeve sayısı, askıya alma) 1.}
+
+% ---------------------------------------------------------------------
+\section*{Bölüm C (36 puan)}
+\textbf{C1 (12).} P1 $(0, 6, 3)$, P2 $(2, 2, 1)$, P3 $(3, 7, 4)$, P4 $(5, 3, 2)$; (varış, patlama, öncelik) olarak.
+
+(a) FCFS\quad\gantt{0.6}{P1/0/6, P2/6/8, P3/8/15, P4/15/18}\\
+Bekleme $0, 4, 5, 10$: ortalama $19/4 = 4.75$~ms. Dönüş $6, 6, 12, 13$: ortalama $37/4 = 9.25$~ms.
+
+(b) Kesintili Öncelik\quad\gantt{0.6}{P1/0/2, P2/2/4, P1/4/5, P4/5/8, P1/8/11, P3/11/18}\\
+P2 (öncelik $1$) $2$'de P1'i keser; $4$'te P1 devam eder; P4 (öncelik $2$) onu $5$'te keser; P1 $11$'de biter, P3 en sonda. Bekleme $5, 0, 8, 0$: ortalama $13/4 = 3.25$~ms. Dönüş $11, 2, 15, 3$: ortalama $31/4 = 7.75$~ms.
+
+(c) Round Robin, $q=2$\quad\gantt{0.6}{P1/0/2, P2/2/4, P1/4/6, P3/6/8, P4/8/10, P1/10/12, P3/12/14, P4/14/15, P3/15/18}\\
+$t=2$'de P2, P1'in zaman dilimi dolduğu anda gelir ve kuyruğa önce girer (kuyruk P2, P1); P3 $3$'te gelir (kuyruk P1, P3); P4 $5$'te gelir. Tamamlanma $12, 4, 18, 15$. Bekleme $6, 0, 8, 7$: ortalama $21/4 = 5.25$~ms. Dönüş $12, 2, 15, 10$: ortalama $39/4 = 9.75$~ms.
+\rubric{algoritma başına 4 puan: Gantt şeması 2, ortalama bekleme 1, ortalama dönüş 1. Başka açılardan tutarlı ama yanlış bir RR eşitlik sırası: $-1$.}
+
+\textbf{C2 (8).} (a) $2$~KB $= 2^{11} = 2048$: $p = \lfloor 5000/2048 \rfloor = 2$, $d = 5000 - 4096 = 904$; sayfa $2 \to$ çerçeve $6$; $a_{\text{fiz}} = 6 \times 2048 + 904 = 13\,192$. (b) $\lfloor 9000/2048 \rfloor = 4$, ama tabloda yalnızca $0$--$3$ sayfaları var: adres geçersizdir, MMU işletim sistemine tuzak üretir (süreç genellikle sonlandırılır: segmentation fault). (c) $\text{EAT} = 10 + (2 - 0.8) \times 90 = 10 + 108 = 118$~ns ($= 0.8 \times 100 + 0.2 \times 190 = 80 + 38$); sadeleştirilmiş uzlaşımla ($t_{\text{TLB}}=0$): $0.8 \times 90 + 0.2 \times 180 = 108$~ns. (d) İlk uyan: $450$~KB (delik 2); en iyi uyan: $300$~KB (delik 4); en kötü uyan: $500$~KB (delik 5).
+\rubric{(a) $p$, $d$ birer puan, $a_{\text{fiz}}$ 1; (b) 1; (c) 2 (formül 1, değer 1); (d) 2 (üçü de doğru; ikisi doğru: 1).}
+
+\Needspace{28\baselineskip}
+\textbf{C3 (8).} FIFO $9$, OPT $6$, LRU $7$ hata (kalın = yeni yüklenen sayfa).
+\begin{center}
+\small
+\textbf{FIFO}\\[0.2em]
+\begin{tabular}{@{}l*{12}{c}@{}}
+\toprule
+başv. & \textbf{5} & \textbf{4} & \textbf{1} & \textbf{5} & \textbf{0} & \textbf{5} & \textbf{4} & \textbf{0} & \textbf{2} & \textbf{1} & \textbf{0} & \textbf{1} \\ \midrule
+çr.\ 0 & \nw{5} & 5 & 5 & 5 & \nw{0} & 0 & 0 & 0 & \nw{2} & 2 & 2 & 2 \\
+çr.\ 1 &  & \nw{4} & 4 & 4 & 4 & \nw{5} & 5 & 5 & 5 & \nw{1} & 1 & 1 \\
+çr.\ 2 &  &  & \nw{1} & 1 & 1 & 1 & \nw{4} & 4 & 4 & 4 & \nw{0} & 0 \\
+\midrule hata & \F & \F & \F &  & \F & \F & \F &  & \F & \F & \F &  \\ \bottomrule
+\end{tabular}
+\\[0.6em]\textbf{OPT}\\[0.2em]
+\begin{tabular}{@{}l*{12}{c}@{}}
+\toprule
+başv. & \textbf{5} & \textbf{4} & \textbf{1} & \textbf{5} & \textbf{0} & \textbf{5} & \textbf{4} & \textbf{0} & \textbf{2} & \textbf{1} & \textbf{0} & \textbf{1} \\ \midrule
+çr.\ 0 & \nw{5} & 5 & 5 & 5 & 5 & 5 & 5 & 5 & \nw{2} & \nw{1} & 1 & 1 \\
+çr.\ 1 &  & \nw{4} & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 \\
+çr.\ 2 &  &  & \nw{1} & 1 & \nw{0} & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\midrule hata & \F & \F & \F &  & \F &  &  &  & \F & \F &  &  \\ \bottomrule
+\end{tabular}
+\\[0.6em]\textbf{LRU}\\[0.2em]
+\begin{tabular}{@{}l*{12}{c}@{}}
+\toprule
+başv. & \textbf{5} & \textbf{4} & \textbf{1} & \textbf{5} & \textbf{0} & \textbf{5} & \textbf{4} & \textbf{0} & \textbf{2} & \textbf{1} & \textbf{0} & \textbf{1} \\ \midrule
+çr.\ 0 & \nw{5} & 5 & 5 & 5 & 5 & 5 & 5 & 5 & \nw{2} & 2 & 2 & 2 \\
+çr.\ 1 &  & \nw{4} & 4 & 4 & \nw{0} & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+çr.\ 2 &  &  & \nw{1} & 1 & 1 & 1 & \nw{4} & 4 & 4 & \nw{1} & 1 & 1 \\
+\midrule hata & \F & \F & \F &  & \F &  & \F &  & \F & \F &  &  \\ \bottomrule
+\end{tabular}
+\end{center}
+OPT: $0$'da $1$'i çıkar (en geç yeniden kullanılan); $2$'de hem $5$ hem $4$ bir daha hiç kullanılmaz, $1$'de de hem $2$ hem $4$ bir daha hiç kullanılmaz --- aralarındaki her seçim aynı sayıyı verir; bu sütunlarda farklı çerçeve içeriklerini kabul edin. LRU: $0$'da $4$'ü, $4$'te $1$'i, $2$'de $5$'i, $1$'de $4$'ü çıkar.
+\rubric{FIFO 3, OPT 2, LRU 3 (FIFO ve LRU için tablo 2 + sayı 1; OPT: sayı 1, kararlar 1).}
+
+\textbf{C4 (8).} (a) $\text{EAT} = 0.9995 \times 100 + 0.0005 \times 5\,000\,000 = 99.95 + 2500 = 2599.95$~ns, RAM'den yaklaşık $26$ kat yavaş. (b) Bayt $100 \times 50 = 5000$; blok $\lfloor 5000/512 \rfloor = 9$; konum $5000 - 9 \times 512 = 392$; son bayt $5049$, hâlâ blok $9$'da ($10 \times 512 = 5120$): sığar. (c) $U(4) = 1 - 0.5^{4} = 0.9375$; hızlanma $\le 1/(0.25 + 0.75/3) = 1/0.5 = 2$; sınır $1/0.25 = 4$.
+\rubric{(a) formül 1, değer 1, kat 1; (b) blok 1, konum 1, sığma 1; (c) 1 + 1.}
+
+% ---------------------------------------------------------------------
+\section*{Bölüm D (14 puan: her biri 2)}
+\rubric{2 = doğru ve eksiksiz; 1 = doğru komut ama yanlış ya da eksik seçenek/argüman; aksi hâlde 0.}
+Beklenen yanıtlar ve gerçek çıktıları:
+
+\textbf{D1} \texttt{ls -lah docs} (ya da \texttt{ls -la -h docs}).
+\Needspace{14\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_c1.txt}
+\textbf{D2} \texttt{mv docs/notes\_01.txt docs/meeting\_01.txt}
+\Needspace{7\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_c2.txt}
+\textbf{D3} \texttt{touch report\{1..5\}.txt} (süslü ayraç genişletmesi; \texttt{touch report1.txt \dots\ report5.txt} 1 puan alır --- ``kısa'' değil).
+\Needspace{6\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_c3.txt}
+\textbf{D4} \texttt{ln -s logs/access.log latest.log} (göreli hedef, bağlantının bulunduğu dizine göre çözülür).
+\Needspace{8\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_c4.txt}
+\textbf{D5} \texttt{chmod u+x scripts/backup.sh} (sekizli gösterim sembolik değildir: 1 puan).
+\Needspace{7\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_c5.txt}
+\textbf{D6} \texttt{kill -9 4321} (ya da \texttt{kill -KILL 4321}, \texttt{kill -SIGKILL 4321}). Aşağıdaki kayıtta PID \texttt{\$!}'den alındı; komutları çalıştıran kabuk bir betikti.
+\Needspace{14\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_c6.txt}
+\textbf{D7} \texttt{du -sh logs}
+\Needspace{5\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_c7.txt}
+
+% ---------------------------------------------------------------------
+\section*{Bölüm E (9 puan: her biri 3)}
+\rubric{3 = doğru; 2 = bir aşama yanlış ya da eksik (ör.\ \texttt{sort} olmadan \texttt{uniq -c} ya da \texttt{head} yok); 1 = doğru fikir, birkaç hata.}
+\textbf{E1} \texttt{sort data/cities.txt | uniq -c | sort -rn | head -1}
+\Needspace{5\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_e1.txt}
+\textbf{E2} \texttt{grep -c "GET /login " logs/access.log} (ya da \texttt{cut -d' ' -f7 logs/access.log | grep -c '\^{}/login\$'}). \texttt{/login}'den sonraki boşluk olmazsa kalıp \texttt{/login2} gibi sayfaları da sayardı --- günlüğümüzde böyle sayfa olmadığından burada aynı sayıyı verir.
+\Needspace{5\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_e2.txt}
+\textbf{E3} \texttt{tail -n +2 data/students.csv | sort -t, -k5 -rn | head -3 | cut -d, -f2,5}
+\Needspace{7\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_e3.txt}
+\texttt{tail -n +2} olmadan da başlık satırı \texttt{-rn} ile sona sıralanır (anahtarı sayı değildir); bu yüzden sonuç burada aynıdır: kabul edin.
+
+% ---------------------------------------------------------------------
+\section*{Bölüm F (9 puan)}
+\Needspace{20\baselineskip}
+\lstinputlisting[style=sh]{../code/passfail.sh}
+\Needspace{12\baselineskip}
+\lstinputlisting[style=term]{../code/out_sf_f_run.txt}
+\rubric{shebang ve standart hataya kullanım iletisi ile \texttt{exit 1} içeren argüman denetimi: 2; final notlarının çıkarılması (\texttt{tail -n +2}, \texttt{cut -d, -f5} ya da bir \texttt{while IFS=, read} döngüsü): 2; sayısal sınamalı döngü (\texttt{[ ]} içinde \texttt{>=} değil, \texttt{-ge}): 2; \texttt{\$(( ))} ile iki sayaç: 2; istenen biçimde çıktı: 1. Doğruysa bir \texttt{awk} çözümü de kabul edilir.}
+
+\end{document}

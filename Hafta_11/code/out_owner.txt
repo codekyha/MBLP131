@@ -1,0 +1,7 @@
+student@okan-lab:~/lab$ ls -l docs/notes_01.txt
+-rw-rw-r-- 1 student student 16 Oct 12 19:38 docs/notes_01.txt
+student@okan-lab:~/lab$ chown root docs/notes_01.txt
+chown: changing ownership of 'docs/notes_01.txt': Operation not permitted
+student@okan-lab:~/lab$ chgrp students docs/notes_01.txt
+chgrp: changing group of 'docs/notes_01.txt': Operation not permitted
+student@okan-lab:~/lab$ chown $USER docs/notes_01.txt

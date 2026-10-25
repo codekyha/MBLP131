@@ -1,0 +1,42 @@
+student@okan-lab:~$ type ls
+ls is /usr/bin/ls
+student@okan-lab:~$ cd /
+student@okan-lab:/$ ls
+bin                etc                lib64       opt   sbin                tmp
+bin.usr-is-merged  home               lost+found  proc  sbin.usr-is-merged  usr
+boot               lib                media       root  srv                 var
+dev                lib.usr-is-merged  mnt         run   sys
+student@okan-lab:/$ ls -ld /bin /sbin /lib
+lrwxrwxrwx 1 root root 7 Apr 22  2024 /bin -> usr/bin
+lrwxrwxrwx 1 root root 7 Apr 22  2024 /lib -> usr/lib
+lrwxrwxrwx 1 root root 8 Apr 22  2024 /sbin -> usr/sbin
+student@okan-lab:/$ ls -l /usr/bin/ls
+-rwxr-xr-x 1 root root 142312 Jan 23  2026 /usr/bin/ls
+student@okan-lab:/$ head -n 4 /etc/os-release
+PRETTY_NAME="Ubuntu 24.04.4 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.4 LTS (Noble Numbat)"
+student@okan-lab:/$ ls /var
+backups  cache  lib  local  lock  log  mail  opt  run  spool  tmp
+student@okan-lab:/$ ls -ld /tmp
+drwxrwxrwt 16 root root 4096 Oct 12 08:49 /tmp
+student@okan-lab:/$ ls -l /dev/null /dev/tty /dev/zero
+crw-rw-rw- 1 root root 1, 3 Oct  9 23:24 /dev/null
+crw-rw-rw- 1 root root 5, 0 Oct  9 23:24 /dev/tty
+crw-rw-rw- 1 root root 1, 5 Oct  9 23:24 /dev/zero
+student@okan-lab:/$ head -n 3 /proc/meminfo
+MemTotal:        8222320 kB
+MemFree:         7069620 kB
+MemAvailable:    7539020 kB
+student@okan-lab:/$ echo $$
+18432
+student@okan-lab:/$ head -n 7 /proc/$$/status
+Name:   bash
+Umask:  0002
+State:  S (sleeping)
+Tgid:   18432
+Ngid:   0
+Pid:    18432
+PPid:   18377
+student@okan-lab:/$ cd

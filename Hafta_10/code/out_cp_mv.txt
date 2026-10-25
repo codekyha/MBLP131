@@ -1,0 +1,42 @@
+student@okan-lab:~/lab$ cp docs/syllabus.txt backup/
+student@okan-lab:~/lab$ cp docs/syllabus.txt backup/syllabus_copy.txt
+student@okan-lab:~/lab$ ls backup
+syllabus.txt  syllabus_copy.txt
+student@okan-lab:~/lab$ cp -v docs/notes_01.txt docs/notes_02.txt backup/
+'docs/notes_01.txt' -> 'backup/notes_01.txt'
+'docs/notes_02.txt' -> 'backup/notes_02.txt'
+student@okan-lab:~/lab$ cp -i docs/syllabus.txt backup/
+cp: overwrite 'backup/syllabus.txt'? n
+student@okan-lab:~/lab$ cp projects/alpha backup/
+cp: -r not specified; omitting directory 'projects/alpha'
+student@okan-lab:~/lab$ cp -r projects/alpha backup/
+student@okan-lab:~/lab$ tree backup
+backup
+├── alpha
+│   ├── README.md
+│   ├── docs
+│   │   └── design.txt
+│   └── src
+│       └── main.c
+├── notes_01.txt
+├── notes_02.txt
+├── syllabus.txt
+└── syllabus_copy.txt
+
+4 directories, 7 files
+student@okan-lab:~/lab$ ls -i docs/syllabus.txt backup/syllabus.txt
+804330 backup/syllabus.txt  804123 docs/syllabus.txt
+student@okan-lab:~/lab$ mv backup/syllabus.txt backup/syllabus_old.txt
+student@okan-lab:~/lab$ ls -i backup/syllabus_old.txt
+804330 backup/syllabus_old.txt
+student@okan-lab:~/lab$ mv -v docs/notes_03.txt backup/
+renamed 'docs/notes_03.txt' -> 'backup/notes_03.txt'
+student@okan-lab:~/lab$ mv backup/alpha backup/alpha_2026
+student@okan-lab:~/lab$ ls docs backup
+backup:
+alpha_2026    notes_02.txt  syllabus_copy.txt
+notes_01.txt  notes_03.txt  syllabus_old.txt
+
+docs:
+'final report.txt'   notes_01.txt   syllabus.txt
+ linux_quotes.txt    notes_02.txt

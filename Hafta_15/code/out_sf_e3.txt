@@ -1,0 +1,4 @@
+student@okan-lab:~/lab$ tail -n +2 data/students.csv | sort -t, -k5 -rn | head -3 | cut -d, -f2,5
+Onur Dogan,100
+Elif Yilmaz,99
+Emre Dogan,98

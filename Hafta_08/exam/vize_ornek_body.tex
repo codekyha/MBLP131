@@ -1,0 +1,158 @@
+% ===================== MBLP131 Ara Sınav (Vize) -- ÖRNEK KÂĞIT (öğrenci sürümü) =====================
+% Dersin ön belgesiyle derlenir:
+%   python3 ../../lib/assemble_notes.py tr 8 vize_ornek_body.tex MBLP131_Vize_Ornek.tex "Ara Sınav (Vize) Örnek Kâğıdı"
+% Her yanıt ../code/sample_exam.py ile doğrulandı (çıktı ../code/out_sample.txt); bkz. MBLP131_Vize_CevapAnahtari.
+\fancyhead[R]{\small\color{muted}Ara Sınav (Vize) --- Örnek Kâğıt}
+\setlength{\parskip}{0.35em}
+\setlength{\emergencystretch}{3em}
+\newcommand{\pts}[1]{\textcolor{mintdeep}{\textbf{[#1~puan]}}\enspace}
+\newcommand{\ans}[1]{\par\smallskip\noindent\begin{tikzpicture}\draw[muted!60,rounded corners=2pt] (0,0) rectangle (\linewidth,#1);\end{tikzpicture}\par\medskip}
+% bir Gantt şeması için boş zaman ekseni, 0..#1 ms
+\newcommand{\ganttgrid}[2]{\par\noindent\begin{tikzpicture}[x=0.82cm]
+\node[anchor=east,font=\small\bfseries] at (-0.2,0.31) {#2};
+\draw[muted!70] (0,0) rectangle (#1,0.62);
+\foreach \t in {0,...,#1} {\draw[muted!70] (\t,0) -- (\t,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1pt] {\t};}
+\end{tikzpicture}\par\smallskip}
+% boş çerçeve tablosu: 12 başvuru, 3 çerçeve
+\newcommand{\frametable}[1]{\begin{tabular}{@{}l|*{12}{>{\centering\arraybackslash}p{0.62cm}|}@{}}
+\multicolumn{13}{@{}l}{\textbf{#1}}\\ \hline
+başv. & 1 & 0 & 4 & 2 & 1 & 0 & 1 & 2 & 3 & 1 & 2 & 3 \\ \hline
+çr.\ 0 &&&&&&&&&&&& \\ \hline
+çr.\ 1 &&&&&&&&&&&& \\ \hline
+çr.\ 2 &&&&&&&&&&&& \\ \hline
+hata &&&&&&&&&&&& \\ \hline
+\end{tabular}}
+% C1 için boş süreç tablosu
+\newcommand{\proctable}{\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Süreç} & \textbf{Bitiş} & \textbf{Dönüş} & \textbf{Bekleme} & \textbf{Yanıt} \\ \hline
+A &&&& \\ \hline B &&&& \\ \hline C &&&& \\ \hline D &&&& \\ \hline
+\textbf{Ortalama} & --- &&& \\ \hline
+\end{tabular}}
+
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=14pt,bottom=14pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, İşletim Sistemleri Temelleri}}\par\smallskip
+{\headfont\fontsize{22}{26}\selectfont\bfseries Ara Sınav (Vize) --- Örnek Kâğıt}\par\smallskip
+{\small İstanbul Okan Üniversitesi \,·\, Meslek Yüksekokulu \,·\, Elektronik Haberleşme Teknolojisi Programı}\par
+{\small Öğretim üyesi: Dr.\ Öğr.\ Üyesi Hasan Oğuz \quad Tarih: [duyurulacak] \quad Salon: [duyurulacak] \quad Süre: [90] dakika}
+\end{tcolorbox}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabularx}{\linewidth}{@{}lX lX@{}}
+\textbf{Ad, soyad:} & \hrulefill & \textbf{Öğrenci no:} & \hrulefill \\
+\textbf{İmza:} & \hrulefill & \textbf{Sıra / salon:} & \hrulefill \\
+\end{tabularx}
+
+\vspace{0.4em}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Bölüm} & A & B & C1 & C2 & C3 & C4 & C5 & \textbf{Toplam} \\ \hline
+\textbf{Puan} & 20 & 20 & 16 & 12 & 12 & 10 & 10 & \textbf{100} \\ \hline
+\textbf{Alınan} & & & & & & & & \\[0.4em] \hline
+\end{tabular}
+\end{center}
+
+\textbf{Kurallar.} Bu kâğıt 1--7. haftaları kapsar. [Kitap kapalı; not yok, telefon yok --- kesinleşecek.] [Basit, programlanamayan bir hesap makinesine izin verilir --- kesinleşecek.] Yanıtlarınızı kutulara yazın ve her hesabın her adımını gösterin (formül $\to$ sayılar $\to$ birimiyle sonuç). \textbf{Dersin uzlaşımları:} bağlam değişimi süresi $0$; eşitlikler önce varış zamanına, sonra ada göre bozulur; küçük öncelik numarası yüksek öncelik demektir; Round Robin'de bir zaman diliminin bittiği anda gelen süreç kuyruğa kesilen süreçten önce girer; TLB: $\text{EAT} = t_{\text{TLB}} + (2-\alpha)\,t_m$; delikler adres sırasıyla listelenir ve istek seçilen deliğin başından kesilir; sayfa çerçeveleri boş başlar.
+
+% ---------------------------------------------------------------------
+\section*{A Bölümü --- Çoktan seçmeli \hfill (10 $\times$ 2 = 20 puan)}
+\emph{Tek} bir seçeneği daire içine alın.
+\begin{enumerate}[leftmargin=2.0em,label=A\arabic*.,itemsep=0.15em]
+  \item 1961'de MIT'de gösterilen ilk başarılı zaman paylaşımlı sistem hangisidir? \quad (a) Multics \quad (b) CTSS \quad (c) OS/360 \quad (d) MS-DOS
+  \item Bütün hizmetlerin çekirdek modunda tek bir program olarak çalıştığı, bu yüzden hızlı olan ama hatalı bir sürücünün bütün sistemi çökertebildiği işletim sistemi yapısı hangisidir? \quad (a) mikroçekirdek \quad (b) katmanlı \quad (c) monolitik \quad (d) hiçbiri
+  \item \emph{Çocuk} süreçte \cmd{fork()} ne döndürür? \quad (a) çocuğun PID'sini \quad (b) $0$ \quad (c) ebeveynin PID'sini \quad (d) $-1$
+  \item Beş durumlu süreç modelinde hangi geçiş \emph{yoktur}? \quad (a) hazır $\to$ çalışıyor \quad (b) çalışıyor $\to$ bekliyor \quad (c) bekliyor $\to$ çalışıyor \quad (d) çalışıyor $\to$ hazır
+  \item İşlemci zamanlama algoritması en doğrudan hangi büyüklüğü etkiler? \quad (a) CPU patlamasının uzunluğunu \quad (b) G/Ç süresini \quad (c) bekleme süresini \quad (d) programın boyutunu
+  \item Linux ve Windows kullanıcı iş parçacıklarını çekirdek iş parçacıklarına hangi modelle eşler? \quad (a) çoktan bire \quad (b) birebir \quad (c) çoktan çoğa \quad (d) birden çoğa
+  \item Round Robin'in zaman dilimi her CPU patlamasından büyükse Round Robin hangisi gibi davranır? \quad (a) SJF \quad (b) FCFS \quad (c) öncelikli \quad (d) SRTF
+  \item Yürütme zamanında adres bağlama için sistemin neye ihtiyacı vardır? \quad (a) bir bağlayıcıya (linker) \quad (b) yer değiştiren bir yükleyiciye \quad (c) bir MMU'ya \quad (d) sıkıştırmaya
+  \item TLB nedir? \quad (a) sayfa tablosu girdilerinin küçük, hızlı bir önbelleği \quad (b) sayfa tablosunun kendisi \quad (c) boş çerçevelerin listesi \quad (d) takas edilen sayfalar için bir disk alanı
+  \item Bir sistem boşa çalışıyor (thrashing). İşletim sisteminin doğru tepkisi nedir? \quad (a) daha çok süreç almak \quad (b) zaman dilimini büyütmek \quad (c) LRU yerine OPT kullanmak \quad (d) bellekteki süreç sayısını azaltmak
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\section*{B Bölümü --- Kısa yanıt \hfill (4 $\times$ 5 = 20 puan)}
+\begin{enumerate}[leftmargin=2.0em,label=B\arabic*.,itemsep=0.3em]
+  \item İşletim sistemine iki klasik bakış açısını (\emph{genişletilmiş makine} ve \emph{kaynak yöneticisi}) anlatın. Zamanda çoğullamaya bir, uzayda çoğullamaya bir örnek verin. \pts{5}
+  \ans{2.7cm}
+  \item Kullanıcı düzeyi ve çekirdek düzeyi iş parçacıklarını karşılaştırın: her birinin bir üstünlüğünü ve bir zayıflığını verin. Çoktan bire modelde bir iş parçacığı bloklayan bir sistem çağrısı yaptığında ne olur? \pts{5}
+  \ans{2.7cm}
+  \item İki iş parçacığı, ikisi de $1$ ile başlatılmış $S$ ve $Q$ semaforlarını kullanıyor; iş parçacıkları şunları yürütüyor:\\[0.2em]
+  \hspace*{1em}P0: \texttt{wait(S); wait(Q); ... signal(S); signal(Q);}\\
+  \hspace*{1em}P1: \texttt{wait(Q); wait(S); ... signal(Q); signal(S);}\\[0.2em]
+  Kilitlenmeye yol açan bir yürütme sırası verin, nedenini açıklayın ve bunu önleyen basit bir kural söyleyin. \pts{5}
+  \ans{2.7cm}
+  \item Sabit bağlantı ile sembolik bağlantı arasındaki farkı açıklayın. Bir kullanıcı \cmd{ln a.txt h.txt}, \cmd{ln -s a.txt s.txt} ve ardından \cmd{rm a.txt} komutlarını çalıştırıyor. Veri \texttt{h.txt} üzerinden hâlâ okunabilir mi? \texttt{s.txt} üzerinden? Neden? \pts{5}
+  \ans{2.7cm}
+\end{enumerate}
+
+\newpage
+% ---------------------------------------------------------------------
+\section*{C Bölümü --- Problemler \hfill (60 puan)}
+\begin{enumerate}[leftmargin=2.0em,label=C\arabic*.,itemsep=0.5em]
+  \item \pts{16} Tek işlemcili bir sisteme dört süreç geliyor (süreler ms):
+  \begin{center}
+  \begin{tabular}{@{}cccc@{}}
+  \toprule
+  \textbf{Süreç} & \textbf{Varış} & \textbf{Patlama} & \textbf{Öncelik} \\
+  \midrule
+  A & 0 & 6 & 3 \\ B & 2 & 5 & 2 \\ C & 3 & 2 & 1 \\ D & 5 & 4 & 4 \\
+  \bottomrule
+  \end{tabular}
+  \end{center}
+  (a) Kesintisiz SJF, (b) kesintili öncelikli zamanlama ve (c) $q = 3$~ms ile Round Robin için Gantt şemasını çizin ve tabloyu doldurun. (d) Üçünden hangisi en küçük ortalama bekleme süresini verir?
+
+  \ganttgrid{17}{(a)}
+  \proctable
+  \ganttgrid{17}{(b)}
+  \proctable
+  \ganttgrid{17}{(c)}
+  \proctable
+  \par\medskip (d) \hrulefill
+
+  \newpage
+  \item \pts{12}
+  (a) Bir sürecin taban yazmacı \texttt{0x6000}, sınır yazmacı \texttt{0x0A00}'dır. \texttt{0x09FF}, \texttt{0x0A00} ve \texttt{0x0150} mantıksal adreslerini çevirin. Geçerli fiziksel adres aralığını verin. \pts{4}
+  \ans{2.6cm}
+  (b) Bir bölüt tablosunda şunlar var: $0$. bölüt: taban $1400$, sınır $600$; $1$. bölüt: taban $6300$, sınır $400$; $2$. bölüt: taban $4300$, sınır $1100$; $3$. bölüt: taban $3200$, sınır $1000$. $\langle 2, 1099\rangle$, $\langle 1, 400\rangle$ ve $\langle 3, 512\rangle$ adreslerini çevirin. \pts{4}
+  \ans{2.4cm}
+  (c) Sayfalamalı bir sistemde $t_{\text{TLB}} = 20$~ns ve $t_m = 100$~ns. İsabet oranı $0.8$ iken ve TLB olmadan etkin erişim süresini hesaplayın. Hangi isabet oranı $128$~ns'lik bir etkin erişim süresi verir? \pts{4}
+  \ans{2.6cm}
+
+  \item \pts{12} $1, 0, 4, 2, 1, 0, 1, 2, 3, 1, 2, 3$ başvuru dizisi ve başlangıçta boş $3$ çerçeve için FIFO, LRU ve OPT çerçeve tablolarını doldurun ve sayfa hatalarını sayın.
+  \par\medskip
+  \frametable{FIFO \quad hata sayısı: \underline{\hspace{1.5cm}}}\par\medskip
+  \frametable{LRU \quad hata sayısı: \underline{\hspace{1.5cm}}}\par\medskip
+  \frametable{OPT \quad hata sayısı: \underline{\hspace{1.5cm}}}
+
+  \newpage
+  \item \pts{10} Bellekte beş delik var (boyut@başlangıç, KB, adres sırasında): $650@200$, $450@1100$, $200@1800$, $550@2200$, $250@3000$. A $= 270$, B $= 290$, C $= 330$ ve D $= 510$~KB süreçleri bu sırayla geliyor. İlk uyan, en iyi uyan ve en kötü uyan için her sürecin kullandığı deliği ve geriye kalan deliğin boyutunu verin. Hangi istekler karşılanamaz ve neden?
+  \begin{center}
+  \renewcommand{\arraystretch}{2.0}
+  \begin{tabular}{|l|p{4.0cm}|p{4.0cm}|p{4.0cm}|}
+  \hline
+  \textbf{İstek} & \textbf{İlk uyan} & \textbf{En iyi uyan} & \textbf{En kötü uyan} \\ \hline
+  A $= 270$ &&& \\ \hline
+  B $= 290$ &&& \\ \hline
+  C $= 330$ &&& \\ \hline
+  D $= 510$ &&& \\ \hline
+  \end{tabular}
+  \end{center}
+  \ans{2.0cm}
+
+  \item \pts{10}
+  (a) Bir dosya $0$'dan numaralanmış $300$ baytlık kayıtlardan oluşuyor; dosya sistemi $1024$ baytlık bloklar kullanıyor. $45$. kayıt hangi göreli blokta ve bloğun içinde hangi konumda başlar? $58$. kayıt tek bir bloğa sığar mı? \pts{4}
+  \ans{3.0cm}
+  (b) Aşağıdaki kod (çıktı terminale) her harfi kaç kez yazar ve sonunda kaç süreç vardır? \pts{3}\\
+  \texttt{fork(); printf("X\textbackslash n"); fork(); fork(); printf("Y\textbackslash n");}
+  \ans{2.2cm}
+  (c) Bir bağlam değişimi $s = 20\ \mu$s sürüyor ve zaman dilimi $q = 5$~ms. Her süreç zaman diliminin tamamını kullanıyorsa işlemci zamanının yüzde kaçı geçişlere gider? \pts{3}
+  \ans{2.0cm}
+\end{enumerate}
+
+\vfill
+\begin{center}\small\color{muted}--- Örnek kâğıdın sonu. Başarılar! ---\end{center}

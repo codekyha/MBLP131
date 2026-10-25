@@ -1,0 +1,14 @@
+student@okan-lab:~/lab$ name=student; echo "Hello $name"
+Hello student
+student@okan-lab:~/lab$ echo 'Hello $name'
+Hello $name
+student@okan-lab:~/lab$ echo "2^10 = $((2 ** 10))"
+2^10 = 1024
+student@okan-lab:~/lab$ n=$(wc -l < data/students.csv); echo "students.csv has $n lines"
+students.csv has 41 lines
+student@okan-lab:~/lab$ [ -d logs ] && echo "logs is a directory"
+logs is a directory
+student@okan-lab:~/lab$ for c in 1 2 3; do echo "item $c"; done
+item 1
+item 2
+item 3

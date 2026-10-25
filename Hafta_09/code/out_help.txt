@@ -1,0 +1,26 @@
+student@okan-lab:~$ ls --help | head -n 12
+Usage: ls [OPTION]... [FILE]...
+List information about the FILEs (the current directory by default).
+Sort entries alphabetically if none of -cftuvSUX nor --sort is specified.
+
+Mandatory arguments to long options are mandatory for short options too.
+  -a, --all                  do not ignore entries starting with .
+  -A, --almost-all           do not list implied . and ..
+      --author               with -l, print the author of each file
+  -b, --escape               print C-style escapes for nongraphic characters
+      --block-size=SIZE      with -l, scale sizes by SIZE when printing them;
+                             e.g., '--block-size=M'; see SIZE format below
+
+student@okan-lab:~$ type cd pwd ls
+cd is a shell builtin
+pwd is a shell builtin
+ls is /usr/bin/ls
+student@okan-lab:~$ help cd | head -n 5
+cd: cd [-L|[-P [-e]] [-@]] [dir]
+    Change the shell working directory.
+    
+    Change the current directory to DIR.  The default DIR is the value of the
+    HOME shell variable. If DIR is "-", it is converted to $OLDPWD.
+student@okan-lab:~$ help pwd | head -n 3
+pwd: pwd [-LP]
+    Print the name of the current working directory.

@@ -1,0 +1,134 @@
+# LabVM service stack
+#
+#   docker compose up -d                       PostgreSQL, Redis and nginx (small public images; pre-pulled in the VM image)
+#   docker compose --profile ollama up -d      + Ollama (local LLM server) - not needed in the VM, it has Ollama installed
+#   docker compose --profile lab up -d --build + the lab container (JupyterLab, FastAPI, Streamlit) and MLflow
+#                                                (for hosts that are NOT the LabVM image; the first build takes a while)
+#   docker compose down                        stop (add -v to delete the stored data as well)
+#   docker compose exec lab bash               shell in the lab container
+#   docker compose exec ollama ollama pull llama3.2:3b
+#
+# Settings are read from the .env file next to this one (copy .env.example to .env).
+
+name: labvm
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: labvm-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mbbo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mbbo205}
+      POSTGRES_DB: ${POSTGRES_DB:-mbbo205}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mbbo} -d ${POSTGRES_DB:-mbbo205}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: labvm-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: labvm-nginx
+    ports:
+      - "${NGINX_PORT:-8080}:80"
+    volumes:
+      - ./work/nginx/html:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+  ollama:
+    profiles: ["ollama"]
+    image: ollama/ollama:latest
+    container_name: labvm-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+    # With an NVIDIA GPU, enable:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  lab:
+    profiles: ["lab"]
+    build:
+      context: ${LAB_KIT_DIR:-..}
+      dockerfile: docker/Dockerfile
+      args:
+        LAB_PROFILE: ai
+    image: labvm/lab:2026
+    container_name: labvm-lab
+    hostname: lab
+    environment:
+      JUPYTER_TOKEN: ${JUPYTER_TOKEN:-mbbo205}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-mbbo}:${POSTGRES_PASSWORD:-mbbo205}@postgres:5432/${POSTGRES_DB:-mbbo205}
+      REDIS_URL: redis://redis:6379/0
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      OLLAMA_HOST: http://ollama:11434
+      HF_HOME: /work/.cache/huggingface
+    ports:
+      - "8888:8888"   # JupyterLab
+      - "8000:8000"   # FastAPI / uvicorn
+      - "8501:8501"   # Streamlit
+    volumes:
+      - ./work:/work
+      # Docker socket of the host: lets the container run "docker" (training environment only).
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:-999}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mlflow:
+    profiles: ["lab"]
+    image: labvm/lab:2026
+    pull_policy: never          # built locally by the "lab" service; never pulled from a registry
+    container_name: labvm-mlflow
+    environment:
+      # MLflow >= 3.5 only accepts localhost and private-IP Host headers; the service name "mlflow" must be allowed.
+      MLFLOW_SERVER_ALLOWED_HOSTS: "mlflow:*,localhost:*,127.0.0.1:*"
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflowdata:/mlflow
+    user: "0:0"
+    depends_on:
+      - lab
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  mlflowdata:
+  ollama:

@@ -1,0 +1,28 @@
+$ echo "hello" > notes.txt
+$ ls -li notes.txt
+368662 -rw-rw-r-- 1 student student 6 Oct  8 12:20 notes.txt
+$ ln notes.txt hard.txt
+$ ln -s notes.txt soft.txt
+$ ls -li
+total 8
+368662 -rw-rw-r-- 2 student student 6 Oct  8 12:20 hard.txt
+368662 -rw-rw-r-- 2 student student 6 Oct  8 12:20 notes.txt
+368663 lrwxrwxrwx 1 student student 9 Oct  8 12:20 soft.txt -> notes.txt
+$ stat notes.txt
+  File: notes.txt
+  Size: 6         	Blocks: 8          IO Block: 4096   regular file
+Device: 254,0	Inode: 368662      Links: 2
+Access: (0664/-rw-rw-r--)  Uid: ( 1001/ student)   Gid: ( 1002/ student)
+Access: 2026-10-08 12:20:48.530146698 +0000
+Modify: 2026-10-08 12:20:48.530146698 +0000
+Change: 2026-10-08 12:20:48.534146698 +0000
+ Birth: 2026-10-08 12:20:48.530146698 +0000
+$ rm notes.txt
+$ cat hard.txt
+hello
+$ cat soft.txt
+cat: soft.txt: No such file or directory
+$ ls -li
+total 4
+368662 -rw-rw-r-- 1 student student 6 Oct  8 12:20 hard.txt
+368663 lrwxrwxrwx 1 student student 9 Oct  8 12:20 soft.txt -> notes.txt

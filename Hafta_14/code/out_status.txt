@@ -1,0 +1,39 @@
+student@okan-lab:~/lab/scripts$ ls ../docs > /dev/null
+student@okan-lab:~/lab/scripts$ echo $?
+0
+student@okan-lab:~/lab/scripts$ ls ../nothing
+ls: cannot access '../nothing': No such file or directory
+student@okan-lab:~/lab/scripts$ echo $?
+2
+student@okan-lab:~/lab/scripts$ nosuchcommand
+bash: nosuchcommand: command not found
+student@okan-lab:~/lab/scripts$ echo $?
+127
+student@okan-lab:~/lab/scripts$ grep -q ERROR ../logs/system.log
+student@okan-lab:~/lab/scripts$ echo $?
+0
+student@okan-lab:~/lab/scripts$ grep -q PANIC ../logs/system.log
+student@okan-lab:~/lab/scripts$ echo $?
+1
+student@okan-lab:~/lab/scripts$ [ 5 -gt 3 ]
+student@okan-lab:~/lab/scripts$ echo $?
+0
+student@okan-lab:~/lab/scripts$ [ "abc" = "abd" ]
+student@okan-lab:~/lab/scripts$ echo $?
+1
+student@okan-lab:~/lab/scripts$ type [
+[ is a shell builtin
+student@okan-lab:~/lab/scripts$ ./check.sh ../docs/syllabus.txt
+../docs/syllabus.txt: regular file, 15 lines
+student@okan-lab:~/lab/scripts$ ./check.sh ../logs
+../logs: directory
+student@okan-lab:~/lab/scripts$ ./check.sh /dev/null
+/dev/null: exists, but is neither a file nor a directory
+student@okan-lab:~/lab/scripts$ ./check.sh nothing.txt
+nothing.txt: does not exist
+student@okan-lab:~/lab/scripts$ echo $?
+1
+student@okan-lab:~/lab/scripts$ ./check.sh
+Usage: ./check.sh PATH
+student@okan-lab:~/lab/scripts$ echo $?
+2

@@ -1,0 +1,4 @@
+buffer: 8192 pages of 4096 bytes
+child read  all pages:      0 faults
+child write all pages:   8192 faults (copy-on-write)
+parent still sees  'A'  (its copy was never changed)

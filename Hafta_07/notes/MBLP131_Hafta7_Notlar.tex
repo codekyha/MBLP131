@@ -1,0 +1,1481 @@
+% =====================================================================
+%  MBLP131 -- İşletim Sistemleri Temelleri
+%  Hafta 7 Ders Notları: Sanal Bellek ve Dosya Sistemleri
+%  XeLaTeX ile iki kez derleyin:  xelatex MBLP131_Hafta7_Notlar.tex
+%  ./figures/ ve ../code/ klasörlerine ihtiyaç duyar.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\newcommand{\weeknum}{7}
+% ---------- Page & fonts ---------------------------------------------
+\usepackage[a4paper,margin=2.3cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{turkish}
+\IfFontExistsTF{Calibri}{\setmainfont{Calibri}}{\setmainfont{Carlito}}
+\IfFontExistsTF{Cambria}{\newfontfamily\headfont{Cambria}}{\newfontfamily\headfont{Caladea}}
+\IfFontExistsTF{Consolas}{\setmonofont[Scale=0.95]{Consolas}}{\setmonofont[Scale=0.88]{DejaVu Sans Mono}}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\linespread{1.12}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+% ---------- Colours (course design system) ----------------------------
+\usepackage{xcolor}
+\definecolor{dark}{HTML}{212121}
+\definecolor{charcoal}{HTML}{36454F}
+\definecolor{slate}{HTML}{50808E}
+\definecolor{mint}{HTML}{02C39A}
+\definecolor{mintdeep}{HTML}{028090}
+\definecolor{light}{HTML}{F2F2F2}
+\definecolor{muted}{HTML}{6B7679}
+
+% ---------- Packages ---------------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{needspace}
+\graphicspath{{figures/}}
+\usepackage[font=small,labelfont={bf,color=mintdeep},justification=centering]{caption}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\setlist{itemsep=0.25em,topsep=0.3em}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=mintdeep,urlcolor=mintdeep,citecolor=mintdeep]{hyperref}
+
+% ---------- Headings ----------------------------------------------------
+\titleformat{\section}{\headfont\Large\bfseries\color{charcoal}}{\color{mint}\thesection}{0.7em}{}
+\titleformat{\subsection}{\headfont\large\bfseries\color{charcoal}}{\color{mintdeep}\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\headfont\normalsize\bfseries\color{mintdeep}}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+
+% ---------- Header / footer -----------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}MBLP131 --- İşletim Sistemleri Temelleri}
+\fancyhead[R]{\small\color{muted}Hafta \weeknum{} Ders Notları}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% ---------- Boxes ---------------------------------------------------------
+\newtcolorbox{keyidea}[1][Key idea]{enhanced,breakable,colback=charcoal,colframe=charcoal,
+  coltext=white,fonttitle=\headfont\bfseries\color{mint},title={#1},
+  attach title to upper={\par\smallskip},boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{example}[1][Worked example]{enhanced,colback=light,colframe=light,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{tryit}[1][Try it yourself]{enhanced,breakable,colback=white,colframe=mint,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.8pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{histnote}[1][Historical note]{enhanced,breakable,colback=white,colframe=slate!40,
+  fonttitle=\headfont\bfseries\color{slate},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.5pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt,fontupper=\small}
+
+% Photo helper: fits image inside a box, never distorted (keepaspectratio)
+\newcommand{\photo}[3]{\includegraphics[width=#1,height=#2,keepaspectratio]{#3}}
+
+\newcommand{\term}[1]{\textbf{\color{mintdeep}#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+
+% ---------- Code listings ----------------------------------------------------
+\usepackage{listings}
+\lstdefinestyle{course}{
+  basicstyle=\ttfamily\small, columns=fullflexible, keepspaces=true,
+  backgroundcolor=\color{dark}, rulecolor=\color{dark}, frame=single, framesep=6pt,
+  xleftmargin=8pt, xrightmargin=8pt, aboveskip=0.8em, belowskip=0.6em,
+  basicstyle=\ttfamily\small\color{light},
+  keywordstyle=\color{mint}\bfseries, commentstyle=\color{white!60}\itshape,
+  stringstyle=\color{orange!70!yellow}, numberstyle=\tiny\color{muted},
+  numbers=left, numbersep=10pt, showstringspaces=false, breaklines=true,
+  tabsize=4, upquote=true}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}}
+\lstset{style=course,language=C}
+\usepackage{textcomp}
+
+% listings 1.9 + XeLaTeX: Turkish letters above U+00FF (ı İ ğ Ğ ş Ş) must be declared as letters
+\makeatletter
+\lst@CCPut \lst@ProcessLetter {"130}{"131}{"11E}{"11F}{"15E}{"15F}\z@
+\lst@AddToHook{SelectCharTable}{\catcode"130=13 \catcode"131=13 \catcode"11E=13
+  \catcode"11F=13 \catcode"15E=13 \catcode"15F=13 }
+\makeatother
+
+\begin{document}
+% ============================ Hafta 7 gövdesi ============================
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 7 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Sanal Bellek ve Dosya Sistemleri}\par\smallskip
+{\small\itshape\color{white!70} 4\,GB'lık bir program 2\,GB RAM'de nasıl çalışır ve dosyalar gerçekte nerede durur?}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Sanal bellek fikrini ve bir programın yalnızca bir kısmı RAM'deyken neden çalışabildiğini açıklamak.
+  \item İsteğe bağlı sayfalamayı, geçerli--geçersiz bitini ve işletim sisteminin bir sayfa hatasını adım adım nasıl işlediğini anlatmak.
+  \item Sayfa hatalarıyla etkin erişim süresini ve belirli bir yavaşlamayı aşmayan en büyük hata oranını hesaplamak.
+  \item Yazınca kopyala yöntemini ve \cmd{fork()} ile bağlantısını açıklamak.
+  \item FIFO, OPT ve LRU sayfa değiştirme için çerçeve tablolarını çizmek, sayfa hatalarını saymak; Belady anomalisini ve saat algoritmasını açıklamak.
+  \item Boşa çalışmayı (thrashing) ve çalışma kümesi modelini açıklamak.
+  \item Dosya özniteliklerini, dosya işlemlerini, açık dosya tablolarını ve sıralı, doğrudan ve indeksli erişimi (blok hesabıyla birlikte) anlatmak.
+  \item Tek düzeyli, iki düzeyli, ağaç ve döngüsüz çizge dizinlerini karşılaştırmak; mutlak ve göreli yolları kullanmak; düğümleri (inode), sabit ve sembolik bağlantıları açıklamak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{6. Haftadan 7. Haftaya}
+
+Geçen hafta \term{MMU} mantıksal adresleri fiziksel adreslere çevirdi, \term{sayfalama} (paging) belleği sayfalara ve çerçevelere böldü, bir \term{sayfa tablosu} eşlemeyi kaydetti ve \term{TLB} son çevirileri önbellekte tuttu. Bunların hepsi örtük olarak \emph{çalışan bir sürecin her sayfasının RAM'de olduğunu} varsayıyordu. Bu hafta bu varsayımı bırakıyoruz: bir sayfa diskte de durabilir ve ancak gerektiğinde belleğe getirilebilir. \term{Sanal bellek} (virtual memory) adı verilen bu fikir, bir bilgisayarın RAM'inin alabileceğinden daha çok program çalıştırmasını sağlar. İkinci yarıda işletim sisteminin diğer büyük depolama soyutlamasına geçiyoruz: \term{dosya}.
+
+% =====================================================================
+\section{Sanal Bellek}
+
+\subsection{Fikir}
+
+Gerçek bir programa bakarsanız büyük kısmının nadiren kullanıldığını görürsünüz: sıra dışı hataları işleyen kod, pek az kişinin tıkladığı menü seçenekleri, $10\,000$ girdilik yer ayrılıp yalnızca $50$'si kullanılan diziler. Kullanılan kodun bile tamamı aynı anda gerekmez. Programlar \term{başvuru yerelliği} (locality of reference) gösterir: herhangi bir kısa süre içinde program sayfalarının yalnızca birkaçıyla çalışır (o anki fonksiyon, onun yerel değişkenleri, dizinin işlenmekte olan kısmı).
+
+\Needspace{9\baselineskip}
+\begin{keyidea}[Sanal bellek]
+\textbf{Sanal bellek}, programın gördüğü belleği (\emph{sanal} ya da mantıksal adres alanını) makinenin fiziksel belleğinden ayırır. RAM'de yalnızca o an gereken sayfalar tutulur; geri kalanlar \term{yedek depo} (backing store) ya da takas alanı (swap space) denen bir disk bölgesinde kalır. Bu yüzden sanal adres alanı fiziksel bellekten çok daha \emph{büyük} olabilir.
+\end{keyidea}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[p/.style={rectangle,rounded corners=1.5pt,minimum width=2.6cm,minimum height=0.48cm,font=\footnotesize},
+  arr/.style={-{Stealth[length=2mm]},thick,mintdeep}]
+\node[font=\small\bfseries] at (0,0.6) {Sanal adres alanı};
+\foreach \i/\l in {0/A,1/B,2/C,3/D,4/E,5/F,6/G,7/H} {
+  \ifnum\i=0 \def\c{mint}\else\ifnum\i=2 \def\c{mint}\else\ifnum\i=5 \def\c{mint}\else\def\c{light}\fi\fi\fi
+  \node[p,fill=\c] (v\i) at (0,-0.55*\i) {sayfa \i\ $\cdot$ \l};
+}
+\node[font=\small\bfseries] at (5,0.6) {Fiziksel bellek};
+\foreach \i/\l/\c in {0/{çerçeve 0 $\cdot$ F}/mint,1/{başka süreç}/light,2/{çerçeve 2 $\cdot$ A}/mint,3/{başka süreç}/light,4/{çerçeve 4 $\cdot$ C}/mint}
+  \node[p,fill=\c] (f\i) at (5,-0.55*\i) {\l};
+\draw[arr] (v0.east) -- (f2.west);
+\draw[arr] (v2.east) -- (f4.west);
+\draw[arr] (v5.east) -- (f0.west);
+\node[cylinder,shape border rotate=90,aspect=0.25,draw=slate,fill=slate!20,minimum width=2.6cm,minimum height=1.5cm,align=center,font=\footnotesize] (d) at (5,-3.75) {Disk (yedek depo)\\B D E G H};
+\draw[dashed,slate,thick] (v3.east) -- (d.west);
+\end{tikzpicture}
+\caption{RAM'de yalnızca A, C ve F sayfaları var; programın diğer sayfaları diskte bekliyor.}
+\end{figure}
+
+Kazançlar azımsanacak gibi değildir:
+\begin{itemize}
+  \item Bir program artık fiziksel belleğin boyutuyla sınırlı değildir. (64 bitlik Linux'ta her sürecin $128$~TiB'lık bir sanal adres alanı vardır.)
+  \item Her süreç daha az RAM kaplar, bu yüzden belleğe aynı anda daha çok süreç sığar: \emph{çoklu programlama derecesi} ve onunla birlikte işlemci kullanımı artar (1.\ ve 4.\ haftalar).
+  \item Bir programı yüklemek ya da takaslamak için daha az G/Ç gerekir; programlar daha hızlı başlar.
+  \item Sayfalar süreçler arasında paylaşılabilir (paylaşılan kütüphaneler ve \cmd{fork()} sonrasında yazınca kopyala, Kısım~\ref{sec:cow}).
+\end{itemize}
+
+% =====================================================================
+\section{İsteğe Bağlı Sayfalama}
+
+\subsection{Tembel yükleme}
+
+İşletim sistemi hangi sayfaları RAM'e koyacağına nasıl karar verir? En basit strateji, program başlamadan önce tamamını yüklemektir. Her modern genel amaçlı işletim sisteminin kullandığı seçenek ise \term{isteğe bağlı sayfalamadır} (demand paging): bir sayfa ancak ona ilk kez başvurulduğunda yüklenir. Bu, \emph{tembel yükleme} (lazy loading) denen genel bir programlama fikrinin bir örneğidir: bir işi gerekmeden önce asla yapma.
+
+Programın tamamını hevesle yüklemeye kıyasla isteğe bağlı sayfalama daha az G/Ç ve daha az bellek gerektirir, programları daha hızlı başlatır ve RAM'e daha çok süreç sığdırır. Bedeli, her sayfanın ilk kullanımının bir \emph{sayfa hatasına} yol açmasıdır.
+
+İşletim sisteminin tek tek sayfaları disk ile bellek arasında taşıyan kısmına \term{sayfalayıcı} (pager) denir. (Daha eski \emph{takasçı}, swapper, sözcüğü \emph{süreçlerin tamamını} taşımayı anlatır.) \emph{Saf} isteğe bağlı sayfalamada bir süreç bellekte hiç sayfası olmadan başlar; daha ilk komutu bir hataya yol açar.
+
+\subsection{Geçerli--geçersiz biti}
+
+Donanımın bir sayfanın bellekte olup olmadığını anlamasının bir yolu olmalıdır. Her sayfa tablosu girdisinde bir \term{geçerli--geçersiz biti} (valid--invalid bit) bulunur:
+\begin{itemize}
+  \item \textbf{v (valid, geçerli):} sayfa sürece aittir \emph{ve} bir çerçevededir; girdi çerçeve numarasını tutar.
+  \item \textbf{i (invalid, geçersiz):} sayfa ya şu an bellekte değildir ya da sürecin adres alanının parçası bile değildir.
+\end{itemize}
+Başlangıçta her girdi i yapılır. Bir süreç yalnızca geçerli sayfalara eriştiği sürece 6.\ haftadaki gibi, tam hızda çalışır.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[c/.style={rectangle,minimum width=1.3cm,minimum height=0.46cm,font=\small,inner sep=0pt}]
+\node[font=\small\bfseries] at (0,0.55) {Mantıksal bellek};
+\node[font=\small\bfseries] at (3.4,0.55) {Sayfa tablosu};
+\node[font=\small\bfseries] at (7.0,0.55) {Fiziksel bellek};
+\foreach \i/\l in {0/A,1/B,2/C,3/D,4/E,5/F,6/G,7/H} {
+  \node[font=\scriptsize,text=muted] at (-0.95,-0.5*\i) {\i};
+  \node[c,fill=light] at (0,-0.5*\i) {\l};
+}
+\foreach \i/\f/\b in {0/4/v,1//i,2/6/v,3//i,4//i,5/9/v,6//i,7//i} {
+  \node[font=\scriptsize,text=muted] at (2.3,-0.5*\i) {\i};
+  \if v\b
+    \node[c,fill=charcoal,text=white,minimum width=1.0cm] at (3.1,-0.5*\i) {\f};
+    \node[c,fill=mint,minimum width=0.55cm] at (4.0,-0.5*\i) {v};
+  \else
+    \node[c,fill=light,minimum width=1.0cm] at (3.1,-0.5*\i) {};
+    \node[c,fill=red!15,text=red!60!black,minimum width=0.55cm] at (4.0,-0.5*\i) {i};
+  \fi
+}
+\node[font=\scriptsize\itshape,text=muted] at (3.4,-4.05) {çerçeve \quad bit};
+\foreach \i in {0,...,9} {
+  \node[font=\scriptsize,text=muted] at (6.05,-0.4*\i) {\i};
+  \node[c,fill=light,minimum height=0.36cm] (pm\i) at (7.0,-0.4*\i) {};
+}
+\node[c,fill=mint,minimum height=0.36cm] at (7.0,-1.6) {A};
+\node[c,fill=mint,minimum height=0.36cm] at (7.0,-2.4) {C};
+\node[c,fill=mint,minimum height=0.36cm] at (7.0,-3.6) {F};
+\node[cylinder,shape border rotate=90,aspect=0.25,draw=slate,fill=slate!20,minimum width=2.0cm,minimum height=2.3cm,align=center,font=\small] at (10.0,-1.8) {Disk\\A B C D\\E F G H};
+\end{tikzpicture}
+\caption{A, C ve F sayfaları 4, 6 ve 9 numaralı çerçevelerde (bit v); diğer tüm girdiler geçersiz. Her sayfanın diskte bir kopyası var.}
+\end{figure}
+
+\subsection{Bir sayfa hatasının işlenmesi}
+
+Süreç, biti i olan bir sayfaya dokunursa ne olur? MMU adresi çeviremez ve bir \term{sayfa hatası} (page fault) üretir: işletim sistemine bir tuzak (trap, 2.\ hafta). İşletim sistemi bundan sonra şu adımları izler.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[b/.style={rectangle,rounded corners=2pt,minimum height=0.9cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=2.5mm]},thick,mintdeep},
+  num/.style={circle,fill=mint,text=white,font=\scriptsize\bfseries,inner sep=1.5pt}]
+\node[b,fill=light,minimum width=2.2cm] (proc) at (0,0) {\textbf{Süreç}\\\texttt{load M}};
+\node[rectangle,draw=slate,minimum width=1.6cm,minimum height=1.2cm,label={[font=\scriptsize\itshape,text=muted]above:sayfa tablosu}] (pt) at (3.6,0) {};
+\node[rectangle,fill=red!15,minimum width=1.55cm,minimum height=0.36cm,font=\scriptsize] at (3.6,0) {M \hfill i};
+\node[b,fill=charcoal,text=white,minimum width=2.4cm] (os) at (7.4,0) {\textbf{İşletim}\\\textbf{sistemi}};
+\node[cylinder,shape border rotate=90,aspect=0.25,draw=slate,fill=slate!20,minimum width=2.4cm,minimum height=1.5cm,align=center,font=\small] (disk) at (7.4,-3.4) {Yedek\\depo};
+\node[rectangle,draw=slate,minimum width=2.2cm,minimum height=2.2cm,label={[font=\scriptsize\itshape,text=muted]below:fiziksel bellek}] (pm) at (3.6,-3.4) {};
+\node[rectangle,fill=mint,minimum width=2.1cm,minimum height=0.42cm,font=\scriptsize] (ff) at (3.6,-3.4) {boş çerçeve $\to$ M};
+\draw[arr] (proc.east) -- node[num,above=1pt]{1} (pt.west);
+\draw[arr,red!60!black] (pt.east) -- node[num,fill=red!60!black,above=1pt]{2} (os.west);
+\draw[arr] (os.south) -- node[num,right=2pt]{3} (disk.north);
+\draw[arr] (disk.west) -- node[num,above=1pt]{4} (ff.east);
+\draw[arr] (pm.north) -- node[num,right=2pt]{5} (pt.south);
+\draw[arr] (pt.south west) to[bend left=25] node[num,below=2pt]{6} (proc.south);
+\end{tikzpicture}
+\caption{Sayfa hatası işlemenin altı adımı.}
+\label{fig:pf}
+\end{figure}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Başvuru.} Süreç, M sayfasına başvuran bir komut yürütür. Sayfa tablosu girdisi i der.
+  \item \textbf{Tuzak.} MMU bir sayfa hatası üretir. İşletim sistemi sürecin durumunu kaydeder ve bir iç tabloya bakar: adres yasal mı? Değilse süreç sonlandırılır (Linux'ta: \emph{segmentation fault}). Yasal ama bellekte değilse devam edilir.
+  \item \textbf{Bulma.} İşletim sistemi M sayfasının yedek depodaki yerini ve boş bir çerçeve bulur (boş çerçeve yoksa bir sayfayı \emph{değiştirmesi} gerekir, Kısım~\ref{sec:repl}).
+  \item \textbf{Okuma.} Sayfanın çerçeveye okunması için bir disk işlemi başlatır. Bu milisaniyeler sürer; bu arada işlemci zamanlayıcısı (4.\ hafta) başka bir süreci çalıştırır, hata veren süreç ise \emph{bekliyor} durumundadır (3.\ hafta).
+  \item \textbf{Güncelleme.} Disk kesmesi geldiğinde işletim sistemi çerçeve numarasını sayfa tablosu girdisine yazar ve biti v yapar.
+  \item \textbf{Yeniden başlatma.} Süreç yeniden hazır duruma getirilir ve hataya yol açan komut \emph{baştan yeniden başlatılır}. Bu kez erişim başarılı olur; süreç bir şey olduğunu fark edemez (yavaşlama dışında).
+\end{enumerate}
+
+\paragraph{Küçük ve büyük hatalar.} Her sayfa hatası disk gerektirmez. Sayfa yepyeni bir bellekse (örneğin \cmd{malloc} ile ayrılmış bir diziye ilk dokunuş), işletim sisteminin yalnızca boş bir çerçeve bulup sıfırlarla doldurması yeter. Linux buna \term{küçük hata} (minor fault) der. \term{Büyük hata} (major fault) ise disk G/Ç'si gerektirir; örneğin bir program dosyasının bir sayfasını ya da diske takaslanmış bir sayfayı okumak için. Büyük hatalar binlerce kat daha pahalıdır.
+
+\subsection{Sayfa hatalarıyla etkin erişim süresi}
+
+$p$, bir bellek erişiminin sayfa hatasına yol açma olasılığı, yani \term{sayfa hatası oranı} (page-fault rate) olsun ($0 \le p \le 1$). Bellek erişim süresi $t_m$ ve sayfa hatası hizmet süresi $t_{\text{fault}}$ ile \term{etkin erişim süresi} (effective access time, EAT) şu ağırlıklı ortalamadır:
+\[
+\text{EAT} = (1-p)\, t_m + p\, t_{\text{fault}} .
+\]
+Bu, 6.\ haftadaki TLB formülüyle tam olarak aynı yapıdadır: olasılığıyla ağırlıklandırılmış hızlı durum artı olasılığıyla ağırlıklandırılmış yavaş durum. Hata hizmet süresi tuzağı, durumun kaydedilmesini, disk okumasını (açık ara en büyük kısım) ve sürecin yeniden başlatılmasını içerir.
+
+\begin{example}[Çözümlü örnek: sayfa hatalarıyla EAT]
+$t_m = 200\ \text{ns}$ ve $t_{\text{fault}} = 8\ \text{ms} = 8\,000\,000\ \text{ns}$ alalım ve binde bir erişimin hata verdiğini varsayalım, $p = 0.001$:
+\begin{align*}
+\text{EAT} &= 0.999 \times 200\ \text{ns} + 0.001 \times 8\,000\,000\ \text{ns} \\
+           &= 199.8\ \text{ns} + 8\,000\ \text{ns} = 8\,199.8\ \text{ns} \approx 8.2\ \mu\text{s}.
+\end{align*}
+Bellek $8199.8/200 \approx 41$ kat yavaşlamıştır!
+
+\textbf{Yavaşlamanın \%10'un altında kalması için $p$ ne kadar küçük olmalı?} $\text{EAT} < 1.1\, t_m = 220\ \text{ns}$ olmalıdır:
+\[
+200 + p\,(8\,000\,000 - 200) < 220
+\quad\Longrightarrow\quad
+p < \frac{20}{7\,999\,800} \approx 2.5 \times 10^{-6}.
+\]
+Bu, en fazla $1/p \approx 400\,000$ bellek erişiminde bir sayfa hatası demektir. (Sayılar \cmd{code/page\_replacement.py} ile denetlendi.)
+\end{example}
+
+Ders şudur: sayfa hatası oranı son derece küçük olmalıdır ve uygulamada küçük \emph{olmasının} tek nedeni yerelliktir. Bir SSD ile ($t_{\text{fault}}$ yaklaşık $0.1$~ms mertebesinde) ceza daha küçüktür, ama aynı akıl yürütme geçerlidir.
+
+\subsection{Yazınca kopyala}
+\label{sec:cow}
+
+3.\ haftada, ebeveyninin kopyası olarak bir çocuk süreç oluşturan \cmd{fork()} çağrısını gördük. Ebeveynin her sayfasını kopyalamak yavaş ve çoğu zaman anlamsız olurdu: pek çok çocuk hemen \cmd{exec()} çağırır ve tüm belleğini yeni bir programla değiştirir. Sanal bellek daha iyi bir çözüm sunar: \term{yazınca kopyala} (copy-on-write, COW).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[pr/.style={rectangle,rounded corners=2pt,fill=charcoal,text=white,minimum width=1.4cm,minimum height=2.0cm,font=\small\bfseries},
+  pg/.style={rectangle,rounded corners=1.5pt,minimum width=1.7cm,minimum height=0.45cm,font=\footnotesize},
+  arr/.style={-{Stealth[length=2mm]},slate}]
+\begin{scope}
+\node[font=\small\bfseries,text=mintdeep] at (2.25,1.5) {\texttt{fork()}'tan hemen sonra};
+\node[pr] (p) at (0,0) {Ebeveyn}; \node[pr] (c) at (4.5,0) {Çocuk};
+\foreach \i/\t in {0/sayfa A,1/sayfa B,2/sayfa C} { \node[pg,fill=light] (a\i) at (2.25,0.65-0.65*\i) {\t};
+  \draw[arr] (p.east) -- (a\i.west); \draw[arr] (c.west) -- (a\i.east); }
+\end{scope}
+\begin{scope}[xshift=7.8cm]
+\node[font=\small\bfseries,text=mintdeep] at (2.25,1.5) {Çocuk C sayfasına yazdıktan sonra};
+\node[pr] (p) at (0,0) {Ebeveyn}; \node[pr] (c) at (4.5,0) {Çocuk};
+\foreach \i/\t/\f in {0/sayfa A/light,1/sayfa B/light,2/sayfa C/mint!25,3/C'nin kopyası/mint} \node[pg,fill=\f] (b\i) at (2.25,0.65-0.65*\i) {\t};
+\foreach \i in {0,1,2} \draw[arr] (p.east) -- (b\i.west);
+\foreach \i in {0,1,3} \draw[arr] (c.west) -- (b\i.east);
+\end{scope}
+\end{tikzpicture}
+\caption{Yazınca kopyala: sayfalar bir süreç yazana kadar paylaşılır; yalnızca yazılan sayfa kopyalanır.}
+\end{figure}
+
+\cmd{fork()} sonrasında ebeveyn ve çocuk tüm sayfalarını paylaşır ve işletim sistemi bu sayfaları salt okunur olarak işaretler. Okumak bedavadır. Süreçlerden biri paylaşılan bir sayfaya \emph{yazdığında} donanım bir koruma hatası üretir; işletim sistemi yalnızca o sayfayı kopyalar, yazan sürece kendi (artık yazılabilir) kopyasını verir ve yazma işlemini yeniden başlatır. Hiç yazılmayan sayfalar hiç kopyalanmaz. Mekanizma, isteğe bağlı sayfalamada kullandığımız tuzak-ve-yeniden-başlat düzeneğinin aynısıdır.
+
+\subsection{Uygulama: sayfa hatalarını izlemek}
+
+Bu kısımdaki programlar, bu notların yanındaki \texttt{code/} klasöründedir. Hepsini \cmd{make} ile derleyin (\cmd{gcc -Wall -O2} kullanır).
+
+\paragraph{Örnek 1: isteğe bağlı sayfalama.} Program \cmd{malloc()} ile $64$~MB ayırır, sonra her sayfaya iki kez birer bayt yazar. Çekirdek her süreç için sayfa hatalarını sayar; \cmd{getrusage()} bu sayacı okur. Listede programın özü var; sonuçları yazdıran tam sürüm \cmd{page\_faults.c} dosyasıdır.
+
+\lstinputlisting[caption={}]{../code/page_faults_excerpt.c}
+
+Test makinemizdeki çıktı (Linux, $4$~KB'lık sayfalar):
+\Needspace{7\baselineskip}
+\begin{lstlisting}[style=term]
+$ ./page_faults
+page size 4096 bytes; array 64 MB = 16384 pages
+after malloc       :      1 new faults
+first touch (write):  16383 new faults
+second touch       :      0 new faults
+\end{lstlisting}
+
+Çıktıyı okumak:
+\begin{itemize}
+  \item \cmd{malloc()} kendisi yalnızca $1$ hataya yol açar: \emph{sanal} alan ayırır ve (ilk sayfaya) yalnızca küçük bir kayıt başlığı yazar.
+  \item İlk geçiş dokunduğu her sayfa için bir kez hata verir: $16.383$ hata, artı \cmd{malloc}'un zaten dokunduğu $1$ sayfa, $16.384$ sayfanın tamamını verir.
+  \item İkinci geçiş $0$ hataya yol açar: her sayfa artık bellektedir.
+\end{itemize}
+Bunların hepsi \emph{küçük} hatalardır: çekirdeğin yalnızca sıfırlanmış çerçeveler vermesi gerekti. \cmd{/usr/bin/time -v} aracı tüm çalışmanın sayaçlarını raporlar (programın ve C kütüphanesinin yüklenmesindeki hatalar dahil):
+\Needspace{7\baselineskip}
+\begin{lstlisting}[style=term]
+$ /usr/bin/time -v ./page_faults
+...
+   Maximum resident set size (kbytes): 66964
+   Major (requiring I/O) page faults: 0
+   Minor (reclaiming a frame) page faults: 16463
+\end{lstlisting}
+\emph{Saydam büyük sayfaların} (transparent huge pages) tüm bellek için etkin olduğu sistemlerde çekirdek bunun yerine $2$~MB'lık sayfalar eşleyebilir; o zaman çok daha az hata görürsünüz. (\cmd{/usr/bin/time} yoksa aracı \cmd{sudo apt install time} ile kurun.)
+
+\paragraph{Örnek 2: yazınca kopyala.} Ebeveyn $32$~MB'lık bir tamponu doldurur ve \cmd{fork()} yapar. Çocuk önce her sayfayı okur, sonra her sayfaya yazar. Listede programın özü var; Örnek~1'deki \cmd{minor\_faults()} yardımcı fonksiyonunu da içeren tam sürüm \cmd{code/cow\_fork.c} dosyasıdır.
+
+\lstinputlisting[caption={}]{../code/cow_fork_excerpt.c}
+
+\Needspace{7\baselineskip}
+\begin{lstlisting}[style=term]
+$ ./cow_fork
+buffer: 8192 pages of 4096 bytes
+child read  all pages:      0 faults
+child write all pages:   8192 faults (copy-on-write)
+parent still sees  'A'  (its copy was never changed)
+\end{lstlisting}
+
+Paylaşılan sayfaları okumanın bedeli yoktur; yazmanın bedeli ise sayfa başına tam olarak bir hatadır, toplam $8192$, çünkü her sayfa ilk yazıldığında kopyalanır. Ebeveyn hâlâ özgün verisini görür. (\cmd{fork()} öncesindeki \cmd{fflush(stdout)} önemlidir: o olmasaydı ebeveynin çıktı tamponunda bekleyen metin çocuğa da kopyalanır ve iki kez basılırdı.)
+
+% =====================================================================
+\section{Sayfa Değiştirme}
+\label{sec:repl}
+
+\subsection{Bellek dolduğunda}
+
+İşletim sistemi belleği bilerek \emph{fazla dağıtır}: tüm süreçlerin sanal belleklerinin toplamı RAM'den büyüktür; tüm sayfaların aynı anda gerekmeyeceğine bahse girilir. Er ya da geç bir sayfa hatası olur ve boş çerçeve yoktur. İşletim sistemi bu durumda çıkarılacak bir \term{kurban} (victim) sayfa seçmelidir. Sayfa hatası yordamı şu hâle gelir:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item İstenen sayfanın diskteki yerini bul.
+  \item Boş bir çerçeve bul. Yoksa bir \term{sayfa değiştirme algoritması} (page-replacement algorithm) ile bir kurban çerçeve seç; kurban değiştirilmişse diske yaz; onun sayfa tablosu girdisini geçersiz işaretle.
+  \item İstenen sayfayı boşalan çerçeveye oku; sayfa tablosunu güncelle.
+  \item Süreci yeniden başlat.
+\end{enumerate}
+
+\paragraph{Değişiklik (kirli) biti.} Dikkat edilmezse bir değiştirme \emph{iki} disk aktarımına mal olur: biri kurbanı dışarı yazmak, biri yeni sayfayı içeri okumak için. Bu yüzden donanım her sayfa için bir \term{değişiklik biti} (modify bit, dirty bit) tutar; sayfaya her yazıldığında bu bit kendiliğinden kurulur. Program kodunun bir sayfası gibi \emph{temiz} bir kurbanın diskte aynısı zaten vardır ve doğrudan atılabilir.
+
+\paragraph{Algoritmaları nasıl karşılaştırırız?} Her algoritmayı aynı \term{başvuru dizisi} (reference string: bir programın başvurduğu sayfa numaraları dizisi) ve aynı çerçeve sayısıyla çalıştırır ve sayfa hatalarını sayarız. Bu kısım boyunca klasik
+\[
+7,\,0,\,1,\,2,\,0,\,3,\,0,\,4,\,2,\,3,\,0,\,3,\,2,\,1,\,2,\,0,\,1,\,7,\,0,\,1
+\]
+dizisini, başlangıçta hepsi boş $3$ çerçeveyle kullanıyoruz. Aşağıdaki tablolarda nane rengi yeni yüklenen sayfayı, soluk sütunlar sayfa hatalarını (F = fault), gri sütunlar isabetleri gösterir. Tüm tablolar \texttt{code/} klasöründeki Python benzetimcisiyle (\cmd{page\_replacement.py}) üretildi.
+
+\subsection{FIFO: ilk giren ilk çıkar}
+
+Kurban, bellekte en uzun süredir duran sayfadır. FIFO, sayfa numaralarından oluşan bir kuyrukla kolayca gerçeklenir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[c/.style={rectangle,minimum width=0.61cm,minimum height=0.47cm,inner sep=0pt,font=\small}]
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,0.00) {başvuru};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-0.52) {çerçeve 0};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-1.04) {çerçeve 1};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-1.56) {çerçeve 2};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-2.08) {hata?};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (0.33,0) {7};
+\node[c,fill=mint,text=black] at (0.33,-0.52) {\bfseries7};
+\node[c,fill=mint!25,text=black] at (0.33,-1.04) {};
+\node[c,fill=mint!25,text=black] at (0.33,-1.56) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (0.33,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (0.99,0) {0};
+\node[c,fill=mint!25,text=black] at (0.99,-0.52) {7};
+\node[c,fill=mint,text=black] at (0.99,-1.04) {\bfseries0};
+\node[c,fill=mint!25,text=black] at (0.99,-1.56) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (0.99,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (1.65,0) {1};
+\node[c,fill=mint!25,text=black] at (1.65,-0.52) {7};
+\node[c,fill=mint!25,text=black] at (1.65,-1.04) {0};
+\node[c,fill=mint,text=black] at (1.65,-1.56) {\bfseries1};
+\node[c,text=red!60!black,font=\small\bfseries] at (1.65,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (2.31,0) {2};
+\node[c,fill=mint,text=black] at (2.31,-0.52) {\bfseries2};
+\node[c,fill=mint!25,text=black] at (2.31,-1.04) {0};
+\node[c,fill=mint!25,text=black] at (2.31,-1.56) {1};
+\node[c,text=red!60!black,font=\small\bfseries] at (2.31,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (2.97,0) {0};
+\node[c,fill=light,text=muted!70] at (2.97,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (2.97,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (2.97,-1.56) {1};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (3.63,0) {3};
+\node[c,fill=mint!25,text=black] at (3.63,-0.52) {2};
+\node[c,fill=mint,text=black] at (3.63,-1.04) {\bfseries3};
+\node[c,fill=mint!25,text=black] at (3.63,-1.56) {1};
+\node[c,text=red!60!black,font=\small\bfseries] at (3.63,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (4.29,0) {0};
+\node[c,fill=mint!25,text=black] at (4.29,-0.52) {2};
+\node[c,fill=mint!25,text=black] at (4.29,-1.04) {3};
+\node[c,fill=mint,text=black] at (4.29,-1.56) {\bfseries0};
+\node[c,text=red!60!black,font=\small\bfseries] at (4.29,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (4.95,0) {4};
+\node[c,fill=mint,text=black] at (4.95,-0.52) {\bfseries4};
+\node[c,fill=mint!25,text=black] at (4.95,-1.04) {3};
+\node[c,fill=mint!25,text=black] at (4.95,-1.56) {0};
+\node[c,text=red!60!black,font=\small\bfseries] at (4.95,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (5.61,0) {2};
+\node[c,fill=mint!25,text=black] at (5.61,-0.52) {4};
+\node[c,fill=mint,text=black] at (5.61,-1.04) {\bfseries2};
+\node[c,fill=mint!25,text=black] at (5.61,-1.56) {0};
+\node[c,text=red!60!black,font=\small\bfseries] at (5.61,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (6.27,0) {3};
+\node[c,fill=mint!25,text=black] at (6.27,-0.52) {4};
+\node[c,fill=mint!25,text=black] at (6.27,-1.04) {2};
+\node[c,fill=mint,text=black] at (6.27,-1.56) {\bfseries3};
+\node[c,text=red!60!black,font=\small\bfseries] at (6.27,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (6.93,0) {0};
+\node[c,fill=mint,text=black] at (6.93,-0.52) {\bfseries0};
+\node[c,fill=mint!25,text=black] at (6.93,-1.04) {2};
+\node[c,fill=mint!25,text=black] at (6.93,-1.56) {3};
+\node[c,text=red!60!black,font=\small\bfseries] at (6.93,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (7.59,0) {3};
+\node[c,fill=light,text=muted!70] at (7.59,-0.52) {0};
+\node[c,fill=light,text=muted!70] at (7.59,-1.04) {2};
+\node[c,fill=light,text=muted!70] at (7.59,-1.56) {3};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (8.25,0) {2};
+\node[c,fill=light,text=muted!70] at (8.25,-0.52) {0};
+\node[c,fill=light,text=muted!70] at (8.25,-1.04) {2};
+\node[c,fill=light,text=muted!70] at (8.25,-1.56) {3};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (8.91,0) {1};
+\node[c,fill=mint!25,text=black] at (8.91,-0.52) {0};
+\node[c,fill=mint,text=black] at (8.91,-1.04) {\bfseries1};
+\node[c,fill=mint!25,text=black] at (8.91,-1.56) {3};
+\node[c,text=red!60!black,font=\small\bfseries] at (8.91,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (9.57,0) {2};
+\node[c,fill=mint!25,text=black] at (9.57,-0.52) {0};
+\node[c,fill=mint!25,text=black] at (9.57,-1.04) {1};
+\node[c,fill=mint,text=black] at (9.57,-1.56) {\bfseries2};
+\node[c,text=red!60!black,font=\small\bfseries] at (9.57,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (10.23,0) {0};
+\node[c,fill=light,text=muted!70] at (10.23,-0.52) {0};
+\node[c,fill=light,text=muted!70] at (10.23,-1.04) {1};
+\node[c,fill=light,text=muted!70] at (10.23,-1.56) {2};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (10.89,0) {1};
+\node[c,fill=light,text=muted!70] at (10.89,-0.52) {0};
+\node[c,fill=light,text=muted!70] at (10.89,-1.04) {1};
+\node[c,fill=light,text=muted!70] at (10.89,-1.56) {2};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (11.55,0) {7};
+\node[c,fill=mint,text=black] at (11.55,-0.52) {\bfseries7};
+\node[c,fill=mint!25,text=black] at (11.55,-1.04) {1};
+\node[c,fill=mint!25,text=black] at (11.55,-1.56) {2};
+\node[c,text=red!60!black,font=\small\bfseries] at (11.55,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (12.21,0) {0};
+\node[c,fill=mint!25,text=black] at (12.21,-0.52) {7};
+\node[c,fill=mint,text=black] at (12.21,-1.04) {\bfseries0};
+\node[c,fill=mint!25,text=black] at (12.21,-1.56) {2};
+\node[c,text=red!60!black,font=\small\bfseries] at (12.21,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (12.87,0) {1};
+\node[c,fill=mint!25,text=black] at (12.87,-0.52) {7};
+\node[c,fill=mint!25,text=black] at (12.87,-1.04) {0};
+\node[c,fill=mint,text=black] at (12.87,-1.56) {\bfseries1};
+\node[c,text=red!60!black,font=\small\bfseries] at (12.87,-2.08) {F};
+\end{tikzpicture}
+\caption{3 çerçeveyle FIFO: \textbf{15 sayfa hatası}.}
+\end{figure}
+
+İlk üç hata \term{zorunlu} (compulsory, soğuk başlangıç) hatalardır: hiçbir algoritma 7, 0 ve 1'i ilk kez yüklemekten kaçınamaz. Sonra 2, 7'nin (en eski) yerine geçer, 0 bir isabettir ve 3, 0'ın yerine geçer, çünkü artık en eski sayfa 0'dır; oysa 0'a hemen bir sonraki başvuruda yine gerek vardır. FIFO bir sayfanın ne zaman geldiğini bilir, hâlâ kullanılıp kullanılmadığını bilmez.
+
+\subsection{OPT: en iyi algoritma}
+
+Kurban, gelecekte \emph{en uzun süre kullanılmayacak} olan sayfadır. Bu algoritma (OPT ya da MIN, Bélády 1966), herhangi bir başvuru dizisi ve çerçeve sayısı için olası en düşük sayfa hatası sayısını verir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[c/.style={rectangle,minimum width=0.61cm,minimum height=0.47cm,inner sep=0pt,font=\small}]
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,0.00) {başvuru};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-0.52) {çerçeve 0};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-1.04) {çerçeve 1};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-1.56) {çerçeve 2};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-2.08) {hata?};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (0.33,0) {7};
+\node[c,fill=mint,text=black] at (0.33,-0.52) {\bfseries7};
+\node[c,fill=mint!25,text=black] at (0.33,-1.04) {};
+\node[c,fill=mint!25,text=black] at (0.33,-1.56) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (0.33,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (0.99,0) {0};
+\node[c,fill=mint!25,text=black] at (0.99,-0.52) {7};
+\node[c,fill=mint,text=black] at (0.99,-1.04) {\bfseries0};
+\node[c,fill=mint!25,text=black] at (0.99,-1.56) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (0.99,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (1.65,0) {1};
+\node[c,fill=mint!25,text=black] at (1.65,-0.52) {7};
+\node[c,fill=mint!25,text=black] at (1.65,-1.04) {0};
+\node[c,fill=mint,text=black] at (1.65,-1.56) {\bfseries1};
+\node[c,text=red!60!black,font=\small\bfseries] at (1.65,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (2.31,0) {2};
+\node[c,fill=mint,text=black] at (2.31,-0.52) {\bfseries2};
+\node[c,fill=mint!25,text=black] at (2.31,-1.04) {0};
+\node[c,fill=mint!25,text=black] at (2.31,-1.56) {1};
+\node[c,text=red!60!black,font=\small\bfseries] at (2.31,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (2.97,0) {0};
+\node[c,fill=light,text=muted!70] at (2.97,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (2.97,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (2.97,-1.56) {1};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (3.63,0) {3};
+\node[c,fill=mint!25,text=black] at (3.63,-0.52) {2};
+\node[c,fill=mint!25,text=black] at (3.63,-1.04) {0};
+\node[c,fill=mint,text=black] at (3.63,-1.56) {\bfseries3};
+\node[c,text=red!60!black,font=\small\bfseries] at (3.63,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (4.29,0) {0};
+\node[c,fill=light,text=muted!70] at (4.29,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (4.29,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (4.29,-1.56) {3};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (4.95,0) {4};
+\node[c,fill=mint!25,text=black] at (4.95,-0.52) {2};
+\node[c,fill=mint,text=black] at (4.95,-1.04) {\bfseries4};
+\node[c,fill=mint!25,text=black] at (4.95,-1.56) {3};
+\node[c,text=red!60!black,font=\small\bfseries] at (4.95,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (5.61,0) {2};
+\node[c,fill=light,text=muted!70] at (5.61,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (5.61,-1.04) {4};
+\node[c,fill=light,text=muted!70] at (5.61,-1.56) {3};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (6.27,0) {3};
+\node[c,fill=light,text=muted!70] at (6.27,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (6.27,-1.04) {4};
+\node[c,fill=light,text=muted!70] at (6.27,-1.56) {3};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (6.93,0) {0};
+\node[c,fill=mint!25,text=black] at (6.93,-0.52) {2};
+\node[c,fill=mint,text=black] at (6.93,-1.04) {\bfseries0};
+\node[c,fill=mint!25,text=black] at (6.93,-1.56) {3};
+\node[c,text=red!60!black,font=\small\bfseries] at (6.93,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (7.59,0) {3};
+\node[c,fill=light,text=muted!70] at (7.59,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (7.59,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (7.59,-1.56) {3};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (8.25,0) {2};
+\node[c,fill=light,text=muted!70] at (8.25,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (8.25,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (8.25,-1.56) {3};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (8.91,0) {1};
+\node[c,fill=mint!25,text=black] at (8.91,-0.52) {2};
+\node[c,fill=mint!25,text=black] at (8.91,-1.04) {0};
+\node[c,fill=mint,text=black] at (8.91,-1.56) {\bfseries1};
+\node[c,text=red!60!black,font=\small\bfseries] at (8.91,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (9.57,0) {2};
+\node[c,fill=light,text=muted!70] at (9.57,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (9.57,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (9.57,-1.56) {1};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (10.23,0) {0};
+\node[c,fill=light,text=muted!70] at (10.23,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (10.23,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (10.23,-1.56) {1};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (10.89,0) {1};
+\node[c,fill=light,text=muted!70] at (10.89,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (10.89,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (10.89,-1.56) {1};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (11.55,0) {7};
+\node[c,fill=mint,text=black] at (11.55,-0.52) {\bfseries7};
+\node[c,fill=mint!25,text=black] at (11.55,-1.04) {0};
+\node[c,fill=mint!25,text=black] at (11.55,-1.56) {1};
+\node[c,text=red!60!black,font=\small\bfseries] at (11.55,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (12.21,0) {0};
+\node[c,fill=light,text=muted!70] at (12.21,-0.52) {7};
+\node[c,fill=light,text=muted!70] at (12.21,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (12.21,-1.56) {1};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (12.87,0) {1};
+\node[c,fill=light,text=muted!70] at (12.87,-0.52) {7};
+\node[c,fill=light,text=muted!70] at (12.87,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (12.87,-1.56) {1};
+\end{tikzpicture}
+\caption{3 çerçeveyle OPT: \textbf{9 sayfa hatası}, olası en az sayı.}
+\end{figure}
+
+Örneğin 4 numaralı sayfaya başvuruda (8.\ konum) çerçevelerde 2, 0 ve 3 vardır. İleriye bakınca 2'nin bir sonraki kullanımı 9.\ konumda, 3'ünkü 10.\ konumda, 0'ınki 11.\ konumdadır; bu yüzden 0 değiştirilir. Sorun açıktır: işletim sistemi gelecekteki başvuru dizisini bilemez. OPT bir \emph{ölçüt} (yardstick) olarak kullanılır: ``algoritmamız bu iş yükünde en iyinin \%10 yakınında''.
+
+\subsection{LRU: en uzun süredir kullanılmayan}
+
+LRU (least recently used) yakın geçmişi yakın geleceğin tahmini olarak kullanır: kurban, \emph{en uzun süredir kullanılmamış} sayfadır. Bir başka deyişle, zamanda geriye bakan OPT'dir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[c/.style={rectangle,minimum width=0.61cm,minimum height=0.47cm,inner sep=0pt,font=\small}]
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,0.00) {başvuru};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-0.52) {çerçeve 0};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-1.04) {çerçeve 1};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-1.56) {çerçeve 2};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-2.08) {hata?};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (0.33,0) {7};
+\node[c,fill=mint,text=black] at (0.33,-0.52) {\bfseries7};
+\node[c,fill=mint!25,text=black] at (0.33,-1.04) {};
+\node[c,fill=mint!25,text=black] at (0.33,-1.56) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (0.33,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (0.99,0) {0};
+\node[c,fill=mint!25,text=black] at (0.99,-0.52) {7};
+\node[c,fill=mint,text=black] at (0.99,-1.04) {\bfseries0};
+\node[c,fill=mint!25,text=black] at (0.99,-1.56) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (0.99,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (1.65,0) {1};
+\node[c,fill=mint!25,text=black] at (1.65,-0.52) {7};
+\node[c,fill=mint!25,text=black] at (1.65,-1.04) {0};
+\node[c,fill=mint,text=black] at (1.65,-1.56) {\bfseries1};
+\node[c,text=red!60!black,font=\small\bfseries] at (1.65,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (2.31,0) {2};
+\node[c,fill=mint,text=black] at (2.31,-0.52) {\bfseries2};
+\node[c,fill=mint!25,text=black] at (2.31,-1.04) {0};
+\node[c,fill=mint!25,text=black] at (2.31,-1.56) {1};
+\node[c,text=red!60!black,font=\small\bfseries] at (2.31,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (2.97,0) {0};
+\node[c,fill=light,text=muted!70] at (2.97,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (2.97,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (2.97,-1.56) {1};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (3.63,0) {3};
+\node[c,fill=mint!25,text=black] at (3.63,-0.52) {2};
+\node[c,fill=mint!25,text=black] at (3.63,-1.04) {0};
+\node[c,fill=mint,text=black] at (3.63,-1.56) {\bfseries3};
+\node[c,text=red!60!black,font=\small\bfseries] at (3.63,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (4.29,0) {0};
+\node[c,fill=light,text=muted!70] at (4.29,-0.52) {2};
+\node[c,fill=light,text=muted!70] at (4.29,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (4.29,-1.56) {3};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (4.95,0) {4};
+\node[c,fill=mint,text=black] at (4.95,-0.52) {\bfseries4};
+\node[c,fill=mint!25,text=black] at (4.95,-1.04) {0};
+\node[c,fill=mint!25,text=black] at (4.95,-1.56) {3};
+\node[c,text=red!60!black,font=\small\bfseries] at (4.95,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (5.61,0) {2};
+\node[c,fill=mint!25,text=black] at (5.61,-0.52) {4};
+\node[c,fill=mint!25,text=black] at (5.61,-1.04) {0};
+\node[c,fill=mint,text=black] at (5.61,-1.56) {\bfseries2};
+\node[c,text=red!60!black,font=\small\bfseries] at (5.61,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (6.27,0) {3};
+\node[c,fill=mint!25,text=black] at (6.27,-0.52) {4};
+\node[c,fill=mint,text=black] at (6.27,-1.04) {\bfseries3};
+\node[c,fill=mint!25,text=black] at (6.27,-1.56) {2};
+\node[c,text=red!60!black,font=\small\bfseries] at (6.27,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (6.93,0) {0};
+\node[c,fill=mint,text=black] at (6.93,-0.52) {\bfseries0};
+\node[c,fill=mint!25,text=black] at (6.93,-1.04) {3};
+\node[c,fill=mint!25,text=black] at (6.93,-1.56) {2};
+\node[c,text=red!60!black,font=\small\bfseries] at (6.93,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (7.59,0) {3};
+\node[c,fill=light,text=muted!70] at (7.59,-0.52) {0};
+\node[c,fill=light,text=muted!70] at (7.59,-1.04) {3};
+\node[c,fill=light,text=muted!70] at (7.59,-1.56) {2};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (8.25,0) {2};
+\node[c,fill=light,text=muted!70] at (8.25,-0.52) {0};
+\node[c,fill=light,text=muted!70] at (8.25,-1.04) {3};
+\node[c,fill=light,text=muted!70] at (8.25,-1.56) {2};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (8.91,0) {1};
+\node[c,fill=mint,text=black] at (8.91,-0.52) {\bfseries1};
+\node[c,fill=mint!25,text=black] at (8.91,-1.04) {3};
+\node[c,fill=mint!25,text=black] at (8.91,-1.56) {2};
+\node[c,text=red!60!black,font=\small\bfseries] at (8.91,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (9.57,0) {2};
+\node[c,fill=light,text=muted!70] at (9.57,-0.52) {1};
+\node[c,fill=light,text=muted!70] at (9.57,-1.04) {3};
+\node[c,fill=light,text=muted!70] at (9.57,-1.56) {2};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (10.23,0) {0};
+\node[c,fill=mint!25,text=black] at (10.23,-0.52) {1};
+\node[c,fill=mint,text=black] at (10.23,-1.04) {\bfseries0};
+\node[c,fill=mint!25,text=black] at (10.23,-1.56) {2};
+\node[c,text=red!60!black,font=\small\bfseries] at (10.23,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (10.89,0) {1};
+\node[c,fill=light,text=muted!70] at (10.89,-0.52) {1};
+\node[c,fill=light,text=muted!70] at (10.89,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (10.89,-1.56) {2};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (11.55,0) {7};
+\node[c,fill=mint!25,text=black] at (11.55,-0.52) {1};
+\node[c,fill=mint!25,text=black] at (11.55,-1.04) {0};
+\node[c,fill=mint,text=black] at (11.55,-1.56) {\bfseries7};
+\node[c,text=red!60!black,font=\small\bfseries] at (11.55,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (12.21,0) {0};
+\node[c,fill=light,text=muted!70] at (12.21,-0.52) {1};
+\node[c,fill=light,text=muted!70] at (12.21,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (12.21,-1.56) {7};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (12.87,0) {1};
+\node[c,fill=light,text=muted!70] at (12.87,-0.52) {1};
+\node[c,fill=light,text=muted!70] at (12.87,-1.04) {0};
+\node[c,fill=light,text=muted!70] at (12.87,-1.56) {7};
+\end{tikzpicture}
+\caption{3 çerçeveyle LRU: \textbf{12 sayfa hatası}.}
+\end{figure}
+
+4 numaralı sayfaya başvuruda çerçevelerde yine 2, 0 ve 3 vardır, ama bu kez geriye bakarız: en uzun süre önce kullanılan 2'dir, bu yüzden 2 değiştirilir (OPT 0'ı değiştirmişti). LRU yerellik sayesinde iyi çalışır.
+
+Tam LRU, \emph{her} bellek erişiminde donanım desteği gerektirir: ya sayfa tablosu girdisine yazılan bir zaman damgası ya da başvurulan sayfanın en üste taşındığı bir sayfa numarası yığıtı (stack). İkisi de gerçek donanım için çok pahalıdır; bu yüzden sistemler LRU'ya \emph{yaklaşır} (Kısım~\ref{sec:clock}).
+
+\subsection{Karşılaştırma}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{Algoritma} & \textbf{Kurban şu sayfadır\dots} & \textbf{Hata (3 çerçeve)} & \textbf{Gerçeklenebilir mi?} & \textbf{Belady anomalisi?} \\
+\midrule
+FIFO & en uzun süre önce yüklenen & 15 & evet, çok ucuz & olabilir \\
+OPT & gelecekte en geç kullanılacak & 9 & hayır (geleceği ister) & asla \\
+LRU & en uzun süredir kullanılmayan & 12 & yaklaşık olarak & asla \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Sınav ipucu:} sütun sütun çalışın ve her başvurudan sonra çerçevelerin içeriğini yazın. OPT için dizide \emph{ileriye}, LRU için \emph{geriye} bakın; FIFO için yalnızca geliş sırasını hatırlayın.
+
+\subsection{Belady anomalisi}
+
+Sezgi, bir sürece daha çok çerçeve vermenin onun sayfa hatası sayısını asla artıramayacağını söyler. FIFO için sezgi yanılır. $1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5$ başvuru dizisini düşünün:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[c/.style={rectangle,minimum width=0.75cm,minimum height=0.47cm,inner sep=0pt,font=\small}]
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,0.00) {başvuru};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-0.52) {çerçeve 0};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-1.04) {çerçeve 1};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-1.56) {çerçeve 2};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-2.08) {hata?};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (0.40,0) {1};
+\node[c,fill=mint,text=black] at (0.40,-0.52) {\bfseries1};
+\node[c,fill=mint!25,text=black] at (0.40,-1.04) {};
+\node[c,fill=mint!25,text=black] at (0.40,-1.56) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (0.40,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (1.20,0) {2};
+\node[c,fill=mint!25,text=black] at (1.20,-0.52) {1};
+\node[c,fill=mint,text=black] at (1.20,-1.04) {\bfseries2};
+\node[c,fill=mint!25,text=black] at (1.20,-1.56) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (1.20,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (2.00,0) {3};
+\node[c,fill=mint!25,text=black] at (2.00,-0.52) {1};
+\node[c,fill=mint!25,text=black] at (2.00,-1.04) {2};
+\node[c,fill=mint,text=black] at (2.00,-1.56) {\bfseries3};
+\node[c,text=red!60!black,font=\small\bfseries] at (2.00,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (2.80,0) {4};
+\node[c,fill=mint,text=black] at (2.80,-0.52) {\bfseries4};
+\node[c,fill=mint!25,text=black] at (2.80,-1.04) {2};
+\node[c,fill=mint!25,text=black] at (2.80,-1.56) {3};
+\node[c,text=red!60!black,font=\small\bfseries] at (2.80,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (3.60,0) {1};
+\node[c,fill=mint!25,text=black] at (3.60,-0.52) {4};
+\node[c,fill=mint,text=black] at (3.60,-1.04) {\bfseries1};
+\node[c,fill=mint!25,text=black] at (3.60,-1.56) {3};
+\node[c,text=red!60!black,font=\small\bfseries] at (3.60,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (4.40,0) {2};
+\node[c,fill=mint!25,text=black] at (4.40,-0.52) {4};
+\node[c,fill=mint!25,text=black] at (4.40,-1.04) {1};
+\node[c,fill=mint,text=black] at (4.40,-1.56) {\bfseries2};
+\node[c,text=red!60!black,font=\small\bfseries] at (4.40,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (5.20,0) {5};
+\node[c,fill=mint,text=black] at (5.20,-0.52) {\bfseries5};
+\node[c,fill=mint!25,text=black] at (5.20,-1.04) {1};
+\node[c,fill=mint!25,text=black] at (5.20,-1.56) {2};
+\node[c,text=red!60!black,font=\small\bfseries] at (5.20,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (6.00,0) {1};
+\node[c,fill=light,text=muted!70] at (6.00,-0.52) {5};
+\node[c,fill=light,text=muted!70] at (6.00,-1.04) {1};
+\node[c,fill=light,text=muted!70] at (6.00,-1.56) {2};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (6.80,0) {2};
+\node[c,fill=light,text=muted!70] at (6.80,-0.52) {5};
+\node[c,fill=light,text=muted!70] at (6.80,-1.04) {1};
+\node[c,fill=light,text=muted!70] at (6.80,-1.56) {2};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (7.60,0) {3};
+\node[c,fill=mint!25,text=black] at (7.60,-0.52) {5};
+\node[c,fill=mint,text=black] at (7.60,-1.04) {\bfseries3};
+\node[c,fill=mint!25,text=black] at (7.60,-1.56) {2};
+\node[c,text=red!60!black,font=\small\bfseries] at (7.60,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (8.40,0) {4};
+\node[c,fill=mint!25,text=black] at (8.40,-0.52) {5};
+\node[c,fill=mint!25,text=black] at (8.40,-1.04) {3};
+\node[c,fill=mint,text=black] at (8.40,-1.56) {\bfseries4};
+\node[c,text=red!60!black,font=\small\bfseries] at (8.40,-2.08) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (9.20,0) {5};
+\node[c,fill=light,text=muted!70] at (9.20,-0.52) {5};
+\node[c,fill=light,text=muted!70] at (9.20,-1.04) {3};
+\node[c,fill=light,text=muted!70] at (9.20,-1.56) {4};
+\end{tikzpicture}
+
+\medskip
+\begin{tikzpicture}[c/.style={rectangle,minimum width=0.75cm,minimum height=0.47cm,inner sep=0pt,font=\small}]
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,0.00) {başvuru};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-0.52) {çerçeve 0};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-1.04) {çerçeve 1};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-1.56) {çerçeve 2};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-2.08) {çerçeve 3};
+\node[anchor=east,font=\footnotesize\itshape,text=muted] at (-0.1,-2.60) {hata?};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (0.40,0) {1};
+\node[c,fill=mint,text=black] at (0.40,-0.52) {\bfseries1};
+\node[c,fill=mint!25,text=black] at (0.40,-1.04) {};
+\node[c,fill=mint!25,text=black] at (0.40,-1.56) {};
+\node[c,fill=mint!25,text=black] at (0.40,-2.08) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (0.40,-2.60) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (1.20,0) {2};
+\node[c,fill=mint!25,text=black] at (1.20,-0.52) {1};
+\node[c,fill=mint,text=black] at (1.20,-1.04) {\bfseries2};
+\node[c,fill=mint!25,text=black] at (1.20,-1.56) {};
+\node[c,fill=mint!25,text=black] at (1.20,-2.08) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (1.20,-2.60) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (2.00,0) {3};
+\node[c,fill=mint!25,text=black] at (2.00,-0.52) {1};
+\node[c,fill=mint!25,text=black] at (2.00,-1.04) {2};
+\node[c,fill=mint,text=black] at (2.00,-1.56) {\bfseries3};
+\node[c,fill=mint!25,text=black] at (2.00,-2.08) {};
+\node[c,text=red!60!black,font=\small\bfseries] at (2.00,-2.60) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (2.80,0) {4};
+\node[c,fill=mint!25,text=black] at (2.80,-0.52) {1};
+\node[c,fill=mint!25,text=black] at (2.80,-1.04) {2};
+\node[c,fill=mint!25,text=black] at (2.80,-1.56) {3};
+\node[c,fill=mint,text=black] at (2.80,-2.08) {\bfseries4};
+\node[c,text=red!60!black,font=\small\bfseries] at (2.80,-2.60) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (3.60,0) {1};
+\node[c,fill=light,text=muted!70] at (3.60,-0.52) {1};
+\node[c,fill=light,text=muted!70] at (3.60,-1.04) {2};
+\node[c,fill=light,text=muted!70] at (3.60,-1.56) {3};
+\node[c,fill=light,text=muted!70] at (3.60,-2.08) {4};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (4.40,0) {2};
+\node[c,fill=light,text=muted!70] at (4.40,-0.52) {1};
+\node[c,fill=light,text=muted!70] at (4.40,-1.04) {2};
+\node[c,fill=light,text=muted!70] at (4.40,-1.56) {3};
+\node[c,fill=light,text=muted!70] at (4.40,-2.08) {4};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (5.20,0) {5};
+\node[c,fill=mint,text=black] at (5.20,-0.52) {\bfseries5};
+\node[c,fill=mint!25,text=black] at (5.20,-1.04) {2};
+\node[c,fill=mint!25,text=black] at (5.20,-1.56) {3};
+\node[c,fill=mint!25,text=black] at (5.20,-2.08) {4};
+\node[c,text=red!60!black,font=\small\bfseries] at (5.20,-2.60) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (6.00,0) {1};
+\node[c,fill=mint!25,text=black] at (6.00,-0.52) {5};
+\node[c,fill=mint,text=black] at (6.00,-1.04) {\bfseries1};
+\node[c,fill=mint!25,text=black] at (6.00,-1.56) {3};
+\node[c,fill=mint!25,text=black] at (6.00,-2.08) {4};
+\node[c,text=red!60!black,font=\small\bfseries] at (6.00,-2.60) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (6.80,0) {2};
+\node[c,fill=mint!25,text=black] at (6.80,-0.52) {5};
+\node[c,fill=mint!25,text=black] at (6.80,-1.04) {1};
+\node[c,fill=mint,text=black] at (6.80,-1.56) {\bfseries2};
+\node[c,fill=mint!25,text=black] at (6.80,-2.08) {4};
+\node[c,text=red!60!black,font=\small\bfseries] at (6.80,-2.60) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (7.60,0) {3};
+\node[c,fill=mint!25,text=black] at (7.60,-0.52) {5};
+\node[c,fill=mint!25,text=black] at (7.60,-1.04) {1};
+\node[c,fill=mint!25,text=black] at (7.60,-1.56) {2};
+\node[c,fill=mint,text=black] at (7.60,-2.08) {\bfseries3};
+\node[c,text=red!60!black,font=\small\bfseries] at (7.60,-2.60) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (8.40,0) {4};
+\node[c,fill=mint,text=black] at (8.40,-0.52) {\bfseries4};
+\node[c,fill=mint!25,text=black] at (8.40,-1.04) {1};
+\node[c,fill=mint!25,text=black] at (8.40,-1.56) {2};
+\node[c,fill=mint!25,text=black] at (8.40,-2.08) {3};
+\node[c,text=red!60!black,font=\small\bfseries] at (8.40,-2.60) {F};
+\node[c,fill=charcoal,text=white,font=\small\bfseries] at (9.20,0) {5};
+\node[c,fill=mint!25,text=black] at (9.20,-0.52) {4};
+\node[c,fill=mint,text=black] at (9.20,-1.04) {\bfseries5};
+\node[c,fill=mint!25,text=black] at (9.20,-1.56) {2};
+\node[c,fill=mint!25,text=black] at (9.20,-2.08) {3};
+\node[c,text=red!60!black,font=\small\bfseries] at (9.20,-2.60) {F};
+\end{tikzpicture}
+\caption{Aynı dizide FIFO: \textbf{3 çerçeveyle 9 hata} (üstte), ama \textbf{4 çerçeveyle 10 hata} (altta).}
+\end{figure}
+
+Bu, \term{Belady anomalisidir} (Belady's anomaly). LRU ve OPT bunu asla göstermez. Bunlar \term{yığıt algoritmaları} (stack algorithms) sınıfındandır: $n$ çerçeveyle bellekte bulunan sayfalar kümesi, $n+1$ çerçeveyle bulunanların her zaman bir alt kümesidir (LRU için: en son kullanılan $n$ sayfa her zaman en son kullanılan $n+1$ sayfanın içindedir). Bu yüzden bir çerçeve eklemek hiçbir zaman hata ekleyemez. Aynı dizide LRU $3$ çerçeveyle $10$, $4$ çerçeveyle $8$ hata verir.
+
+\begin{histnote}[László Bélády]
+Macaristan doğumlu bilgisayar bilimci László Bélády IBM Research'te çalıştı. 1966'da en iyi değiştirme algoritmasını (MIN) yayımladı; 1969'da da R.\,A.\ Nelson ve G.\,S.\ Shedler ile birlikte, bugün onun adını taşıyan anomaliyi anlatan makaleyi yazdı.
+\end{histnote}
+
+\subsection{LRU'ya yaklaşmak: başvuru biti ve saat}
+\label{sec:clock}
+
+Birçok işlemci her sayfa için bir \term{başvuru biti} (reference bit) sağlar: sayfa her okunduğunda ya da yazıldığında donanım bu biti $1$ yapar. İşletim sistemi biti okuyabilir ve $0$'a çekebilir. Bit, bir sayfanın \emph{ne zaman} kullanıldığını söylemez, ama \emph{bit son kez sıfırlandığından beri} kullanılıp kullanılmadığını söyler.
+
+\term{İkinci şans} (second-chance) ya da \term{saat} (clock) algoritması çerçeveleri bir çember üzerine dizer; bir işaretçi, ``saat ibresi'', sıradaki adayı gösterir:
+\begin{itemize}
+  \item İbrenin altındaki sayfanın $R = 1$ ise sayfaya ikinci bir şans verilir: $R = 0$ yapılır ve ibre ilerletilir.
+  \item $R = 0$ ise sayfa, ibre son geçtiğinden beri kullanılmamıştır: kurban odur.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[f/.style={rectangle,rounded corners=2pt,minimum width=1.7cm,minimum height=0.8cm,align=center,font=\footnotesize}]
+\draw[dashed,slate] (0,0) circle (2.1);
+\foreach \a/\p/\r/\c in {90/3/{$R=1\to0$}/mint!25,30/7/{$R=0$: kurban}/red!25,-30/1/{$R=1$}/light,-90/4/{$R=1$}/light,-150/9/{$R=0$}/light,150/2/{$R=1$}/light}
+  \node[f,fill=\c] at (\a:2.1) {\textbf{sayfa \p}\\\r};
+\fill[mintdeep] (0,0) circle (0.08);
+\draw[-{Stealth[length=3mm]},very thick,mintdeep] (0,0) -- (90:1.55);
+\draw[-{Stealth[length=2mm]},thick,mintdeep,dashed] (0,0) -- (30:1.45);
+\node[font=\footnotesize\itshape,text=mintdeep] at (-0.55,-0.1) {ibre};
+\end{tikzpicture}
+\caption{İbre 3.\ sayfada ($R=1$): biti sıfırlanır ve ibre 7.\ sayfaya ($R=0$) ilerler; 7.\ sayfa değiştirilir.}
+\end{figure}
+
+Bütün bitler $1$ ise ibre bitleri sıfırlayarak çemberde bir tur atar ve algoritma FIFO'ya dönüşür. Gerçek sistemler bu fikrin geliştirilmiş biçimlerini kullanır; örneğin Linux ``etkin'' (active) ve ``etkin olmayan'' (inactive) sayfa listeleri tutar.
+
+% =====================================================================
+\section{Boşa Çalışma ve Çalışma Kümesi}
+
+\subsection{Boşa çalışma}
+
+Bir sürecin etkin olarak kullandığı sayfa sayısının çerçeve sayısından fazla olduğunu düşünün. Süreç hata verir, çıkardığı sayfa yakında yine gereken bir sayfadır, bu yüzden yine hata verir, yine ve yine. Zamanının çoğunu yürütmeye değil sayfalamaya harcayan bir süreç \term{boşa çalışıyordur} (thrashing).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=9cm,height=4.6cm,xmin=0,xmax=13,ymin=0,ymax=100,
+  xlabel={çoklu programlama derecesi $\rightarrow$},ylabel={İşlemci kullanımı},
+  xtick=\empty,ytick=\empty,axis lines=left,
+  every axis label/.style={font=\small},
+  xlabel style={at={(axis description cs:0.5,-0.05)}},ylabel style={at={(axis description cs:-0.03,0.5)}}]
+\addplot[very thick,mintdeep,smooth] coordinates {(1,18) (2,34) (3,48) (4,60) (5,70) (6,77) (7,82) (8,84) (9,76) (10,55) (11,30) (12,14)};
+\node[font=\small\bfseries,text=red!60!black] at (axis cs:11.3,62) {boşa çalışma};
+\draw[-{Stealth},red!60!black,thick] (axis cs:11.0,57) -- (axis cs:10.3,47);
+\end{axis}
+\end{tikzpicture}
+\caption{Bellekteki süreç sayısına karşı işlemci kullanımı (kavramsal eğri, ölçülmüş veri değildir).}
+\end{figure}
+
+Eğri tehlikeyi açıklar. Süreç eklemek önce işlemci kullanımını artırır (bazıları G/Ç beklerken çalıştırılacak başka süreçler vardır). Belli bir noktadan sonra süreçlerin her birine yetecek kadar çerçeve kalmaz; sayfa hataları patlar, süreçler sayfalama diski için kuyruğa girer ve işlemci kullanımı çöker. Boşta duran işlemciye bakıp daha da çok süreç kabul eden saf bir zamanlayıcı durumu kötüleştirir: bir kısır döngü. Çare, çoklu programlama derecesini \emph{düşürmek} (bazı süreçleri askıya almak ya da diske takaslamak) ya da fiziksel bellek eklemektir. RAM'i az, tarayıcı sekmesi çok, disk ışığı sürekli yanan ve faresi zar zor hareket eden bir bilgisayar kullandıysanız boşa çalışmayı görmüşsünüzdür.
+
+\subsection{Çalışma kümesi modeli}
+
+Bir sürecin $t$ anındaki \term{çalışma kümesi} (working set) $\text{WS}(t,\Delta)$, en son $\Delta$ başvurusunda kullanılan farklı sayfaların kümesidir; $\Delta$'ya çalışma kümesi penceresi denir. Çalışma kümesi, programın o anki yerelliğine yaklaşır.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[c/.style={rectangle,minimum width=0.5cm,minimum height=0.5cm,inner sep=0pt,font=\small}]
+\foreach \v [count=\i from 0] in {2,6,1,5,7,7,7,7,5,1,6,2,3,4,1,2,3,4,4,4,3,4,3,4,4,4} {
+  \pgfmathsetmacro{\inw}{(\i<=9)||(\i>=16)}
+  \ifdim\inw pt>0pt \node[c,fill=mint!25] at (\i*0.56,0) {\v}; \else \node[c,fill=light] at (\i*0.56,0) {\v}; \fi
+}
+\draw[mintdeep,thick] (-0.25,-0.45) -- (5.29,-0.45);
+\node[font=\small\bfseries,text=mintdeep] at (2.52,-0.8) {$\Delta=10$: $\text{WS}(t_1)=\{1,2,5,6,7\}$};
+\draw[mintdeep,thick] (8.71,-0.45) -- (14.25,-0.45);
+\node[font=\small\bfseries,text=mintdeep] at (11.48,-0.8) {$\Delta=10$: $\text{WS}(t_2)=\{3,4\}$};
+\draw[-{Stealth},thick] (5.04,0.75) -- (5.04,0.3); \node[font=\small] at (5.04,0.95) {$t_1$};
+\draw[-{Stealth},thick] (14.0,0.75) -- (14.0,0.3); \node[font=\small] at (14.0,0.95) {$t_2$};
+\end{tikzpicture}
+\caption{Çalışma kümesi programın yerelliğini izler: $t_1$ anında 5 sayfa, $t_2$ anında yalnızca 2 sayfa.}
+\end{figure}
+
+$\text{WSS}_i = |\text{WS}_i|$, $i$.\ sürecin çalışma kümesi boyutuysa, toplam çerçeve talebi $D = \sum_i \text{WSS}_i$ olur. $D$ kullanılabilir çerçeve sayısı $m$'yi aşarsa boşa çalışma başlar ve işletim sistemi, çerçeveler boşalana kadar bir süreci askıya almalıdır. $\Delta$'nın seçimi önemlidir: çok küçükse yerelliğin bir kısmını kaçırır; çok büyükse birkaç yerelliği birden kapsar ve çerçeve israf eder.
+
+Uygulamada daha basit bir akrabası \emph{sayfa hatası sıklığı} (page-fault frequency) denetimidir: işletim sistemi her sürecin hata oranını ölçer, oran çok yüksekse sürece daha çok çerçeve verir, çok düşükse çerçevelerinden bazılarını geri alır.
+
+% =====================================================================
+\section{Dosya Kavramı}
+
+Ana bellek uçucudur ve her şeyi tutamayacak kadar küçüktür. Bu yüzden işletim sistemi elektrik kesildikten sonra da varlığını sürdüren ikinci bir depolama soyutlaması sunar: \term{dosya} (file), ikincil bellekte kaydedilmiş, adı olan bir ilişkili bilgiler topluluğu. Kullanıcı açısından dosya, kaydedilebilecek en küçük depolama birimidir: diske veriyi ancak bir dosyanın içinde yazabilirsiniz.
+
+\Needspace{16\baselineskip}
+\subsection{Dosya öznitelikleri}
+
+Her dosyanın içeriğinin yanı sıra \term{öznitelikleri} (attributes, üst veri) vardır. Sağdaki sütun, Kısım~\ref{sec:links}'teki \cmd{stat} çıktısından alınmış gerçek bir dosyanın değerlerini gösterir.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{4.4cm}}
+\toprule
+\textbf{Öznitelik} & \textbf{Anlamı} & \textbf{Örnek (\texttt{notes.txt})} \\
+\midrule
+Ad & İnsanın okuyabileceği ad; Linux'ta diğer özniteliklerle birlikte değil, dizinde saklanır. & \texttt{notes.txt} \\
+Tanımlayıcı & Dosyanın dosya sistemi içindeki benzersiz numarası. & düğüm (inode) $368662$ \\
+Tür & Normal dosya, dizin, sembolik bağlantı, aygıt, \dots & normal dosya \\
+Konum & Dosyanın veri bloklarının aygıttaki yeri. & düğümdeki blok işaretçileri \\
+Boyut & Bayt cinsinden güncel boyut (ve ayrılmış bloklar). & $6$ bayt ($512$~B'lık $8$ blok) \\
+Koruma & Kim okuyabilir, yazabilir, çalıştırabilir. & \texttt{-rw-rw-r--}, sahibi \texttt{student} \\
+Zaman damgaları & Oluşturma, son erişim, son değişiklik, son durum değişikliği. & Access / Modify / Change / Birth \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+İşletim sistemi bu öznitelikleri her dosya için tutulan ve \term{dosya denetim bloğu} (file control block, FCB) denen bir yapıda saklar. UNIX ve Linux'ta dosya denetim bloğu \term{düğümdür} (inode, Kısım~\ref{sec:inode}).
+
+\subsection{Dosya işlemleri}
+
+Dosya bir \emph{soyut veri türüdür}: ona uygulayabileceğiniz işlemlerle tanımlanır. Temel işlemler ve karşılık gelen Linux sistem çağrıları şunlardır:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{>{\bfseries}l >{\raggedright\arraybackslash}X l}
+\toprule
+\textbf{İşlem} & \textbf{İşletim sisteminin yaptığı} & \textbf{Linux çağrısı} \\
+\midrule
+create (oluştur) & Dosya sisteminde yer bulur ve dizine bir girdi ekler. & \cmd{open(\dots, O\_CREAT)} \\
+open (aç) & Dizini bir kez arar, izinleri denetler, bir \emph{dosya tanımlayıcısı} döndürür. & \cmd{open()} \\
+read (oku) & Dosyadan, geçerli konumdan başlayarak baytları kopyalar. & \cmd{read()} \\
+write (yaz) & Dosyaya, geçerli konumdan başlayarak baytları kopyalar. & \cmd{write()} \\
+seek (konumlan) & Geçerli konumu taşır (yeniden konumlandırma); veri aktarılmaz. & \cmd{lseek()} \\
+close (kapat) & Açık dosya tablosu girdisini bırakır. & \cmd{close()} \\
+delete (sil) & Dizin girdisini kaldırır; artık kullanılmayınca yeri boşaltır. & \cmd{unlink()} \\
+truncate (kırp) & İçeriği siler ama öznitelikleri korur. & \cmd{truncate()} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Diğer işlemler (sonuna ekleme, yeniden adlandırma, kopyalama) bunlardan kurulabilir. Silme işleminin adına dikkat edin, \cmd{unlink()}: dosyanın bir \emph{adını} kaldırır; Kısım~\ref{sec:acyclic} bunun neden her zaman veriyi silmekle aynı şey olmadığını açıklar.
+
+\subsection{Açık dosya tabloları}
+
+Her bir \cmd{read()} için dizini aramak ve izinleri denetlemek yavaş olurdu. Bunun yerine \cmd{open()} bu işi bir kez yapar ve sonucu bellekteki tablolarda saklar; sürecin sonraki tüm çağrılarda kullandığı küçük bir tamsayı, \term{dosya tanımlayıcısı} (file descriptor) döndürür. $0$, $1$ ve $2$ numaralı tanımlayıcılar bir program başladığında zaten açıktır: standart girdi, standart çıktı ve standart hata (2.\ hafta).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[e/.style={rectangle,minimum width=2.8cm,minimum height=0.42cm,font=\footnotesize\ttfamily,fill=light},
+  arr/.style={-{Stealth[length=2mm]},thick,mintdeep}]
+\node[font=\small\bfseries,anchor=west] at (-1.4,0.55) {A süreci};
+\node[e] at (0,0) {fd 0  stdin}; \node[e] at (0,-0.47) {fd 1  stdout};
+\node[e,fill=mint!25] (a3) at (0,-0.94) {fd 3  pos = 96};
+\node[font=\small\bfseries,anchor=west] at (-1.4,-1.9) {B süreci};
+\node[e] at (0,-2.45) {fd 0  stdin};
+\node[e,fill=mint!25] (b4) at (0,-2.92) {fd 4  pos = 0};
+\node[font=\small\bfseries] at (5.0,0.55) {Sistem geneli açık dosya tablosu};
+\node[rectangle,rounded corners=2pt,fill=charcoal,text=white,minimum width=3.4cm,minimum height=1.3cm,align=center,font=\small] (sw) at (5.0,-1.1) {\textbf{students.dat}\\açılma sayısı $=2$\\boyut, diskteki konum};
+\node[rectangle,fill=light,minimum width=3.4cm,minimum height=0.5cm,font=\footnotesize] at (5.0,-2.3) {diğer açık dosyalar \dots};
+\draw[arr] (a3.east) -- (sw.west);
+\draw[arr] (b4.east) -- (sw.south west);
+\node[cylinder,shape border rotate=90,aspect=0.25,draw=slate,fill=slate!20,minimum width=2.3cm,minimum height=1.6cm,align=center,font=\footnotesize] (dk) at (9.6,-1.1) {Disk\\FCB / düğüm};
+\draw[arr,slate] (sw.east) -- (dk.west);
+\end{tikzpicture}
+\caption{Süreç başına tablolar her sürecin dosya işaretçisini tutar; sistem geneli tablo paylaşılan bilgileri ve bir açılma sayısını tutar.}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Süreç başına açık dosya tablosunda}, o sürecin açık her dosyası için bir girdi bulunur; girdide \term{dosya işaretçisi} (file pointer, geçerli konum) ve erişim kipi (okuma, yazma, \dots) vardır.
+  \item \textbf{Sistem geneli açık dosya tablosunda}, açık her dosya için, onu açmış tüm süreçlerin paylaştığı bir girdi bulunur; girdide süreçten bağımsız bilgiler vardır: diskteki konum, boyut ve bir \term{açılma sayısı} (open count). \cmd{close()} sayıyı bir azaltır; sayı $0$'a inince girdi kaldırılır.
+\end{itemize}
+Bu, ders kitabındaki modeldir. Linux bir düzey daha ekler (tanımlayıcı $\to$ konumu tutan ``açık dosya tanımı'', open file description $\to$ bellekteki düğüm), ama fikir aynıdır.
+
+\subsection{Dosya türleri ve uzantılar}
+
+İşletim sistemi ve uygulamalar bir dosyanın ne tür veri içerdiğini bilmelidir. En yaygın teknik, türü adın içine bir \term{uzantı} (extension) olarak koymaktır:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Dosya türü} & \textbf{Olağan uzantılar} & \textbf{İçerik} \\
+\midrule
+Kaynak kod & \texttt{.c .py .java} & bir programlama dilinde program metni \\
+Nesne / çalıştırılabilir & \texttt{.o .exe} (Linux'ta yok) & makine kodu \\
+Betik & \texttt{.sh .bat} & bir komut yorumlayıcısı için komutlar \\
+Metin / belge & \texttt{.txt .pdf .docx} & metin, biçimli belgeler \\
+Çoklu ortam & \texttt{.jpg .mp3 .mp4} & görüntü, ses, video \\
+Arşiv & \texttt{.zip .tar.gz} & çoğunlukla sıkıştırılmış birden çok dosya \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Windows bir dosyayı hangi programın açacağına uzantıya göre karar verir. UNIX ve Linux'ta uzantı yalnızca insanlar ve uygulamalar için bir \emph{ipucudur}; çekirdek onunla ilgilenmez. \cmd{file} komutu adı görmezden gelir ve içeriğe, özellikle ilk birkaç bayta bakar; pek çok biçimde bu baytlar sabit bir \term{sihirli sayıdır} (magic number): bir ELF çalıştırılabilir dosyası \texttt{7F 45 4C 46} baytlarıyla, bir JPEG görüntüsü \texttt{FF D8 FF} ile başlar.
+
+\Needspace{7\baselineskip}
+\begin{lstlisting}[style=term]
+$ file file_access.c
+file_access.c: C source, ASCII text
+$ file file_access
+file_access: ELF 64-bit LSB pie executable, x86-64, version 1...
+$ file photo.txt
+photo.txt: JPEG image data, JFIF standard 1.01, aspect ratio,...
+$ file students.dat
+students.dat: data
+\end{lstlisting}
+Burada \texttt{photo.txt} aslında yanıltıcı adlı bir JPEG resmidir; \texttt{students.dat} ise Örnek~4'ün yazdığı ikili kayıt dosyasıdır (uzun satırlar \texttt{...} ile kesildi).
+
+% =====================================================================
+\section{Erişim Yöntemleri}
+
+Bir dosyadaki bilgi nasıl okunabilir? İşletim sistemi birkaç standart \term{erişim yöntemi} (access method) sunar.
+
+\subsection{Sıralı erişim}
+
+Bilgi sırayla, bir kayıt ötekinin ardından işlenir. \emph{Sonrakini oku} (read next) dosyanın sonraki kısmını döndürür ve dosya işaretçisini ilerletir; \emph{sonrakini yaz} (write next) sona ekler ve ilerletir; \emph{başa sar} (rewind) başa döner. Bu, manyetik teybin modelidir; çoğu programın da modelidir: düzenleyiciler, derleyiciler ve medya oynatıcılar girdilerini baştan sona okur.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\foreach \i in {0,...,11} { \ifnum\i<5 \fill[mint!25] (\i*0.7,0) rectangle +(0.62,0.6); \else \fill[light] (\i*0.7,0) rectangle +(0.62,0.6); \fi }
+\node[font=\footnotesize\itshape,text=muted,anchor=north west] at (0,-0.05) {baş};
+\node[font=\footnotesize\itshape,text=muted,anchor=north east] at (8.32,-0.05) {son};
+\draw[-{Stealth},thick] (3.48,-0.9) -- (3.48,-0.05); \node[font=\footnotesize\bfseries] at (3.48,-1.1) {geçerli konum};
+\draw[-{Stealth},thick,mintdeep] (3.5,0.85) -- (5.2,0.85) node[right,font=\footnotesize\bfseries] {sonrakini oku ya da yaz};
+\draw[-{Stealth},thick,slate] (3.3,0.85) -- (0.1,0.85); \node[font=\footnotesize,text=slate] at (1.7,1.1) {başa sar};
+\end{tikzpicture}
+\caption{Sıralı erişim.}
+\end{figure}
+
+\subsection{Doğrudan (göreli) erişim}
+
+Dosya, sabit boyutlu \emph{blok} ya da \emph{kayıtlardan} oluşan numaralı bir dizi olarak görülür ve herhangi biri herhangi bir sırada okunup yazılabilir: \emph{$n$'yi oku}, \emph{$n$'ye yaz} ya da \emph{$n$'ye git} ve ardından sonrakini oku. Bu, herhangi bir bloğa yaklaşık aynı sürede ulaşabilen bir diske uygun düşer. Veritabanları ve rezervasyon sistemleri doğrudan erişime ihtiyaç duyar: bir uçuştaki 17C koltuğunu bulmak için ondan önceki bütün koltukları okumak istemezsiniz.
+
+Blok numarası $n$, dosyanın başına \emph{görelidir}: blok $0$, blok $1$ ve böyle devam eder. İşletim sistemi göreli blok numaralarını fiziksel disk bloklarına çevirir; kullanıcının dosyanın aygıtta nerede durduğunu bilmesi gerekmez. Doğrudan erişimli bir dosyada sıralı erişim, bir geçerli konum $cp$ tutularak kolayca taklit edilir: \emph{sonrakini oku}, ``$cp$ bloğunu oku, sonra $cp \leftarrow cp+1$'' demektir.
+
+\begin{example}[Çözümlü örnek: 1000.\ kayıt nerede?]
+Bir dosya, $0$'dan numaralanmış, her biri $R = 100$ bayt olan öğrenci kayıtları tutuyor. Dosya sistemi $B = 4096$ baytlık bloklar kullanıyor. $k = 1000$ numaralı kayıt hangi blokta ve bloğun neresinde başlıyor?
+\begin{align*}
+\text{bayt konumu} &= k \cdot R = 1000 \times 100 = 100\,000,\\
+\text{blok} &= \left\lfloor \frac{100\,000}{4096} \right\rfloor = 24,\\
+\text{blok içi konum} &= 100\,000 - 24 \times 4096 = 100\,000 - 98\,304 = 1\,696 .
+\end{align*}
+Kaydın son baytı $100\,099$'dur ve $\lfloor 100\,099 / 4096 \rfloor = 24$ de olduğu için kaydın tamamı 24 numaralı göreli blokta, $1696$ ile $1795$ arasındaki baytlardadır: tek bir blok okuması yeter. C'de bu yalnızca \cmd{lseek(fd, 1000 * 100, SEEK\_SET)} ve ardından \cmd{read(fd, rec, 100)} çağrısıdır; bölmeyi işletim sistemi yapar.
+\end{example}
+
+\subsection{İndeksli erişim}
+
+Büyük dosyalarda doğrudan erişim bile \emph{hangi} kayıt numarasının okunacağını bilmeyi gerektirir. Bunu bir \term{indeks} (index) çözer: (anahtar, blok numarası) çiftlerinden oluşan küçük, sıralı bir dosya; örneğin öğrenci soyadları ve her öğrencinin kaydını tutan blok. Bir kaydı bulmak için işletim sistemi ya da uygulama indekste arar (küçük ve sıralı olduğu için hızlıdır) ve sonra tek bir bloğu doğrudan okur.
+
+İndeksin kendisi çok büyürse o da indekslenir (çok düzeyli indeks). Bu fikir B-ağaçları gibi veritabanı indekslerinin, IBM'in klasik ISAM'ının (indexed sequential access method, indeksli sıralı erişim yöntemi) ve dosya sistemlerinin bir dosyanın kendi bloklarını bulma yönteminin temelinde yatar.
+
+\subsection{Uygulama: C'de sıralı ve doğrudan erişim}
+
+Örnek~4, $32$ baytlık beş sabit boyutlu kayıttan oluşan bir dosya oluşturur, kayıtları sırayla okur, doğrudan 3.\ kayda atlar (bayt $3 \times 32 = 96$) ve 1.\ kaydın üzerine yerinde yazar.
+
+Listede programın özü var; her çağrının dönüş değerini de denetleyen tam sürüm \cmd{file\_access.c} dosyasıdır.
+
+\lstinputlisting[caption={}]{../code/file_access_excerpt.c}
+
+\Needspace{7\baselineskip}
+\begin{lstlisting}[style=term]
+$ ./file_access
+sequential:  [0 Ayse]  [1 Mehmet]  [2 Elif]  [3 Can]  [4 Zeynep]
+direct: record 3 at byte 96 -> [3 Can]
+after update: record 1 -> [1 Mehmet (updated)]
+file size: 160 bytes
+\end{lstlisting}
+
+\cmd{read()}'in ilerlettiği ve \cmd{lseek()}'in ayarladığı dosya işaretçisi, süreç başına açık dosya tablosunda tutulan ``geçerli konumun'' ta kendisidir. Dosya $5 \times 32 = 160$ bayt uzunluğundadır; 1.\ kaydın üzerine yazmak dosyanın boyutunu değiştirmedi ve diğer kayıtlara dokunmadı.
+
+% =====================================================================
+\section{Dizin Yapıları}
+
+Bir disk milyonlarca dosya tutabilir. \term{Dizin} (directory, klasör), dosya adlarını onların dosya denetim bloklarına eşleyen bir simge tablosudur. Dizinler üzerindeki işlemler arasında bir dosyayı aramak, dosya oluşturmak ve silmek, bir dizini listelemek, yeniden adlandırmak ve tüm dosya sistemini dolaşmak (örneğin yedekleme için) vardır. Dizinlerin düzenlenme biçimi birkaç aşamada gelişmiştir.
+
+\subsection{Tek düzeyli ve iki düzeyli dizinler}
+
+\term{Tek düzeyli dizinde} (single-level directory) tüm kullanıcıların tüm dosyaları tek bir dizindedir. Basittir, ama her ad benzersiz olmalıdır: iki kullanıcı da \texttt{test} adlı bir dosya isterse biri kaybeder. Yüzlerce dosya olunca tek bir liste yönetilemez hâle gelir.
+
+\term{İki düzeyli dizin} (two-level directory), her kullanıcıya bir \emph{ana dosya dizininde} (master file directory, MFD) listelenen özel bir \emph{kullanıcı dosya dizini} (user file directory, UFD) verir. Artık iki kullanıcının da \texttt{test} adlı bir dosyası olabilir; bir dosya \texttt{/ayse/test} gibi bir yolla adlandırılır. Kullanıcılar birbirinden yalıtılmıştır: koruma için iyi, ama dosya paylaşmak istediklerinde zahmetli; ayrıca bir kullanıcının kendi dosyalarını gruplamasının hâlâ bir yolu yoktur.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[f/.style={circle,fill=mint,inner sep=0pt,minimum size=0.32cm},
+  d/.style={rectangle,rounded corners=2pt,minimum height=0.5cm,font=\footnotesize}]
+\begin{scope}
+\node[font=\small\bfseries,text=mintdeep] at (2.4,1.0) {Tek düzeyli};
+\node[d,fill=charcoal,text=white,minimum width=5.6cm] (sd) at (2.4,0.3) {cat \quad test \quad data \quad mail \quad hex \quad {\color{red!40}test?}};
+\foreach \x in {0.05,1.0,1.95,2.85,3.7} { \draw[slate] (\x+0.12,0.05) -- (\x+0.12,-0.55); \node[f] at (\x+0.12,-0.7) {}; }
+\end{scope}
+\begin{scope}[xshift=8.3cm]
+\node[font=\small\bfseries,text=mintdeep] at (2.4,1.0) {İki düzeyli};
+\node[d,fill=charcoal,text=white,minimum width=3.6cm] (m) at (2.4,0.3) {MFD: ayse \quad mehmet};
+\node[d,fill=mint!25,minimum width=2.1cm] (u1) at (1.1,-0.7) {test \quad data};
+\node[d,fill=mint!25,minimum width=2.1cm] (u2) at (3.7,-0.7) {test \quad mail};
+\draw[slate] (m.south) -- (u1.north); \draw[slate] (m.south) -- (u2.north);
+\foreach \x in {0.55,1.65,3.15,4.25} { \draw[slate] (\x,-0.95) -- (\x,-1.35); \node[f] at (\x,-1.5) {}; }
+\end{scope}
+\end{tikzpicture}
+\caption{Tek düzeyli: herkes için tek bir ad alanı (ikinci \texttt{test} çakışıyor). İki düzeyli: her kullanıcıya bir dizin.}
+\end{figure}
+
+\subsection{Ağaç yapılı dizinler}
+
+Doğal genelleme bir \term{ağaçtır} (tree): bir dizin, istenen derinliğe kadar dosyalar \emph{ve} başka dizinler (alt dizinler) içerebilir. Her modern işletim sistemi bir ağaç ya da aşağıdaki genellemelerden birini kullanır. Her sürecin bir \term{geçerli çalışma dizini} (current working directory) vardır.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[level distance=1.05cm,
+  dir/.style={rectangle,rounded corners=2pt,fill=mint!25,minimum width=1.4cm,minimum height=0.45cm,font=\footnotesize},
+  fil/.style={rectangle,rounded corners=2pt,fill=light,minimum width=1.4cm,minimum height=0.45cm,font=\footnotesize},
+  level 1/.style={sibling distance=4.6cm}, level 2/.style={sibling distance=2.9cm}, level 3/.style={sibling distance=1.9cm},
+  edge from parent/.style={draw,slate}]
+\node[dir,fill=charcoal,text=white] {/}
+  child {node[dir] {bin} child {node[fil] {ls}} child {node[fil] {cat}}}
+  child {node[dir] {home}
+     child {node[dir] {ayse} child {node[dir] {os} child {node[fil,fill=mint] {notes.txt}} child {node[fil] {lab1.c}}} child {node[fil] {photo.jpg}}}
+     child {node[dir] {mehmet} child {node[fil] {report.txt}}}}
+  child {node[dir] {etc}};
+\end{tikzpicture}
+\caption{Ağaç yapılı bir dizin (soluk: dizinler; gri: dosyalar).}
+\label{fig:tree}
+\end{figure}
+
+Bir dosya iki biçimde adlandırılabilir:
+\begin{itemize}
+  \item \texttt{/home/ayse/os/notes.txt} bir \term{mutlak yoldur} (absolute path): kök \texttt{/} ile başlar, yol üzerindeki her dizini sayar ve her yerden çalışır.
+  \item \term{Göreli yol} (relative path) geçerli dizinden başlar. Örneğin geçerli dizin \texttt{/home/ayse} olduğunda aynı dosyanın göreli yolu \texttt{os/notes.txt} olur.
+\end{itemize}
+Her dizinde iki özel girdi bulunur: \texttt{.} (dizinin kendisi) ve \texttt{..} (üst dizini). \texttt{/\allowbreak{}home/\allowbreak{}ayse/\allowbreak{}os} dizininden Mehmet'in raporu \texttt{../\allowbreak{}../\allowbreak{}mehmet/\allowbreak{}report.txt} olur. Kabukta \texttt{\textasciitilde}, ev dizininizin kısaltmasıdır. Windows aynı fikri sürücü harfleri ve ters bölü işaretleriyle kullanır: \texttt{C:\textbackslash{}Users\textbackslash{}ayse\textbackslash{}os\textbackslash{}notes.txt}. 9.\ haftada bu ağaçta \cmd{pwd}, \cmd{cd} ve \cmd{ls} ile dolaşacaksınız.
+
+\subsection{Döngüsüz çizge dizinler: sabit ve sembolik bağlantılar}
+\label{sec:acyclic}
+
+Bir ağaç \emph{paylaşımı} ifade edemez: Ayşe ile Mehmet aynı proje üzerinde çalışıyorsa proje dosyası ikisinin dizininde de görünmelidir; zamanla birbirinden farklılaşan iki kopya olarak değil, tek bir dosya olarak. \term{Döngüsüz çizge dizin} (acyclic-graph directory), döngü oluşmadığı sürece bir dosyanın ya da alt dizinin birden çok dizinde yer almasına izin verir. UNIX ve Linux iki tür \term{bağlantı} (link) sunar:
+
+\begin{itemize}
+  \item \term{Sabit bağlantı} (hard link), \emph{aynı} düğüme işaret eden ikinci bir dizin girdisidir. İki ad eşittir; hiçbiri ``asıl'' değildir. Düğüm, kendisine işaret eden dizin girdilerinin sayısını, yani \term{bağlantı sayısını} (link count) tutar. Bir adı silmek (\cmd{unlink}) sayıyı bir azaltır; veri ancak sayı $0$'a indiğinde ve hiçbir süreç dosyayı açık tutmadığında serbest bırakılır. Sabit bağlantılar dosya sistemi sınırını aşamaz ve (Linux'ta) dizinlere işaret edemez.
+  \item \term{Sembolik bağlantı} (symbolic link, soft link), içeriği bir \emph{yol adı} olan küçük, ayrı bir dosyadır. Onu açmak, işletim sisteminin bu yolu izlemesine yol açar. Dizinlere ve başka dosya sistemlerine işaret edebilir, ama hedef silinir ya da taşınırsa bağlantı \emph{boşta kalır} (dangling).
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[d/.style={rectangle,rounded corners=2pt,fill=mint!25,minimum width=2.4cm,minimum height=0.5cm,font=\footnotesize},
+  n/.style={rectangle,rounded corners=2pt,fill=light,minimum width=2.4cm,minimum height=0.5cm,font=\footnotesize,align=center},
+  arr/.style={-{Stealth[length=2mm]},thick,mintdeep}]
+\node[d] (a) at (0,0) {/home/ayse}; \node[d] (m) at (4.5,0) {/home/mehmet};
+\node[n] (nt) at (0,-1.1) {notes.txt}; \node[n] (ht) at (4.5,-1.1) {hard.txt};
+\draw[slate] (a) -- (nt); \draw[slate] (m) -- (ht);
+\node[rectangle,rounded corners=2pt,fill=charcoal,text=white,minimum width=2.6cm,minimum height=0.85cm,align=center,font=\footnotesize] (ino) at (2.25,-2.4) {\textbf{düğüm 368662}\\bağlantı sayısı $=2$};
+\draw[arr] (nt.south) -- (ino.north west); \draw[arr] (ht.south) -- (ino.north east);
+\node[font=\footnotesize\bfseries,text=mintdeep] at (2.25,-3.15) {sabit bağlantı: iki ad, tek dosya};
+\begin{scope}[xshift=8.6cm]
+\node[n] (s) at (0,-1.1) {soft.txt\\[-2pt]{\scriptsize içeriği: ``notes.txt''}};
+\node[n] (t) at (3.2,-1.1) {notes.txt};
+\draw[arr,orange!80!black] (s.east) -- (t.west);
+\node[font=\footnotesize\bfseries,text=orange!80!black,align=center] at (1.6,-2.4) {sembolik bağlantı:\\bir yol saklayan dosya};
+\end{scope}
+\end{tikzpicture}
+\caption{Sabit bağlantı aynı düğüm için başka bir addır; sembolik bağlantı bir yol içeren dosyadır.}
+\end{figure}
+
+\subsection{Genel çizge dizinler}
+
+Bağlantıların bir üst dizin de dahil \emph{herhangi bir} dizine işaret etmesine izin verilirse dizin yapısı \term{döngüler} (cycles) içerebilir. İki sorun ortaya çıkar: dosya sistemini dolaşan bir program (arama, yedekleme) sonsuza dek dönebilir; ``silinmiş'' bir alt ağaca kendi içinden hâlâ başvurulabilir, bu yüzden bağlantı sayısı hiç $0$'a inmez ve pahalı bir çöp toplama yapılmadan yeri asla boşaltılamaz. Uygulamadaki sistemler genel çizgelerden kaçınır: Linux dizinlere sabit bağlantıyı yasaklar ve bir sembolik bağlantı zinciri döngüye girdiğinde yol çözümleme \texttt{ELOOP} hatasıyla (``too many levels of symbolic links'') durur.
+
+% =====================================================================
+\section{Linux Ne Gösterir: Düğümler ve Bağlantılar}
+\label{sec:inode}
+
+Linux'ta bir dizin, (ad, düğüm numarası) çiftlerinden oluşan bir tablodur. Bir dosyayla ilgili diğer her şey (türü, izinleri, sahibi, boyutu, zaman damgaları, bağlantı sayısı ve veri bloklarının işaretçileri) onun \term{düğümünde} (inode) saklanır. Düğüm dosyanın adını \emph{içermez}; bir düğümün birden çok adı olabilmesinin nedeni budur.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[e/.style={rectangle,fill=light,minimum height=0.45cm,font=\footnotesize\ttfamily},
+  arr/.style={-{Stealth[length=2mm]},thick,mintdeep}]
+\node[font=\small\bfseries] at (1.4,0.6) {dizin};
+\foreach \n/\i [count=\k from 0] in {notes.txt/368662,hard.txt/368662,soft.txt/368663} {
+  \node[e,minimum width=1.9cm] at (0.7,-0.52*\k) {\n};
+  \node[e,minimum width=1.3cm,fill=mint!25] (d\k) at (2.4,-0.52*\k) {\i};
+}
+\node[rectangle,rounded corners=2pt,fill=charcoal,text=white,align=left,font=\footnotesize,inner sep=6pt] (ino) at (6.0,-0.9) {\textbf{\color{mint}düğüm 368662}\\tür: normal dosya\\kip: \texttt{-rw-rw-r--}\\sahip, grup: student\\boyut: 6 bayt\\bağlantı sayısı: 2\\atime, mtime, ctime\\\textbf{\color{mint}blok işaretçileri}\\{\itshape\color{white!60}(dosya adı yok!)}};
+\draw[arr] (d0.east) -- (ino.west |- d0); \draw[arr] (d1.east) -- (ino.west |- d1);
+\node[rectangle,fill=mint,minimum width=1.6cm,minimum height=0.45cm,font=\footnotesize\ttfamily] (db) at (9.8,-1.6) {"hello\textbackslash n"};
+\node[rectangle,fill=light,minimum width=1.6cm,minimum height=0.45cm] at (9.8,-2.12) {};
+\node[font=\scriptsize\itshape,text=muted] at (9.8,-2.6) {veri blokları};
+\draw[arr] (7.65,-1.6) -- (db.west);
+\end{tikzpicture}
+\caption{Dizin girdileri düğümlere, düğümler veri bloklarına işaret eder.}
+\end{figure}
+
+Yararlı komutlar: \cmd{ls -i} düğüm numaralarını yazdırır, \cmd{ls -l} çıktısının ikinci sütunu bağlantı sayısıdır, \cmd{stat} düğümün tamamını gösterir ve \cmd{df -i} kaç düğümün boş olduğunu gösterir. Bilmeye değer bir sonuç: aynı dosya sistemi içinde \cmd{mv} yalnızca dizin girdilerini değiştirir; bu yüzden dev bir dosyayı taşımak bile anında biter, düğüm ve veri yerinde kalır.
+
+\subsection{Uygulama: \texttt{ls -li}, \texttt{ln}, \texttt{ln -s} ve \texttt{stat}}
+\label{sec:links}
+
+\cmd{code/links\_demo.sh} betiği aşağıdaki komutları çalıştırır (daha iyisi: boş bir dizinde komutları tek tek yazın). Test makinemizde sıradan bir kullanıcı olarak yakalanan çıktı:
+
+\Needspace{7\baselineskip}
+\begin{lstlisting}[style=term]
+$ echo "hello" > notes.txt
+$ ls -li notes.txt
+368662 -rw-rw-r-- 1 student student 6 Oct  8 12:20 notes.txt
+$ ln notes.txt hard.txt
+$ ln -s notes.txt soft.txt
+$ ls -li
+total 8
+368662 -rw-rw-r-- 2 student student 6 Oct  8 12:20 hard.txt
+368662 -rw-rw-r-- 2 student student 6 Oct  8 12:20 notes.txt
+368663 lrwxrwxrwx 1 student student 9 Oct  8 12:20 soft.txt -> notes.txt
+$ stat notes.txt
+  File: notes.txt
+  Size: 6            Blocks: 8          IO Block: 4096   regular file
+Device: 254,0   Inode: 368662      Links: 2
+Access: (0664/-rw-rw-r--)  Uid: ( 1001/ student)   Gid: ( 1002/ student)
+Access: 2026-10-08 12:20:48.530146698 +0000
+Modify: 2026-10-08 12:20:48.530146698 +0000
+Change: 2026-10-08 12:20:48.534146698 +0000
+ Birth: 2026-10-08 12:20:48.530146698 +0000
+$ rm notes.txt
+$ cat hard.txt
+hello
+$ cat soft.txt
+cat: soft.txt: No such file or directory
+$ ls -li
+total 4
+368662 -rw-rw-r-- 1 student student 6 Oct  8 12:20 hard.txt
+368663 lrwxrwxrwx 1 student student 9 Oct  8 12:20 soft.txt -> notes.txt
+\end{lstlisting}
+
+Neye dikkat edelim:
+\begin{itemize}
+  \item \texttt{notes.txt} ve \texttt{hard.txt} \emph{aynı} düğüm numarasına ($368662$) ve $2$ bağlantı sayısına sahip: iki ad, tek dosya.
+  \item \texttt{soft.txt}'nin kendi düğümü ($368663$), türü \texttt{l} ve boyutu $9$'dur: tam olarak sakladığı \texttt{notes.txt} dizgesinin uzunluğu.
+  \item \cmd{stat} çıktısında \emph{Change} (ctime, \emph{düğümün} son değişikliği), \emph{Modify}'dan (mtime, \emph{verinin} son değişikliği) birkaç milisaniye sonradır: sabit bağlantıyı oluşturmak içeriği değil, düğümdeki bağlantı sayısını güncelledi.
+  \item \texttt{notes.txt} adı \cmd{rm} ile silindikten sonra veriye \texttt{hard.txt} üzerinden hâlâ erişilebilir (bağlantı sayısı yine $1$); \texttt{soft.txt} ise boşta kalmıştır: sakladığı yol artık yoktur.
+\end{itemize}
+Bu oturum, 10.\ haftanın (dosya işlemleri: \cmd{cp}, \cmd{mv}, \cmd{rm}, \cmd{ln}) ve düğümde saklanan \texttt{-rw-rw-r--} izin dizgesinin ayrıntılı olarak açıklanacağı 11.\ haftanın bir ön izlemesidir.
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Sekiz cümlede 7. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Sanal bellek her sürece büyük bir adres alanı verir; bu alanın yalnızca kullanılan sayfaları RAM'dedir. Bunu mümkün kılan yerelliktir.
+  \item İsteğe bağlı sayfalama bir sayfayı ilk kullanımında yükler; geçerli--geçersiz biti MMU'ya bir sayfanın bellekte olup olmadığını söyler.
+  \item Geçersiz bir sayfaya erişim işletim sistemine tuzak üretir (sayfa hatası); işletim sistemi sayfayı yükler ve komutu yeniden başlatır; $\text{EAT} = (1-p)t_m + p\,t_{\text{fault}}$ olduğundan $p$ çok küçük olmalıdır.
+  \item Yazınca kopyala, \cmd{fork()} sonrasında sayfaları süreçlerden biri yazana kadar paylaştırır.
+  \item Boş çerçeve yoksa bir değiştirme algoritması kurban seçer: FIFO (örneğimizde 15 hata, Belady anomalisi olabilir), OPT (9, en iyi ama geleceği ister), LRU (12, saat algoritmasıyla yaklaşılır).
+  \item Boşa çalışma, süreçlerin çerçeve sayısı çalışma kümelerinden az olduğunda ortaya çıkar; çare bellekte daha az süreç tutmaktır.
+  \item Dosya, öznitelikleri olan adlandırılmış bir veri topluluğudur; bir kez açılır, sonra sıralı olarak, doğrudan (blok hesabıyla) ya da bir indeks aracılığıyla erişilir.
+  \item Dizinler tek düzeyliden iki düzeyliye, ağaçlara ve döngüsüz çizgelere evrildi; Linux'ta dizin girdileri adları düğümlere eşler ve sabit ve sembolik bağlantılar bir dosyaya birden çok ad verir.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Sözlük}
+
+\begin{description}[leftmargin=0pt,itemsep=0.15em]
+  \item[Belady anomalisi (Belady's anomaly)] Daha çok çerçevenin daha çok sayfa hatasına yol açması; FIFO'da görülebilir.
+  \item[Boşa çalışma (thrashing)] Süreçlerin yürütmekten çok sayfalamaya zaman harcadığı durum.
+  \item[Çalışma kümesi (working set)] Son $\Delta$ başvuruda kullanılan farklı sayfaların kümesi.
+  \item[Değişiklik (kirli) biti (dirty / modify bit)] Bir sayfaya yazıldığında kurulan donanım biti; temiz sayfaların diske geri yazılması gerekmez.
+  \item[Dosya denetim bloğu / düğüm (file control block / inode)] Bir dosyanın özniteliklerini ve blok konumlarını tutan, dosya başına yapı.
+  \item[Geçerli--geçersiz biti (valid--invalid bit)] Bir sayfanın bellekte olup olmadığını gösteren sayfa tablosu biti.
+  \item[İkinci şans (saat) algoritması (second-chance / clock)] Başvuru bitini kullanarak çerçeveleri bir çember üzerinde tarayan LRU yaklaşımı.
+  \item[Sabit bağlantı (hard link)] Var olan bir düğüm için ek bir dizin girdisi.
+  \item[Sanal bellek (virtual memory)] Programın adres alanının fiziksel bellekten ayrılması; böylece adres alanı RAM'den büyük olabilir.
+  \item[Sayfa hatası (page fault)] Bir süreç bellekte olmayan bir sayfaya eriştiğinde üretilen tuzak.
+  \item[Sembolik bağlantı (symbolic link)] İçeriği başka bir dosyanın yolu olan dosya.
+  \item[Yedek depo (backing store)] RAM'de olmayan süreç sayfalarını tutan disk alanı (takas alanı).
+\end{description}
+
+% =====================================================================
+\Needspace{20\baselineskip}
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Kendi makinenizde sayfa hataları, sayfa değiştirme ve bağlantılar]
+\textbf{Linux} (laboratuvar bilgisayarları, WSL ya da bir sanal makine), \texttt{code/} klasöründe:
+\Needspace{7\baselineskip}
+\begin{lstlisting}[style=term]
+$ make                          # üç C programını derler
+$ ./page_faults                 # 64'ü 256 MB yapın: ne olur?
+$ /usr/bin/time -v ./cow_fork   # "Minor ... page faults" satırına bakın
+$ python3 page_replacement.py   # refs'i değiştirip yeniden çalıştırın
+$ mkdir lab && cd lab && bash ../links_demo.sh
+\end{lstlisting}
+\begin{enumerate}[leftmargin=1.4em]
+  \item \cmd{page\_faults.c} içindeki ilk döngüde yalnızca her \emph{ikinci} sayfaya dokunun. Kaç hata beklersiniz, kaç hata alırsınız?
+  \item \cmd{page\_replacement.py} içindeki başvuru dizisini kendi dizinizle değiştirin ve elle çizdiğiniz FIFO, OPT ve LRU tablolarını doğrulayın.
+  \item Bir dosyaya sabit bağlantı yapın, dosyayı bir adıyla düzenleyip öbür adıyla açıp bakın. Sonra \cmd{ln} komutunu bir dizin üzerinde deneyin: hangi hatayı alıyorsunuz?
+  \item \cmd{ls -li /} ve \cmd{stat /} komutlarını çalıştırın. Sisteminizde kök dizinin düğüm numarası kaçtır?
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item Sanal bellek nedir ve bir program, sayfalarının yalnızca bir kısmı RAM'deyken neden çalışabilir?
+  \item Hevesli yükleme ile isteğe bağlı sayfalama arasındaki farkı açıklayın. İsteğe bağlı sayfalamanın bedeli nedir?
+  \item Geçerli--geçersiz biti ne anlama gelir? Bir sayfanın i olarak işaretlenmesi için iki farklı neden verin.
+  \item Sayfa hatası işlemenin altı adımını sayın. Hataya yol açan komut neden yeniden başlatılmalıdır?
+  \item Yazınca kopyala yöntemini açıklayın. \cmd{fork()} ardından \cmd{exec()} çağrısını neden ucuzlatır?
+  \item OPT neden gerçeklenemez? Yine de neden yararlıdır?
+  \item Belady anomalisi nedir? FIFO, OPT ve LRU'dan hangileri bundan etkilenebilir?
+  \item Boşa çalışmayı ve ona yol açabilecek kısır döngüyü anlatın. Çalışma kümesi modeli nasıl yardımcı olur?
+  \item Sıralı, doğrudan ve indeksli erişimi karşılaştırın; her biri için bir uygulama örneği verin.
+  \item Sabit ve sembolik bağlantıları karşılaştırın: özgün ad silindiğinde her birine ne olur?
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item $t_m = 200$~ns ve $t_{\text{fault}} = 8$~ms iken $p = 0.0001$ için EAT'yi hesaplayın.
+  \item $t_m = 100$~ns ve $t_{\text{fault}} = 5$~ms iken yavaşlamayı \%20'nin altında tutan en büyük $p$ nedir?
+  \item $1, 2, 3, 1, 4, 1, 2$ başvuru dizisi ve $3$ çerçeve için FIFO, LRU ve OPT'nin sayfa hatalarını sayın.
+  \item $7, 0, 1, 2, 0, 3, 0, 4$ başvuru dizisi ve $4$ çerçeve için FIFO ve LRU'nun hatalarını sayın.
+  \item Kayıtlar $64$ bayt, bloklar $4096$ bayttır. $200$ numaralı kayıt hangi göreli blokta ve hangi konumda başlar?
+  \item Bir dosyada $250$ baytlık kayıtlar ve $1024$ baytlık bloklar var. $40$ numaralı kayıt tek bir bloğa sığar mı?
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=11]
+  \item $\text{EAT} = 0.9999 \times 200 + 0.0001 \times 8\,000\,000 = 199.98 + 800 = 999.98\ \text{ns} \approx 1\ \mu\text{s}$; RAM'den beş kat yavaş.
+  \item $100 + p\,(5\,000\,000 - 100) < 120$ olmalı, yani $p < 20/4\,999\,900 \approx 4.0\times10^{-6}$: en fazla $250.000$ erişimde bir hata.
+  \item FIFO: $1,2,3$ (3 hata), $1$ isabet, $4$ $1$'in yerine, $1$ $2$'nin yerine, $2$ $3$'ün yerine geçer: $6$ hata. LRU: $4$ $2$'nin (en uzun süredir kullanılmayan) yerine geçer, $1$ isabet, $2$ $3$'ün yerine geçer: $5$ hata. OPT: $4$ $3$'ün (bir daha hiç kullanılmayan) yerine geçer: $4$ hata.
+  \item $4$ çerçeveyle $7,0,1,2$ $4$ zorunlu hataya yol açar, $0$ bir isabettir, $3$ ve $4$ hatadır. FIFO: $3$ $7$'nin yerine, $0$ isabet, $4$ $0$'ın yerine geçer: $6$ hata. LRU: $3$ $7$'nin yerine, $0$ isabet, $4$ $1$'in yerine geçer: $6$ hata.
+  \item Bayt konumu $200 \times 64 = 12\,800$; blok $\lfloor 12\,800/4096 \rfloor = 3$; blok içi konum $12\,800 - 3\times 4096 = 512$.
+  \item $40$ numaralı kayıt $40 \times 250 = 10\,000$ ile $10\,249$ arasındaki baytları kaplar. $\lfloor 10\,000/1024 \rfloor = 9$, ama $\lfloor 10\,249/1024 \rfloor = 10$: kayıt bir blok sınırını aşar, bu yüzden onu okumak iki blok gerektirir.
+\end{enumerate}
+
+% =====================================================================
+\section{Vize Tekrarı: 1--7. Haftalar}
+
+8.\ haftadaki vize sınavı 1.\ haftadan bu haftaya kadar her şeyi kapsar. Bu listeyi bir kontrol listesi olarak kullanın; her madde, belirtilen haftanın slaytlarında ve ders notlarında yer aldı.
+
+\begin{description}[leftmargin=0pt,itemsep=0.2em]
+  \item[1. hafta: Tarihçe] İşletim sistemi ne yapar; toplu işleme sistemleri, çoklu programlama, zaman paylaşımı; boşta duran işlemci tasarımı nasıl yönlendirdi; UNIX (1969) ve Linux (1991).
+  \item[2. hafta: Temeller] Tanımlar ve çekirdek; genişletilmiş makine ve kaynak yöneticisi bakışları; hedefler; kesmeler; bellek hiyerarşisi; ikili mod; sistem çağrıları (\cmd{strace}); basit, monolitik, katmanlı, mikroçekirdek, modüler ve hibrit yapılar.
+  \item[3. hafta: Süreçler] İşletim sistemi hizmetleri; sistem çağrısı türleri; süreç ve bellek düzeni; süreç durumları; PCB; bağlam değişimi; \cmd{fork()}.
+  \item[4. hafta: İş parçacıkları, işlemci] İş parçacıkları ve süreçler; kullanıcı ve çekirdek iş parçacıkları; çoklu iş parçacığı modelleri; işlemci--G/Ç patlamaları; zamanlama ölçütleri (kullanım, üretilen iş, tamamlanma, bekleme ve yanıt süresi).
+  \item[5. hafta: Zamanlama, eşzamanlama] Gantt şemaları ve ortalama bekleme süresiyle FCFS, SJF/SRTF, Öncelik, Round Robin; yarış durumları; kritik bölge problemi; mutex kilitleri; semaforlar.
+  \item[6. hafta: Bellek] Adres bağlama; mantıksal ve fiziksel adresler; MMU; takas; bitişik yer ayırma; iç ve dış parçalanma; sayfalama ve adres çevirisi; TLB ve EAT; bölümleme.
+  \item[7. hafta: Sanal bellek, dosyalar] İsteğe bağlı sayfalama; sayfa hataları; sayfa hatalarıyla EAT; yazınca kopyala; FIFO, OPT, LRU tabloları; Belady anomalisi; saat algoritması; boşa çalışma ve çalışma kümesi; dosya öznitelikleri ve işlemleri; blok hesabıyla erişim yöntemleri; dizin yapıları; sabit ve sembolik bağlantılar.
+\end{description}
+
+\textbf{Alıştırma yapılacak sayısal soru türleri:} Gantt şemaları ve bekleme süreleri (5.\ hafta); adres çevirisi ve TLB ile EAT (6.\ hafta); sayfa hatalarıyla EAT ve sayfa değiştirme çerçeve tabloları (7.\ hafta); doğrudan erişim blok hesabı (7.\ hafta). En iyi çalışma malzemesi, her haftanın notlarının sonundaki çözümlü yanıtlı tekrar sorularıdır.
+
+% =====================================================================
+\section{İleriye Bakış: 8. Hafta ve Sonrası}
+
+\begin{itemize}
+  \item \textbf{8.\ hafta: Vize sınavı}, 1--7.\ haftalar. Öğrenci kimliğinizi ve kaleminizi getirin; kesin saat, salon ve kurallar (örneğin hesap makinesiyle ilgili) dersin Telegram kanalında duyurulacak.
+  \item \textbf{9.\ hafta} dersin uygulamalı yarısını başlatır: Linux kabuğu ve bu hafta çizdiğimiz dizin ağacında gezinme (\cmd{pwd}, \cmd{cd}, \cmd{ls}, mutlak ve göreli yollar).
+  \item \textbf{10.\ hafta:} dosya işlemleri (\cmd{cp}, \cmd{mv}, \cmd{rm}, \cmd{ln}, \cmd{touch}); \textbf{11.\ hafta:} izinler (düğümdeki \texttt{-rw-rw-r--} dizgesi).
+\end{itemize}
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley: Bölüm~10 (Virtual Memory), Bölüm~13 (File-System Interface) ve Kısım~14.1 (File-System Structure).
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}:
+  \begin{itemize}
+    \item Bölüm~21, ``Beyond Physical Memory: Mechanisms'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys.pdf}
+    \item Bölüm~22, ``Beyond Physical Memory: Policies'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys-policy.pdf}
+    \item Bölüm~39, ``Interlude: Files and Directories'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf}
+  \end{itemize}
+  \item L.\,A.\ Bélády, R.\,A.\ Nelson ve G.\,S.\ Shedler, ``An anomaly in space-time characteristics of certain programs running in a paging machine'', \emph{Communications of the ACM} 12(6), 1969, s.~349--353.
+\end{itemize}
+
+\end{document}

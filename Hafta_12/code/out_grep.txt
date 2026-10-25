@@ -1,0 +1,33 @@
+student@okan-lab:~/lab$ grep ERROR logs/system.log | head -n 3
+2026-10-12 09:12:00 ERROR failed to mount /dev/sdb1
+2026-10-12 09:56:00 ERROR failed to mount /dev/sdb1
+2026-10-12 09:07:00 ERROR failed to mount /dev/sdb1
+student@okan-lab:~/lab$ grep -c ERROR logs/system.log
+13
+student@okan-lab:~/lab$ grep -i "TALK" docs/linux_quotes.txt
+Talk is cheap. Show me the code.
+student@okan-lab:~/lab$ grep -n "backup" logs/system.log | head -n 4
+6:2026-10-12 09:55:00 INFO  backup finished
+7:2026-10-12 09:06:00 INFO  backup started
+10:2026-10-12 09:39:00 INFO  backup finished
+29:2026-10-12 10:08:00 INFO  backup started
+student@okan-lab:~/lab$ grep -v INFO logs/system.log | head -n 4
+2026-10-12 09:11:00 WARN  high memory usage
+2026-10-12 09:22:00 WARN  high memory usage
+2026-10-12 09:12:00 ERROR failed to mount /dev/sdb1
+2026-10-12 09:23:00 WARN  temperature 71C
+student@okan-lab:~/lab$ grep -vc INFO logs/system.log
+41
+student@okan-lab:~/lab$ grep "Week 1" docs/syllabus.txt
+Week 1  Introduction and history
+Week 10 File and directory operations
+Week 11 Permissions, ownership and users
+Week 12 Text processing and redirection
+Week 13 Processes and job control
+Week 14 Introduction to shell scripting
+Week 15 Final exam
+student@okan-lab:~/lab$ grep -w "Week 1" docs/syllabus.txt
+Week 1  Introduction and history
+student@okan-lab:~/lab$ grep -r "Project" projects
+projects/beta/README.md:# Project beta
+projects/alpha/README.md:# Project alpha

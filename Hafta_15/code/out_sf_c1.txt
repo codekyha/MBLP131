@@ -1,0 +1,11 @@
+student@okan-lab:~/lab$ ls -lah docs
+total 36K
+drwxrwxr-x  2 student student 4.0K Oct 12 08:50  .
+drwxrwxr-x 10 student student 4.0K Oct 12 08:50  ..
+-rw-rw-r--  1 student student   21 Oct 12 08:50  .settings
+-rw-rw-r--  1 student student   53 Oct 12 08:50 'final report.txt'
+-rw-rw-r--  1 student student  302 Oct 12 08:50  linux_quotes.txt
+-rw-rw-r--  1 student student   16 Oct 12 08:50  notes_01.txt
+-rw-rw-r--  1 student student   16 Oct 12 08:50  notes_02.txt
+-rw-rw-r--  1 student student   16 Oct 12 08:50  notes_03.txt
+-rw-rw-r--  1 student student  578 Oct 12 08:50  syllabus.txt

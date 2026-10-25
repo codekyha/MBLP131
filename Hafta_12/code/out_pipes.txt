@@ -1,0 +1,23 @@
+student@okan-lab:~/lab$ grep ERROR logs/system.log | wc -l
+13
+student@okan-lab:~/lab$ ls -l /proc/self/fd | cat
+total 0
+lrwx------ 1 student student 64 Oct 12 08:48 0 -> /dev/pts/2
+l-wx------ 1 student student 64 Oct 12 08:48 1 -> pipe:[29942]
+lrwx------ 1 student student 64 Oct 12 08:48 2 -> /dev/pts/2
+lr-x------ 1 student student 64 Oct 12 08:48 3 -> /proc/15237/fd
+student@okan-lab:~/lab$ time (sleep 2 | sleep 2)
+
+real    0m2.005s
+user    0m0.003s
+sys     0m0.002s
+student@okan-lab:~/lab$ yes | head -n 3
+y
+y
+y
+student@okan-lab:~/lab$ yes "MCMP117" | head -n 100000 | wc -l
+100000
+student@okan-lab:~/lab$ sort data/cities.txt | uniq -c | sort -rn | head -n 3
+      6 Antalya
+      5 Trabzon
+      5 Eskisehir

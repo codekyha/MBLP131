@@ -1,0 +1,116 @@
+### Exercise 1
+student@okan-lab:~/lab$ whoami
+student
+student@okan-lab:~/lab$ id
+uid=1011(student) gid=1013(student) groups=1013(student)
+student@okan-lab:~/lab$ groups
+student
+### Exercise 2
+student@okan-lab:~/lab$ grep "^$USER:" /etc/passwd
+student:x:1011:1013::/home/student:/bin/bash
+### Exercise 3
+student@okan-lab:~/lab$ ls -l docs/syllabus.txt
+-rw-rw-r-- 1 student student 578 Oct 12 19:38 docs/syllabus.txt
+student@okan-lab:~/lab$ stat -c '%a  %A' docs/syllabus.txt
+664  -rw-rw-r--
+### Exercise 5
+student@okan-lab:~/lab$ echo '#!/bin/bash' > scripts/hello.sh
+student@okan-lab:~/lab$ echo 'echo "Hello, $USER! You are in $PWD"' >> scripts/hello.sh
+student@okan-lab:~/lab$ chmod u+x scripts/hello.sh
+student@okan-lab:~/lab$ ls -l scripts/hello.sh
+-rwxrw-r-- 1 student student 49 Oct 12 19:38 scripts/hello.sh
+student@okan-lab:~/lab$ ./scripts/hello.sh
+Hello, student! You are in /home/student/lab
+### Exercise 6
+student@okan-lab:~/lab$ chmod g-w,o-r docs/notes_01.txt
+student@okan-lab:~/lab$ ls -l docs/notes_01.txt
+-rw-r----- 1 student student 16 Oct 12 19:38 docs/notes_01.txt
+### Exercise 7
+student@okan-lab:~/lab$ chmod 600 docs/notes_02.txt
+student@okan-lab:~/lab$ stat -c '%a  %A  %n' docs/notes_02.txt
+600  -rw-------  docs/notes_02.txt
+### Exercise 8
+student@okan-lab:~/lab$ chmod 700 projects/alpha
+student@okan-lab:~/lab$ ls -ld projects/alpha
+drwx------ 4 student student 4096 Oct 12 19:38 projects/alpha
+### Exercise 9
+student@okan-lab:~/lab$ chmod 750 projects/beta
+student@okan-lab:~/lab$ chmod 640 projects/beta/README.md
+student@okan-lab:~/lab$ ls -ld projects/beta
+drwxr-x--- 4 student student 4096 Oct 12 19:38 projects/beta
+student@okan-lab:~/lab$ ls -l projects/beta
+total 12
+-rw-r----- 1 student student   15 Oct 12 19:38 README.md
+drwxrwxr-x 2 student student 4096 Oct 12 19:38 docs
+drwxrwxr-x 2 student student 4096 Oct 12 19:38 src
+### Exercise 10
+student@okan-lab:~/lab$ umask 027
+student@okan-lab:~/lab$ touch t10.txt
+student@okan-lab:~/lab$ mkdir t10
+student@okan-lab:~/lab$ stat -c '%a  %A  %n' t10.txt t10
+640  -rw-r-----  t10.txt
+750  drwxr-x---  t10
+student@okan-lab:~/lab$ umask 002
+### Exercise 11
+student@okan-lab:~/lab$ umask 033
+student@okan-lab:~/lab$ touch t11.txt
+student@okan-lab:~/lab$ mkdir t11
+student@okan-lab:~/lab$ stat -c '%a  %A  %n' t11.txt t11
+644  -rw-r--r--  t11.txt
+744  drwxr--r--  t11
+student@okan-lab:~/lab$ umask 002
+### Exercise 12
+student@okan-lab:~/lab$ mkdir t12
+student@okan-lab:~/lab$ echo "hello" > t12/a.txt
+student@okan-lab:~/lab$ chmod u-x t12
+student@okan-lab:~/lab$ ls t12
+a.txt
+student@okan-lab:~/lab$ cd t12
+bash: cd: t12: Permission denied
+student@okan-lab:~/lab$ cat t12/a.txt
+cat: t12/a.txt: Permission denied
+student@okan-lab:~/lab$ chmod u+x t12
+student@okan-lab:~/lab$ cat t12/a.txt
+hello
+### Exercise 13
+student@okan-lab:~/lab$ chmod 444 docs/notes_03.txt
+student@okan-lab:~/lab$ rm docs/notes_03.txt
+rm: remove write-protected regular file 'docs/notes_03.txt'? y
+student@okan-lab:~/lab$ ls docs
+'final report.txt'   linux_quotes.txt   notes_01.txt   notes_02.txt   syllabus.txt
+student@okan-lab:~/lab$ chmod 444 docs/linux_quotes.txt
+student@okan-lab:~/lab$ chmod 555 docs
+student@okan-lab:~/lab$ rm -f docs/linux_quotes.txt
+rm: cannot remove 'docs/linux_quotes.txt': Permission denied
+student@okan-lab:~/lab$ chmod 775 docs
+### Exercise 14
+student@okan-lab:~/lab$ chown root src/hello.c
+chown: changing ownership of 'src/hello.c': Operation not permitted
+student@okan-lab:~/lab$ chgrp students src/hello.c
+chgrp: changing group of 'src/hello.c': Operation not permitted
+### Exercise 15
+student@okan-lab:~/lab$ ls -l /usr/bin/passwd /etc/shadow
+-rw-r----- 1 root shadow   884 Oct 12 11:50 /etc/shadow
+-rwsr-xr-x 1 root root   64152 May 30  2024 /usr/bin/passwd
+student@okan-lab:~/lab$ ls -ld /tmp
+drwxrwxrwt 16 root root 4096 Oct 12 19:38 /tmp
+student@okan-lab:~/lab$ echo "test" > /tmp/w11_ex15.txt
+student@okan-lab:~/lab$ ls -l /tmp/w11_ex15.txt
+-rw-rw-r-- 1 student student 5 Oct 12 19:38 /tmp/w11_ex15.txt
+student@okan-lab:~/lab$ rm /tmp/w11_ex15.txt
+### Exercise 16
+student@okan-lab:~/lab$ mkdir projects/team
+student@okan-lab:~/lab$ echo '#!/bin/bash' > projects/team/deploy.sh
+student@okan-lab:~/lab$ echo 'echo "deploying..."' >> projects/team/deploy.sh
+student@okan-lab:~/lab$ echo "password=1234" > projects/team/secret.txt
+student@okan-lab:~/lab$ echo "meeting on Monday" > projects/team/notes.txt
+student@okan-lab:~/lab$ chmod 750 projects/team projects/team/deploy.sh
+student@okan-lab:~/lab$ chmod 600 projects/team/secret.txt
+student@okan-lab:~/lab$ chmod 640 projects/team/notes.txt
+student@okan-lab:~/lab$ stat -c '%a  %A  %n' projects/team projects/team/*
+750  drwxr-x---  projects/team
+750  -rwxr-x---  projects/team/deploy.sh
+640  -rw-r-----  projects/team/notes.txt
+600  -rw-------  projects/team/secret.txt
+student@okan-lab:~/lab$ ./projects/team/deploy.sh
+deploying...

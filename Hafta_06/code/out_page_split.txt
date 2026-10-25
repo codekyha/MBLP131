@@ -1,0 +1,6 @@
+page size = 4096 bytes, offset mask = 0xFFF
+
+0x3A7F (14975): p =  3, d = 0xA7F (2687) -> frame  7 -> 0x7A7F (31359)
+0x1234 ( 4660): p =  1, d = 0x234 ( 564) -> frame  9 -> 0x9234 (37428)
+0x5000 (20480): p =  5, d = 0x000 (   0) -> invalid: trap to OS
+0x0000 (    0): p =  0, d = 0x000 (   0) -> frame  5 -> 0x5000 (20480)

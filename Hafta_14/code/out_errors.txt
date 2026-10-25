@@ -1,0 +1,39 @@
+student@okan-lab:~/lab/scripts$ cat bad_space.sh
+#!/bin/bash
+name = "Ayse"
+echo "Hello $name"
+student@okan-lab:~/lab/scripts$ ./bad_space.sh
+./bad_space.sh: line 2: name: command not found
+Hello 
+student@okan-lab:~/lab/scripts$ cat bad_test.sh
+#!/bin/bash
+n=5
+if [$n -gt 3]; then echo "big"; fi
+student@okan-lab:~/lab/scripts$ ./bad_test.sh
+./bad_test.sh: line 3: [5: command not found
+student@okan-lab:~/lab/scripts$ cat bad_quotes.sh
+#!/bin/bash
+answer=""
+if [ $answer = yes ]; then echo "OK"; fi
+student@okan-lab:~/lab/scripts$ ./bad_quotes.sh
+./bad_quotes.sh: line 3: [: =: unary operator expected
+student@okan-lab:~/lab/scripts$ cat bad_if.sh
+#!/bin/bash
+if [ -d ~/lab ]; then
+    echo "lab exists"
+student@okan-lab:~/lab/scripts$ bash -n bad_if.sh
+bad_if.sh: line 4: syntax error: unexpected end of file
+student@okan-lab:~/lab/scripts$ ./win.sh
+bash: ./win.sh: cannot execute: required file not found
+student@okan-lab:~/lab/scripts$ bash win.sh
+win.sh: line 2: cd: $'/home/student/lab\r': No such file or directory
+Hello from Windows
+student@okan-lab:~/lab/scripts$ file win.sh
+win.sh: Bourne-Again shell script, ASCII text executable, with CRLF line terminators
+student@okan-lab:~/lab/scripts$ cat -A win.sh
+#!/bin/bash^M$
+cd ~/lab^M$
+echo "Hello from Windows"^M$
+student@okan-lab:~/lab/scripts$ sed -i 's/\r$//' win.sh
+student@okan-lab:~/lab/scripts$ ./win.sh
+Hello from Windows

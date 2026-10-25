@@ -1,0 +1,18 @@
+student@okan-lab:~/lab$ cd docs
+student@okan-lab:~/lab/docs$ ls -l syllabus.txt
+-rw-rw-r-- 1 student student 578 Oct 12 19:38 syllabus.txt
+student@okan-lab:~/lab/docs$ chmod u+x syllabus.txt
+student@okan-lab:~/lab/docs$ ls -l syllabus.txt
+-rwxrw-r-- 1 student student 578 Oct 12 19:38 syllabus.txt
+student@okan-lab:~/lab/docs$ chmod go-w syllabus.txt
+student@okan-lab:~/lab/docs$ ls -l syllabus.txt
+-rwxr--r-- 1 student student 578 Oct 12 19:38 syllabus.txt
+student@okan-lab:~/lab/docs$ chmod a=r syllabus.txt
+student@okan-lab:~/lab/docs$ ls -l syllabus.txt
+-r--r--r-- 1 student student 578 Oct 12 19:38 syllabus.txt
+student@okan-lab:~/lab/docs$ chmod u=rw,g=r,o= syllabus.txt
+student@okan-lab:~/lab/docs$ ls -l syllabus.txt
+-rw-r----- 1 student student 578 Oct 12 19:38 syllabus.txt
+student@okan-lab:~/lab/docs$ chmod u+rwx,g+w syllabus.txt
+student@okan-lab:~/lab/docs$ ls -l syllabus.txt
+-rwxrw---- 1 student student 578 Oct 12 19:38 syllabus.txt

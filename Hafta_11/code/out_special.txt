@@ -1,0 +1,19 @@
+student@okan-lab:~/lab$ ls -l /usr/bin/passwd /etc/shadow
+-rw-r----- 1 root shadow   884 Oct 12 11:50 /etc/shadow
+-rwsr-xr-x 1 root root   64152 May 30  2024 /usr/bin/passwd
+student@okan-lab:~/lab$ ls -l /usr/bin/sudo /usr/bin/su
+-rwsr-xr-x 1 root root  55680 Mar  6  2026 /usr/bin/su
+-rwsr-xr-x 1 root root 277936 Mar  2  2026 /usr/bin/sudo
+student@okan-lab:~/lab$ ls -ld /tmp
+drwxrwxrwt 16 root root 4096 Oct 12 19:38 /tmp
+student@okan-lab:~/lab$ stat -c '%a  %A  %n' /usr/bin/passwd /tmp
+4755  -rwsr-xr-x  /usr/bin/passwd
+1777  drwxrwxrwt  /tmp
+student@okan-lab:~/lab$ ls -l /tmp/w11_admin.txt
+-rw-rw-rw- 1 root root 12 Oct 12 19:38 /tmp/w11_admin.txt
+student@okan-lab:~/lab$ rm /tmp/w11_admin.txt
+rm: cannot remove '/tmp/w11_admin.txt': Operation not permitted
+student@okan-lab:~/lab$ echo "my notes" > /tmp/w11_mine.txt
+student@okan-lab:~/lab$ ls -l /tmp/w11_mine.txt
+-rw-rw-r-- 1 student student 9 Oct 12 19:38 /tmp/w11_mine.txt
+student@okan-lab:~/lab$ rm /tmp/w11_mine.txt

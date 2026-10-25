@@ -1,0 +1,41 @@
+student@okan-lab:~$ cd ~/lab
+student@okan-lab:~/lab$ ls -R projects
+projects:
+alpha  beta
+
+projects/alpha:
+README.md  docs  src
+
+projects/alpha/docs:
+design.txt
+
+projects/alpha/src:
+main.c
+
+projects/beta:
+README.md  docs  src
+
+projects/beta/docs:
+design.txt
+
+projects/beta/src:
+main.c
+student@okan-lab:~/lab$ tree projects
+projects
+├── alpha
+│   ├── README.md
+│   ├── docs
+│   │   └── design.txt
+│   └── src
+│       └── main.c
+└── beta
+    ├── README.md
+    ├── docs
+    │   └── design.txt
+    └── src
+        └── main.c
+
+7 directories, 6 files
+student@okan-lab:~/lab$ ls -ld projects docs
+drwxrwxr-x 2 student student 4096 Oct 12 08:49 docs
+drwxrwxr-x 4 student student 4096 Oct 12 08:49 projects

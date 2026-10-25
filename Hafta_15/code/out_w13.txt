@@ -1,0 +1,17 @@
+student@okan-lab:~/lab$ sleep 600 &
+student@okan-lab:~/lab$ echo $!
+23441
+student@okan-lab:~/lab$ jobs
+[1]+  Running                 sleep 600 &
+student@okan-lab:~/lab$ ps -o pid,ppid,stat,cmd
+  PID  PPID STAT CMD
+23361 23360 Ss+  bash /home/student/w15/demo_recap.sh
+23441 23361 S+   sleep 600
+23445 23361 R+   ps -o pid,ppid,stat,cmd
+student@okan-lab:~/lab$ kill %1
+student@okan-lab:~/lab$ kill -l TERM KILL INT STOP CONT
+15
+9
+2
+19
+18

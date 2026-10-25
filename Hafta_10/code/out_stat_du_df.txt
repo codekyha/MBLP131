@@ -1,0 +1,32 @@
+student@okan-lab:~/lab$ stat docs/syllabus.txt
+  File: docs/syllabus.txt
+  Size: 578             Blocks: 8          IO Block: 4096   regular file
+Device: 254,0   Inode: 804123      Links: 1
+Access: (0664/-rw-rw-r--)  Uid: ( 1010/ student)   Gid: ( 1012/ student)
+Access: 2026-10-12 08:47:57.251900492 +0000
+Modify: 2026-10-12 08:47:57.254669759 +0000
+Change: 2026-10-12 08:47:57.254669759 +0000
+ Birth: 2026-10-12 08:47:57.251900492 +0000
+student@okan-lab:~/lab$ stat -c "%n: %s bytes, inode %i, %h link(s)" docs/*.txt
+docs/final report.txt: 53 bytes, inode 804125, 1 link(s)
+docs/linux_quotes.txt: 302 bytes, inode 804124, 1 link(s)
+docs/notes_01.txt: 16 bytes, inode 804127, 1 link(s)
+docs/notes_02.txt: 16 bytes, inode 804128, 1 link(s)
+docs/notes_03.txt: 16 bytes, inode 804129, 1 link(s)
+docs/syllabus.txt: 578 bytes, inode 804123, 1 link(s)
+student@okan-lab:~/lab$ du -sh docs data logs photos
+32K     docs
+16K     data
+36K     logs
+4.0K    photos
+student@okan-lab:~/lab$ du -h projects
+8.0K    projects/beta/src
+8.0K    projects/beta/docs
+24K     projects/beta
+8.0K    projects/alpha/src
+8.0K    projects/alpha/docs
+24K     projects/alpha
+52K     projects
+student@okan-lab:~/lab$ df -h ~
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda        252G   13G   30G  29% /

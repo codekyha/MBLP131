@@ -1,0 +1,36 @@
+student@okan-lab:~/lab$ cat docs/linux_quotes.txt
+Talk is cheap. Show me the code.
+Given enough eyeballs, all bugs are shallow.
+Most good programmers do programming not because they expect to get paid.
+Theory and practice sometimes clash. And when that happens, theory loses.
+Intelligence is the ability to avoid doing work, yet getting the work done.
+student@okan-lab:~/lab$ cat -n docs/notes_01.txt docs/notes_02.txt
+     1  Meeting notes 1
+     2  Meeting notes 2
+student@okan-lab:~/lab$ head -n 3 data/students.csv
+id,name,department,midterm,final
+2026001,Elif Yilmaz,ECT,96,99
+2026002,Zeynep Dogan,ME,95,36
+student@okan-lab:~/lab$ tail -n 3 logs/system.log
+2026-10-12 14:27:00 INFO  user login
+2026-10-12 14:38:00 INFO  backup finished
+2026-10-12 14:49:00 INFO  network link up
+student@okan-lab:~/lab$ tail -n 2 -f logs/system.log
+2026-10-12 14:38:00 INFO  backup finished
+2026-10-12 14:49:00 INFO  network link up
+2026-10-12 15:00:00 WARN  disk almost full
+^C
+student@okan-lab:~/lab$ wc docs/linux_quotes.txt
+  5  50 302 docs/linux_quotes.txt
+student@okan-lab:~/lab$ wc -l data/*.csv data/*.txt
+  41 data/students.csv
+  30 data/cities.txt
+  20 data/numbers.txt
+  91 total
+student@okan-lab:~/lab$ file README.txt src/hello.c data/students.csv photos/img001.jpg projects /usr/bin/ls
+README.txt:        ASCII text
+src/hello.c:       C source, ASCII text
+data/students.csv: CSV ASCII text
+photos/img001.jpg: empty
+projects:          directory
+/usr/bin/ls:       ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=daa5130f2a41f7fbc8662048f3294f3d439ca7ff, for GNU/Linux 3.2.0, stripped

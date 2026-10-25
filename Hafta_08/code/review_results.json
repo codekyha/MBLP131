@@ -1,0 +1,972 @@
+{
+ "w1": {
+  "p": 0.6,
+  "U1": 0.4,
+  "U3": 0.784,
+  "nmin": 6
+ },
+ "w3": {
+  "cs1": 0.001996007984031936,
+  "cs2": 0.07407407407407407,
+  "A": 4,
+  "B": 8
+ },
+ "w4": {
+  "S": 0.2,
+  "N2": 1.6666666666666665,
+  "N4": 2.5,
+  "N8": 3.333333333333333
+ },
+ "jobs": [
+  [
+   "P1",
+   0,
+   7,
+   2
+  ],
+  [
+   "P2",
+   2,
+   4,
+   1
+  ],
+  [
+   "P3",
+   3,
+   2,
+   4
+  ],
+  [
+   "P4",
+   5,
+   5,
+   3
+  ]
+ ],
+ "FCFS": {
+  "segs": [
+   [
+    "P1",
+    0,
+    7
+   ],
+   [
+    "P2",
+    7,
+    11
+   ],
+   [
+    "P3",
+    11,
+    13
+   ],
+   [
+    "P4",
+    13,
+    18
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 2,
+    "first": 0,
+    "completion": 7,
+    "turnaround": 7,
+    "waiting": 0,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 7,
+    "completion": 11,
+    "turnaround": 9,
+    "waiting": 5,
+    "response": 5
+   },
+   "P3": {
+    "arrival": 3,
+    "burst": 2,
+    "priority": 4,
+    "first": 11,
+    "completion": 13,
+    "turnaround": 10,
+    "waiting": 8,
+    "response": 8
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 5,
+    "priority": 3,
+    "first": 13,
+    "completion": 18,
+    "turnaround": 13,
+    "waiting": 8,
+    "response": 8
+   }
+  },
+  "avg": {
+   "waiting": 5.25,
+   "turnaround": 9.75,
+   "response": 5.25
+  },
+  "switches": 3,
+  "end": 18,
+  "busy": 18
+ },
+ "SJF": {
+  "segs": [
+   [
+    "P1",
+    0,
+    7
+   ],
+   [
+    "P3",
+    7,
+    9
+   ],
+   [
+    "P2",
+    9,
+    13
+   ],
+   [
+    "P4",
+    13,
+    18
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 2,
+    "first": 0,
+    "completion": 7,
+    "turnaround": 7,
+    "waiting": 0,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 9,
+    "completion": 13,
+    "turnaround": 11,
+    "waiting": 7,
+    "response": 7
+   },
+   "P3": {
+    "arrival": 3,
+    "burst": 2,
+    "priority": 4,
+    "first": 7,
+    "completion": 9,
+    "turnaround": 6,
+    "waiting": 4,
+    "response": 4
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 5,
+    "priority": 3,
+    "first": 13,
+    "completion": 18,
+    "turnaround": 13,
+    "waiting": 8,
+    "response": 8
+   }
+  },
+  "avg": {
+   "waiting": 4.75,
+   "turnaround": 9.25,
+   "response": 4.75
+  },
+  "switches": 3,
+  "end": 18,
+  "busy": 18
+ },
+ "SRTF": {
+  "segs": [
+   [
+    "P1",
+    0,
+    2
+   ],
+   [
+    "P2",
+    2,
+    3
+   ],
+   [
+    "P3",
+    3,
+    5
+   ],
+   [
+    "P2",
+    5,
+    8
+   ],
+   [
+    "P1",
+    8,
+    13
+   ],
+   [
+    "P4",
+    13,
+    18
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 2,
+    "first": 0,
+    "completion": 13,
+    "turnaround": 13,
+    "waiting": 6,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 2,
+    "completion": 8,
+    "turnaround": 6,
+    "waiting": 2,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 3,
+    "burst": 2,
+    "priority": 4,
+    "first": 3,
+    "completion": 5,
+    "turnaround": 2,
+    "waiting": 0,
+    "response": 0
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 5,
+    "priority": 3,
+    "first": 13,
+    "completion": 18,
+    "turnaround": 13,
+    "waiting": 8,
+    "response": 8
+   }
+  },
+  "avg": {
+   "waiting": 4.0,
+   "turnaround": 8.5,
+   "response": 2.0
+  },
+  "switches": 5,
+  "end": 18,
+  "busy": 18
+ },
+ "PRIO_P": {
+  "segs": [
+   [
+    "P1",
+    0,
+    2
+   ],
+   [
+    "P2",
+    2,
+    6
+   ],
+   [
+    "P1",
+    6,
+    11
+   ],
+   [
+    "P4",
+    11,
+    16
+   ],
+   [
+    "P3",
+    16,
+    18
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 2,
+    "first": 0,
+    "completion": 11,
+    "turnaround": 11,
+    "waiting": 4,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 2,
+    "completion": 6,
+    "turnaround": 4,
+    "waiting": 0,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 3,
+    "burst": 2,
+    "priority": 4,
+    "first": 16,
+    "completion": 18,
+    "turnaround": 15,
+    "waiting": 13,
+    "response": 13
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 5,
+    "priority": 3,
+    "first": 11,
+    "completion": 16,
+    "turnaround": 11,
+    "waiting": 6,
+    "response": 6
+   }
+  },
+  "avg": {
+   "waiting": 5.75,
+   "turnaround": 10.25,
+   "response": 4.75
+  },
+  "switches": 4,
+  "end": 18,
+  "busy": 18
+ },
+ "RR": {
+  "segs": [
+   [
+    "P1",
+    0,
+    3
+   ],
+   [
+    "P2",
+    3,
+    6
+   ],
+   [
+    "P3",
+    6,
+    8
+   ],
+   [
+    "P1",
+    8,
+    11
+   ],
+   [
+    "P4",
+    11,
+    14
+   ],
+   [
+    "P2",
+    14,
+    15
+   ],
+   [
+    "P1",
+    15,
+    16
+   ],
+   [
+    "P4",
+    16,
+    18
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 7,
+    "priority": 2,
+    "first": 0,
+    "completion": 16,
+    "turnaround": 16,
+    "waiting": 9,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 4,
+    "priority": 1,
+    "first": 3,
+    "completion": 15,
+    "turnaround": 13,
+    "waiting": 9,
+    "response": 1
+   },
+   "P3": {
+    "arrival": 3,
+    "burst": 2,
+    "priority": 4,
+    "first": 6,
+    "completion": 8,
+    "turnaround": 5,
+    "waiting": 3,
+    "response": 3
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 5,
+    "priority": 3,
+    "first": 11,
+    "completion": 18,
+    "turnaround": 13,
+    "waiting": 8,
+    "response": 6
+   }
+  },
+  "avg": {
+   "waiting": 7.25,
+   "turnaround": 11.75,
+   "response": 2.5
+  },
+  "switches": 7,
+  "end": 18,
+  "busy": 18
+ },
+ "race": {
+  "9": 9,
+  "10": 2,
+  "11": 9
+ },
+ "fit": {
+  "holes": [
+   [
+    100,
+    300
+   ],
+   [
+    500,
+    600
+   ],
+   [
+    1300,
+    200
+   ],
+   [
+    1700,
+    450
+   ],
+   [
+    2400,
+    350
+   ]
+  ],
+  "req": [
+   [
+    "A",
+    340
+   ],
+   [
+    "B",
+    180
+   ],
+   [
+    "C",
+    420
+   ],
+   [
+    "D",
+    500
+   ]
+  ],
+  "first": {
+   "placed": {
+    "A": [
+     600,
+     500,
+     260
+    ],
+    "B": [
+     300,
+     100,
+     120
+    ],
+    "C": [
+     450,
+     1700,
+     30
+    ],
+    "D": null
+   },
+   "left": [
+    [
+     280,
+     120
+    ],
+    [
+     840,
+     260
+    ],
+    [
+     1300,
+     200
+    ],
+    [
+     2120,
+     30
+    ],
+    [
+     2400,
+     350
+    ]
+   ]
+  },
+  "best": {
+   "placed": {
+    "A": [
+     350,
+     2400,
+     10
+    ],
+    "B": [
+     200,
+     1300,
+     20
+    ],
+    "C": [
+     450,
+     1700,
+     30
+    ],
+    "D": [
+     600,
+     500,
+     100
+    ]
+   },
+   "left": [
+    [
+     100,
+     300
+    ],
+    [
+     1000,
+     100
+    ],
+    [
+     1480,
+     20
+    ],
+    [
+     2120,
+     30
+    ],
+    [
+     2740,
+     10
+    ]
+   ]
+  },
+  "worst": {
+   "placed": {
+    "A": [
+     600,
+     500,
+     260
+    ],
+    "B": [
+     450,
+     1700,
+     270
+    ],
+    "C": null,
+    "D": null
+   },
+   "left": [
+    [
+     100,
+     300
+    ],
+    [
+     840,
+     260
+    ],
+    [
+     1300,
+     200
+    ],
+    [
+     1880,
+     270
+    ],
+    [
+     2400,
+     350
+    ]
+   ]
+  }
+ },
+ "tlb": {
+  "tt": 10,
+  "tm": 80,
+  "a": 0.95,
+  "eat": 94.0,
+  "need": 0.875
+ },
+ "refs": [
+  1,
+  2,
+  0,
+  4,
+  2,
+  3,
+  2,
+  1,
+  2,
+  4,
+  0,
+  2,
+  0,
+  1
+ ],
+ "repl_FIFO": {
+  "faults": 11,
+  "frames": [
+   [
+    1
+   ],
+   [
+    1,
+    2
+   ],
+   [
+    1,
+    2,
+    0
+   ],
+   [
+    4,
+    2,
+    0
+   ],
+   [
+    4,
+    2,
+    0
+   ],
+   [
+    4,
+    3,
+    0
+   ],
+   [
+    4,
+    3,
+    2
+   ],
+   [
+    1,
+    3,
+    2
+   ],
+   [
+    1,
+    3,
+    2
+   ],
+   [
+    1,
+    4,
+    2
+   ],
+   [
+    1,
+    4,
+    0
+   ],
+   [
+    2,
+    4,
+    0
+   ],
+   [
+    2,
+    4,
+    0
+   ],
+   [
+    2,
+    1,
+    0
+   ]
+  ],
+  "fault": [
+   true,
+   true,
+   true,
+   true,
+   false,
+   true,
+   true,
+   true,
+   false,
+   true,
+   true,
+   true,
+   false,
+   true
+  ],
+  "victim": [
+   null,
+   null,
+   null,
+   1,
+   null,
+   2,
+   0,
+   4,
+   null,
+   3,
+   2,
+   1,
+   null,
+   4
+  ]
+ },
+ "repl_LRU": {
+  "faults": 9,
+  "frames": [
+   [
+    1
+   ],
+   [
+    1,
+    2
+   ],
+   [
+    1,
+    2,
+    0
+   ],
+   [
+    4,
+    2,
+    0
+   ],
+   [
+    4,
+    2,
+    0
+   ],
+   [
+    4,
+    2,
+    3
+   ],
+   [
+    4,
+    2,
+    3
+   ],
+   [
+    1,
+    2,
+    3
+   ],
+   [
+    1,
+    2,
+    3
+   ],
+   [
+    1,
+    2,
+    4
+   ],
+   [
+    0,
+    2,
+    4
+   ],
+   [
+    0,
+    2,
+    4
+   ],
+   [
+    0,
+    2,
+    4
+   ],
+   [
+    0,
+    2,
+    1
+   ]
+  ],
+  "fault": [
+   true,
+   true,
+   true,
+   true,
+   false,
+   true,
+   false,
+   true,
+   false,
+   true,
+   true,
+   false,
+   false,
+   true
+  ],
+  "victim": [
+   null,
+   null,
+   null,
+   1,
+   null,
+   0,
+   null,
+   4,
+   null,
+   3,
+   1,
+   null,
+   null,
+   4
+  ]
+ },
+ "repl_OPT": {
+  "faults": 7,
+  "frames": [
+   [
+    1
+   ],
+   [
+    1,
+    2
+   ],
+   [
+    1,
+    2,
+    0
+   ],
+   [
+    1,
+    2,
+    4
+   ],
+   [
+    1,
+    2,
+    4
+   ],
+   [
+    1,
+    2,
+    3
+   ],
+   [
+    1,
+    2,
+    3
+   ],
+   [
+    1,
+    2,
+    3
+   ],
+   [
+    1,
+    2,
+    3
+   ],
+   [
+    1,
+    2,
+    4
+   ],
+   [
+    1,
+    2,
+    0
+   ],
+   [
+    1,
+    2,
+    0
+   ],
+   [
+    1,
+    2,
+    0
+   ],
+   [
+    1,
+    2,
+    0
+   ]
+  ],
+  "fault": [
+   true,
+   true,
+   true,
+   true,
+   false,
+   true,
+   false,
+   false,
+   false,
+   true,
+   true,
+   false,
+   false,
+   false
+  ],
+  "victim": [
+   null,
+   null,
+   null,
+   0,
+   null,
+   4,
+   null,
+   null,
+   null,
+   3,
+   4,
+   null,
+   null,
+   null
+  ]
+ },
+ "pf": {
+  "tm": 100,
+  "tf": 6000000,
+  "p": 0.0002,
+  "eat": 1299.98,
+  "pmax": 8.333472224537076e-07
+ },
+ "blk": {
+  "off": 90000,
+  "blk": 21,
+  "inblk": 3984,
+  "last": 22
+ }
+}

@@ -1,0 +1,13 @@
+student@okan-lab:~/lab$ id
+uid=1015(student) gid=1017(student) groups=1017(student)
+student@okan-lab:~/lab$ touch scripts/run.sh
+student@okan-lab:~/lab$ ls -l scripts/run.sh
+-rw-rw-r-- 1 student student 0 Oct 12 08:50 scripts/run.sh
+student@okan-lab:~/lab$ chmod 750 scripts/run.sh
+student@okan-lab:~/lab$ ls -l scripts/run.sh
+-rwxr-x--- 1 student student 0 Oct 12 08:50 scripts/run.sh
+student@okan-lab:~/lab$ chmod g-x,o+r scripts/run.sh
+student@okan-lab:~/lab$ ls -l scripts/run.sh
+-rwxr--r-- 1 student student 0 Oct 12 08:50 scripts/run.sh
+student@okan-lab:~/lab$ umask
+0002

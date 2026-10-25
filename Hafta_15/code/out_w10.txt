@@ -1,0 +1,17 @@
+student@okan-lab:~/lab$ ls photos/img00?.jpg
+photos/img001.jpg  photos/img004.jpg  photos/img007.jpg
+photos/img002.jpg  photos/img005.jpg  photos/img008.jpg
+photos/img003.jpg  photos/img006.jpg  photos/img009.jpg
+student@okan-lab:~/lab$ echo photos/*.{png,JPG}
+photos/img013.png photos/IMG_014.JPG
+student@okan-lab:~/lab$ mkdir -p backup/{2025,2026}
+student@okan-lab:~/lab$ cp docs/notes_0*.txt backup/2026/
+student@okan-lab:~/lab$ ls backup/2026
+notes_01.txt  notes_02.txt  notes_03.txt
+student@okan-lab:~/lab$ wc -l data/students.csv docs/syllabus.txt
+  41 data/students.csv
+  15 docs/syllabus.txt
+  56 total
+student@okan-lab:~/lab$ ln -s ../logs/access.log docs/latest.log
+student@okan-lab:~/lab$ ls -l docs/latest.log
+lrwxrwxrwx 1 student student 18 Oct 12 08:50 docs/latest.log -> ../logs/access.log

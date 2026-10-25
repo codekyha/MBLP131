@@ -1,0 +1,5 @@
+student@okan-lab:~/lab$ sleep 600 &
+student@okan-lab:~/lab$ jobs
+[1]+  Running                 sleep 600 &
+student@okan-lab:~/lab$ kill %1
+student@okan-lab:~/lab$ jobs

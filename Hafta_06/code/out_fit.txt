@@ -1,0 +1,21 @@
+holes (size@start): 150@300, 450@600, 200@1200, 350@1600, 550@2100 | total = 1700 KB
+requests: A=220, B=400, C=130, D=430 
+
+--- first-fit ---
+  A (220 KB) -> hole 450@600, placed at 600-820, leftover 230 KB
+  B (400 KB) -> hole 550@2100, placed at 2100-2500, leftover 150 KB
+  C (130 KB) -> hole 150@300, placed at 300-430, leftover 20 KB
+  D (430 KB): no hole large enough -> waits (free 950 KB, largest hole 350 KB)
+  holes left: 20@430, 230@820, 200@1200, 350@1600, 150@2500 | total free = 950 KB
+--- best-fit ---
+  A (220 KB) -> hole 350@1600, placed at 1600-1820, leftover 130 KB
+  B (400 KB) -> hole 450@600, placed at 600-1000, leftover 50 KB
+  C (130 KB) -> hole 130@1820, placed at 1820-1950, leftover 0 KB
+  D (430 KB) -> hole 550@2100, placed at 2100-2530, leftover 120 KB
+  holes left: 150@300, 50@1000, 200@1200, 120@2530 | total free = 520 KB
+--- worst-fit ---
+  A (220 KB) -> hole 550@2100, placed at 2100-2320, leftover 330 KB
+  B (400 KB) -> hole 450@600, placed at 600-1000, leftover 50 KB
+  C (130 KB) -> hole 350@1600, placed at 1600-1730, leftover 220 KB
+  D (430 KB): no hole large enough -> waits (free 950 KB, largest hole 330 KB)
+  holes left: 150@300, 50@1000, 200@1200, 220@1730, 330@2320 | total free = 950 KB

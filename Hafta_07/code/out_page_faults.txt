@@ -1,0 +1,4 @@
+page size 4096 bytes; array 64 MB = 16384 pages
+after malloc       :      1 new faults
+first touch (write):  16383 new faults
+second touch       :      0 new faults

@@ -1,0 +1,43 @@
+student@okan-lab:~$ cd ~/lab
+student@okan-lab:~/lab$ pwd
+/home/student/lab
+student@okan-lab:~/lab$ ls
+README.txt  backup  data  docs  logs  photos  projects  scripts  src
+student@okan-lab:~/lab$ ls -F
+README.txt  backup/  data/  docs/  logs/  photos/  projects/  scripts/  src/
+student@okan-lab:~/lab$ ls docs
+'final report.txt'   notes_01.txt   notes_03.txt
+ linux_quotes.txt    notes_02.txt   syllabus.txt
+student@okan-lab:~/lab$ ls -a docs
+ .    .settings           linux_quotes.txt   notes_02.txt   syllabus.txt
+ ..  'final report.txt'   notes_01.txt       notes_03.txt
+student@okan-lab:~/lab$ ls -l
+total 36
+-rw-rw-r-- 1 student student  443 Oct 12 08:49 README.txt
+drwxrwxr-x 2 student student 4096 Oct 12 08:49 backup
+drwxrwxr-x 2 student student 4096 Oct 12 08:49 data
+drwxrwxr-x 2 student student 4096 Oct 12 08:49 docs
+drwxrwxr-x 2 student student 4096 Oct 12 08:49 logs
+drwxrwxr-x 2 student student 4096 Oct 12 08:49 photos
+drwxrwxr-x 4 student student 4096 Oct 12 08:49 projects
+drwxrwxr-x 2 student student 4096 Oct 12 08:49 scripts
+drwxrwxr-x 2 student student 4096 Oct 12 08:49 src
+student@okan-lab:~/lab$ ls -l docs
+total 24
+-rw-rw-r-- 1 student student  53 Oct 12 08:49 'final report.txt'
+-rw-rw-r-- 1 student student 302 Oct 12 08:49  linux_quotes.txt
+-rw-rw-r-- 1 student student  16 Oct 12 08:49  notes_01.txt
+-rw-rw-r-- 1 student student  16 Oct 12 08:49  notes_02.txt
+-rw-rw-r-- 1 student student  16 Oct 12 08:49  notes_03.txt
+-rw-rw-r-- 1 student student 578 Oct 12 08:49  syllabus.txt
+student@okan-lab:~/lab$ ls -lh logs data
+data:
+total 12K
+-rw-rw-r-- 1 student student  227 Oct 12 08:49 cities.txt
+-rw-rw-r-- 1 student student   80 Oct 12 08:49 numbers.txt
+-rw-rw-r-- 1 student student 1.2K Oct 12 08:49 students.csv
+
+logs:
+total 32K
+-rw-rw-r-- 1 student student  24K Oct 12 08:49 access.log
+-rw-rw-r-- 1 student student 5.1K Oct 12 08:49 system.log

@@ -1,0 +1,150 @@
+### Exercise 1
+student@okan-lab:~/lab$ mkdir -p practice/a/b/c
+student@okan-lab:~/lab$ tree practice
+practice
+└── a
+    └── b
+        └── c
+
+4 directories, 0 files
+### Exercise 2
+student@okan-lab:~/lab$ touch practice/{one,two,three}.txt
+student@okan-lab:~/lab$ ls practice
+a  one.txt  three.txt  two.txt
+### Exercise 3
+student@okan-lab:~/lab$ cp docs/syllabus.txt backup/syllabus_backup.txt
+student@okan-lab:~/lab$ ls -l backup
+total 4
+-rw-rw-r-- 1 student student 578 Oct 12 08:48 syllabus_backup.txt
+### Exercise 4
+student@okan-lab:~/lab$ ls -i backup/syllabus_backup.txt
+804718 backup/syllabus_backup.txt
+student@okan-lab:~/lab$ mv backup/syllabus_backup.txt backup/syllabus_v1.txt
+student@okan-lab:~/lab$ ls -i backup/syllabus_v1.txt
+804718 backup/syllabus_v1.txt
+### Exercise 5
+student@okan-lab:~/lab$ head -n 4 docs/syllabus.txt
+Week 1  Introduction and history
+Week 2  Definitions, goals, components, structures
+Week 3  OS services, system calls, processes
+Week 4  Threads and CPU scheduling basics
+student@okan-lab:~/lab$ tail -n 2 docs/syllabus.txt
+Week 14 Introduction to shell scripting
+Week 15 Final exam
+### Exercise 6
+student@okan-lab:~/lab$ wc docs/linux_quotes.txt
+  5  50 302 docs/linux_quotes.txt
+student@okan-lab:~/lab$ wc -l data/students.csv
+41 data/students.csv
+### Exercise 7
+student@okan-lab:~/lab$ cat "docs/final report.txt"
+Final report draft.
+This file name contains a space.
+student@okan-lab:~/lab$ cat docs/final\ report.txt
+Final report draft.
+This file name contains a space.
+### Exercise 8
+student@okan-lab:~/lab$ ls photos/img00?.jpg
+photos/img001.jpg  photos/img004.jpg  photos/img007.jpg
+photos/img002.jpg  photos/img005.jpg  photos/img008.jpg
+photos/img003.jpg  photos/img006.jpg  photos/img009.jpg
+student@okan-lab:~/lab$ ls photos/img01[0-2].jpg
+photos/img010.jpg  photos/img011.jpg  photos/img012.jpg
+student@okan-lab:~/lab$ echo photos/*.png
+photos/img013.png
+### Exercise 9
+student@okan-lab:~/lab$ cd photos
+student@okan-lab:~/lab/photos$ mkdir jpg png other
+student@okan-lab:~/lab/photos$ mv *.jpg jpg/
+student@okan-lab:~/lab/photos$ mv *.png png/
+student@okan-lab:~/lab/photos$ mv *.JPG *.jpeg other/
+student@okan-lab:~/lab/photos$ tree
+.
+├── jpg
+│   ├── img001.jpg
+│   ├── img002.jpg
+│   ├── img003.jpg
+│   ├── img004.jpg
+│   ├── img005.jpg
+│   ├── img006.jpg
+│   ├── img007.jpg
+│   ├── img008.jpg
+│   ├── img009.jpg
+│   ├── img010.jpg
+│   ├── img011.jpg
+│   └── img012.jpg
+├── other
+│   ├── IMG_014.JPG
+│   └── holiday.jpeg
+└── png
+    └── img013.png
+
+4 directories, 15 files
+student@okan-lab:~/lab/photos$ cd ..
+### Exercise 10
+student@okan-lab:~/lab$ echo docs/*
+docs/final report.txt docs/linux_quotes.txt docs/notes_01.txt docs/notes_02.txt docs/notes_03.txt docs/syllabus.txt
+student@okan-lab:~/lab$ ls -a docs
+ .    .settings           linux_quotes.txt   notes_02.txt   syllabus.txt
+ ..  'final report.txt'   notes_01.txt       notes_03.txt
+### Exercise 11
+student@okan-lab:~/lab$ cp -r docs backup/docs_copy
+student@okan-lab:~/lab$ ls -A backup/docs_copy
+ .settings           linux_quotes.txt   notes_02.txt   syllabus.txt
+'final report.txt'   notes_01.txt       notes_03.txt
+student@okan-lab:~/lab$ du -sh docs backup/docs_copy
+32K     docs
+32K     backup/docs_copy
+### Exercise 12
+student@okan-lab:~/lab$ file README.txt src/hello.c photos/jpg/img001.jpg logs
+README.txt:            ASCII text
+src/hello.c:           C source, ASCII text
+photos/jpg/img001.jpg: empty
+logs:                  directory
+student@okan-lab:~/lab$ du -sh data logs photos src
+16K     data
+36K     logs
+16K     photos
+8.0K    src
+### Exercise 13
+student@okan-lab:~/lab$ touch -d "2026-09-01 12:00" docs/notes_01.txt
+student@okan-lab:~/lab$ stat -c "%n | access %x | modify %y" docs/notes_01.txt
+docs/notes_01.txt | access 2026-09-01 12:00:00.000000000 +0000 | modify 2026-09-01 12:00:00.000000000 +0000
+student@okan-lab:~/lab$ ls -l docs/notes_01.txt
+-rw-rw-r-- 1 student student 16 Sep  1 12:00 docs/notes_01.txt
+### Exercise 14
+student@okan-lab:~/lab$ ln docs/syllabus.txt docs/syllabus_hard.txt
+student@okan-lab:~/lab$ ls -li docs/syllabus.txt docs/syllabus_hard.txt
+804121 -rw-rw-r-- 2 student student 578 Oct 12 08:48 docs/syllabus.txt
+804121 -rw-rw-r-- 2 student student 578 Oct 12 08:48 docs/syllabus_hard.txt
+student@okan-lab:~/lab$ rm docs/syllabus.txt
+student@okan-lab:~/lab$ ls -li docs/syllabus_hard.txt
+804121 -rw-rw-r-- 1 student student 578 Oct 12 08:48 docs/syllabus_hard.txt
+student@okan-lab:~/lab$ head -n 2 docs/syllabus_hard.txt
+Week 1  Introduction and history
+Week 2  Definitions, goals, components, structures
+### Exercise 15
+student@okan-lab:~/lab$ ln -s projects/alpha/docs alpha_docs
+student@okan-lab:~/lab$ ls alpha_docs/
+design.txt
+student@okan-lab:~/lab$ mv projects/alpha projects/alpha_old
+student@okan-lab:~/lab$ ls alpha_docs/
+ls: cannot access 'alpha_docs/': No such file or directory
+student@okan-lab:~/lab$ rm alpha_docs
+student@okan-lab:~/lab$ ln -s projects/alpha_old/docs alpha_docs
+student@okan-lab:~/lab$ ls -l alpha_docs
+lrwxrwxrwx 1 student student 23 Oct 12 08:48 alpha_docs -> projects/alpha_old/docs
+### Exercise 16
+student@okan-lab:~/lab$ mkdir -p course/week{01..14}/{slides,notes}
+student@okan-lab:~/lab$ ls course
+week01  week03  week05  week07  week09  week11  week13
+week02  week04  week06  week08  week10  week12  week14
+student@okan-lab:~/lab$ ls course/week10
+notes  slides
+### Exercise 17
+student@okan-lab:~/lab$ rmdir practice
+rmdir: failed to remove 'practice': Directory not empty
+student@okan-lab:~/lab$ rm -r practice course
+student@okan-lab:~/lab$ ls
+README.txt  backup  docs  photos    scripts
+alpha_docs  data    logs  projects  src

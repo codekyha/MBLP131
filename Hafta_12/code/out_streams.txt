@@ -1,0 +1,29 @@
+student@okan-lab:~/lab$ ls data nosuch
+ls: cannot access 'nosuch': No such file or directory
+data:
+cities.txt  numbers.txt  students.csv
+student@okan-lab:~/lab$ ls -l /proc/self/fd
+total 0
+lrwx------ 1 student student 64 Oct 12 08:48 0 -> /dev/pts/1
+lrwx------ 1 student student 64 Oct 12 08:48 1 -> /dev/pts/1
+lrwx------ 1 student student 64 Oct 12 08:48 2 -> /dev/pts/1
+lr-x------ 1 student student 64 Oct 12 08:48 3 -> /proc/15829/fd
+student@okan-lab:~/lab$ ls -l /proc/self/fd > fd.txt
+student@okan-lab:~/lab$ cat fd.txt
+total 0
+lrwx------ 1 student student 64 Oct 12 08:48 0 -> /dev/pts/1
+l-wx------ 1 student student 64 Oct 12 08:48 1 -> /home/student/lab/fd.txt
+lrwx------ 1 student student 64 Oct 12 08:48 2 -> /dev/pts/1
+lr-x------ 1 student student 64 Oct 12 08:48 3 -> /proc/15832/fd
+student@okan-lab:~/lab$ ls -l /proc/self/fd < docs/syllabus.txt
+total 0
+lr-x------ 1 student student 64 Oct 12 08:48 0 -> /home/student/lab/docs/syllabus.txt
+lrwx------ 1 student student 64 Oct 12 08:48 1 -> /dev/pts/1
+lrwx------ 1 student student 64 Oct 12 08:48 2 -> /dev/pts/1
+lr-x------ 1 student student 64 Oct 12 08:48 3 -> /proc/15838/fd
+student@okan-lab:~/lab$ ls -l /proc/self/fd 2> /dev/null
+total 0
+lrwx------ 1 student student 64 Oct 12 08:48 0 -> /dev/pts/1
+lrwx------ 1 student student 64 Oct 12 08:48 1 -> /dev/pts/1
+l-wx------ 1 student student 64 Oct 12 08:48 2 -> /dev/null
+lr-x------ 1 student student 64 Oct 12 08:48 3 -> /proc/15841/fd

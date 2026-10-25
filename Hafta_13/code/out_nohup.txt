@@ -1,0 +1,23 @@
+student@okan-lab:~/lab$ echo "my shell is PID $$"
+my shell is PID 2775
+student@okan-lab:~/lab$ sleep 500 &
+[1] 2831
+student@okan-lab:~/lab$ echo "last background job is PID $!"
+last background job is PID 2831
+student@okan-lab:~/lab$ nohup sleep 600 &
+[2] 2832
+student@okan-lab:~/lab$ nohup: ignoring input and appending output to 'nohup.out'
+nohup sleep 700 > /dev/null 2>&1 &
+[3] 2834
+student@okan-lab:~/lab$ ls
+README.txt  backup  data  docs	logs  nohup.out  photos  projects  scripts  src
+student@okan-lab:~/lab$ jobs -l
+[1]   2831 Running                 sleep 500 &
+[2]-  2832 Running                 nohup sleep 600 &
+[3]+  2834 Running                 nohup sleep 700 > /dev/null 2>&1 &
+student@okan-lab:~/lab$ kill -HUP %1 %2 %3
+student@okan-lab:~/lab$ jobs -l
+[1]   2831 Hangup                  sleep 500
+[2]-  2832 Running                 nohup sleep 600 &
+[3]+  2834 Running                 nohup sleep 700 > /dev/null 2>&1 &
+student@okan-lab:~/lab$ kill %2 %3

@@ -1,0 +1,19 @@
+student@okan-lab:~/lab/scripts$ ./args.sh apple "green tea" 42
+Script name  $0 = ./args.sh
+First arg    $1 = apple
+Second arg   $2 = green tea
+Arg count    $# = 3
+All args     $@ = apple green tea 42
+  argument 1: [apple]
+  argument 2: [green tea]
+  argument 3: [42]
+student@okan-lab:~/lab/scripts$ ./args.sh
+Script name  $0 = ./args.sh
+First arg    $1 = 
+Second arg   $2 = 
+Arg count    $# = 0
+All args     $@ =
+student@okan-lab:~/lab/scripts$ ./greet.sh
+What is your name? Ayse
+Which year were you born? 2006
+Nice to meet you, Ayse. You are about 20 years old.

@@ -1,0 +1,11 @@
+student@okan-lab:~/lab$ sleep 900 &
+student@okan-lab:~/lab$ ps -o pid,stat,cmd
+  PID STAT CMD
+23954 Ss+  bash /home/student/w15/answers_sample.sh
+24000 S+   sleep 900
+24002 R+   ps -o pid,stat,cmd
+student@okan-lab:~/lab$ kill -9 $!
+student@okan-lab:~/lab$ ps -o pid,stat,cmd
+  PID STAT CMD
+23954 Ss+  bash /home/student/w15/answers_sample.sh
+24009 R+   ps -o pid,stat,cmd

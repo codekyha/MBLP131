@@ -1,0 +1,16 @@
+student@okan-lab:~/lab$ grep -c ERROR logs/system.log
+13
+student@okan-lab:~/lab$ grep -n ERROR logs/system.log | head -3
+13:2026-10-12 09:12:00 ERROR failed to mount /dev/sdb1
+17:2026-10-12 09:56:00 ERROR failed to mount /dev/sdb1
+18:2026-10-12 09:07:00 ERROR failed to mount /dev/sdb1
+student@okan-lab:~/lab$ cut -d' ' -f9 logs/access.log | sort | uniq -c | sort -rn
+    148 200
+     57 404
+     34 304
+     24 500
+     20 301
+     17 403
+student@okan-lab:~/lab$ ls nosuchfile 2> errors.txt
+student@okan-lab:~/lab$ cat errors.txt
+ls: cannot access 'nosuchfile': No such file or directory

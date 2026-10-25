@@ -1,0 +1,1721 @@
+{
+ "D1_SRTF": {
+  "segs": [
+   [
+    "P1",
+    0,
+    1
+   ],
+   [
+    "P2",
+    1,
+    2
+   ],
+   [
+    "P3",
+    2,
+    3
+   ],
+   [
+    "P2",
+    3,
+    5
+   ],
+   [
+    "P1",
+    5,
+    9
+   ],
+   [
+    "P4",
+    9,
+    13
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 5,
+    "priority": 3,
+    "first": 0,
+    "completion": 9,
+    "turnaround": 9,
+    "waiting": 4,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 1,
+    "burst": 3,
+    "priority": 1,
+    "first": 1,
+    "completion": 5,
+    "turnaround": 4,
+    "waiting": 1,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 2,
+    "burst": 1,
+    "priority": 4,
+    "first": 2,
+    "completion": 3,
+    "turnaround": 1,
+    "waiting": 0,
+    "response": 0
+   },
+   "P4": {
+    "arrival": 3,
+    "burst": 4,
+    "priority": 2,
+    "first": 9,
+    "completion": 13,
+    "turnaround": 10,
+    "waiting": 6,
+    "response": 6
+   }
+  },
+  "avg": {
+   "waiting": 2.75,
+   "turnaround": 6.0,
+   "response": 1.5
+  },
+  "switches": 5
+ },
+ "D1_RR2": {
+  "segs": [
+   [
+    "P1",
+    0,
+    2
+   ],
+   [
+    "P2",
+    2,
+    4
+   ],
+   [
+    "P3",
+    4,
+    5
+   ],
+   [
+    "P1",
+    5,
+    7
+   ],
+   [
+    "P4",
+    7,
+    9
+   ],
+   [
+    "P2",
+    9,
+    10
+   ],
+   [
+    "P1",
+    10,
+    11
+   ],
+   [
+    "P4",
+    11,
+    13
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 5,
+    "priority": 3,
+    "first": 0,
+    "completion": 11,
+    "turnaround": 11,
+    "waiting": 6,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 1,
+    "burst": 3,
+    "priority": 1,
+    "first": 2,
+    "completion": 10,
+    "turnaround": 9,
+    "waiting": 6,
+    "response": 1
+   },
+   "P3": {
+    "arrival": 2,
+    "burst": 1,
+    "priority": 4,
+    "first": 4,
+    "completion": 5,
+    "turnaround": 3,
+    "waiting": 2,
+    "response": 2
+   },
+   "P4": {
+    "arrival": 3,
+    "burst": 4,
+    "priority": 2,
+    "first": 7,
+    "completion": 13,
+    "turnaround": 10,
+    "waiting": 6,
+    "response": 4
+   }
+  },
+  "avg": {
+   "waiting": 5.0,
+   "turnaround": 8.25,
+   "response": 1.75
+  },
+  "switches": 7
+ },
+ "D2": {
+  "a": 2500,
+  "size": 1024,
+  "p": 2,
+  "d": 452,
+  "f": 7,
+  "phys": 7620,
+  "eat": 120.00000000000001,
+  "alpha115": 0.95
+ },
+ "D3": {
+  "refs": [
+   3,
+   5,
+   1,
+   0,
+   3,
+   1,
+   0,
+   3,
+   1,
+   4,
+   1,
+   0
+  ],
+  "n": 3,
+  "FIFO": {
+   "faults": 8,
+   "frames": [
+    [
+     3
+    ],
+    [
+     3,
+     5
+    ],
+    [
+     3,
+     5,
+     1
+    ],
+    [
+     0,
+     5,
+     1
+    ],
+    [
+     0,
+     3,
+     1
+    ],
+    [
+     0,
+     3,
+     1
+    ],
+    [
+     0,
+     3,
+     1
+    ],
+    [
+     0,
+     3,
+     1
+    ],
+    [
+     0,
+     3,
+     1
+    ],
+    [
+     0,
+     3,
+     4
+    ],
+    [
+     1,
+     3,
+     4
+    ],
+    [
+     1,
+     0,
+     4
+    ]
+   ],
+   "fault": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true
+   ]
+  },
+  "OPT": {
+   "faults": 5,
+   "frames": [
+    [
+     3
+    ],
+    [
+     3,
+     5
+    ],
+    [
+     3,
+     5,
+     1
+    ],
+    [
+     3,
+     0,
+     1
+    ],
+    [
+     3,
+     0,
+     1
+    ],
+    [
+     3,
+     0,
+     1
+    ],
+    [
+     3,
+     0,
+     1
+    ],
+    [
+     3,
+     0,
+     1
+    ],
+    [
+     3,
+     0,
+     1
+    ],
+    [
+     4,
+     0,
+     1
+    ],
+    [
+     4,
+     0,
+     1
+    ],
+    [
+     4,
+     0,
+     1
+    ]
+   ],
+   "fault": [
+    true,
+    true,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false
+   ]
+  },
+  "LRU": {
+   "faults": 7,
+   "frames": [
+    [
+     3
+    ],
+    [
+     3,
+     5
+    ],
+    [
+     3,
+     5,
+     1
+    ],
+    [
+     0,
+     5,
+     1
+    ],
+    [
+     0,
+     3,
+     1
+    ],
+    [
+     0,
+     3,
+     1
+    ],
+    [
+     0,
+     3,
+     1
+    ],
+    [
+     0,
+     3,
+     1
+    ],
+    [
+     0,
+     3,
+     1
+    ],
+    [
+     4,
+     3,
+     1
+    ],
+    [
+     4,
+     3,
+     1
+    ],
+    [
+     4,
+     0,
+     1
+    ]
+   ],
+   "fault": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    true
+   ]
+  }
+ },
+ "D4": {
+  "eat": 2099.98,
+  "pmax": 1.000010000100001e-06
+ },
+ "D4b": {
+  "offset": 9600,
+  "block": 2,
+  "inblock": 1408,
+  "last": 9727,
+  "lastblock": 2
+ },
+ "D5": {
+  "u": 0.784,
+  "ub": 0.4,
+  "amdahl": 2.5,
+  "overhead": 0.02439024390243903
+ },
+ "N1_SJF": {
+  "segs": [
+   [
+    "P1",
+    0,
+    8
+   ],
+   [
+    "P2",
+    8,
+    12
+   ],
+   [
+    "P4",
+    12,
+    17
+   ],
+   [
+    "P3",
+    17,
+    26
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 8,
+    "priority": 2,
+    "first": 0,
+    "completion": 8,
+    "turnaround": 8,
+    "waiting": 0,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 1,
+    "burst": 4,
+    "priority": 1,
+    "first": 8,
+    "completion": 12,
+    "turnaround": 11,
+    "waiting": 7,
+    "response": 7
+   },
+   "P3": {
+    "arrival": 2,
+    "burst": 9,
+    "priority": 4,
+    "first": 17,
+    "completion": 26,
+    "turnaround": 24,
+    "waiting": 15,
+    "response": 15
+   },
+   "P4": {
+    "arrival": 3,
+    "burst": 5,
+    "priority": 3,
+    "first": 12,
+    "completion": 17,
+    "turnaround": 14,
+    "waiting": 9,
+    "response": 9
+   }
+  },
+  "avg": {
+   "waiting": 7.75,
+   "turnaround": 14.25,
+   "response": 7.75
+  },
+  "switches": 3
+ },
+ "N1_SRTF": {
+  "segs": [
+   [
+    "P1",
+    0,
+    1
+   ],
+   [
+    "P2",
+    1,
+    5
+   ],
+   [
+    "P4",
+    5,
+    10
+   ],
+   [
+    "P1",
+    10,
+    17
+   ],
+   [
+    "P3",
+    17,
+    26
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 8,
+    "priority": 2,
+    "first": 0,
+    "completion": 17,
+    "turnaround": 17,
+    "waiting": 9,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 1,
+    "burst": 4,
+    "priority": 1,
+    "first": 1,
+    "completion": 5,
+    "turnaround": 4,
+    "waiting": 0,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 2,
+    "burst": 9,
+    "priority": 4,
+    "first": 17,
+    "completion": 26,
+    "turnaround": 24,
+    "waiting": 15,
+    "response": 15
+   },
+   "P4": {
+    "arrival": 3,
+    "burst": 5,
+    "priority": 3,
+    "first": 5,
+    "completion": 10,
+    "turnaround": 7,
+    "waiting": 2,
+    "response": 2
+   }
+  },
+  "avg": {
+   "waiting": 6.5,
+   "turnaround": 13.0,
+   "response": 4.25
+  },
+  "switches": 4
+ },
+ "N1_RR3": {
+  "segs": [
+   [
+    "P1",
+    0,
+    3
+   ],
+   [
+    "P2",
+    3,
+    6
+   ],
+   [
+    "P3",
+    6,
+    9
+   ],
+   [
+    "P4",
+    9,
+    12
+   ],
+   [
+    "P1",
+    12,
+    15
+   ],
+   [
+    "P2",
+    15,
+    16
+   ],
+   [
+    "P3",
+    16,
+    19
+   ],
+   [
+    "P4",
+    19,
+    21
+   ],
+   [
+    "P1",
+    21,
+    23
+   ],
+   [
+    "P3",
+    23,
+    26
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 8,
+    "priority": 2,
+    "first": 0,
+    "completion": 23,
+    "turnaround": 23,
+    "waiting": 15,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 1,
+    "burst": 4,
+    "priority": 1,
+    "first": 3,
+    "completion": 16,
+    "turnaround": 15,
+    "waiting": 11,
+    "response": 2
+   },
+   "P3": {
+    "arrival": 2,
+    "burst": 9,
+    "priority": 4,
+    "first": 6,
+    "completion": 26,
+    "turnaround": 24,
+    "waiting": 15,
+    "response": 4
+   },
+   "P4": {
+    "arrival": 3,
+    "burst": 5,
+    "priority": 3,
+    "first": 9,
+    "completion": 21,
+    "turnaround": 18,
+    "waiting": 13,
+    "response": 6
+   }
+  },
+  "avg": {
+   "waiting": 13.5,
+   "turnaround": 20.0,
+   "response": 3.0
+  },
+  "switches": 9
+ },
+ "N2": {
+  "first": {
+   "placed": [
+    [
+     115,
+     0,
+     300
+    ],
+    [
+     500,
+     1,
+     600
+    ],
+    [
+     358,
+     4,
+     750
+    ],
+    [
+     200,
+     2,
+     350
+    ],
+    [
+     375,
+     4,
+     392
+    ]
+   ],
+   "holes_after": [
+    185,
+    100,
+    150,
+    200,
+    17,
+    125
+   ]
+  },
+  "best": {
+   "placed": [
+    [
+     115,
+     5,
+     125
+    ],
+    [
+     500,
+     1,
+     600
+    ],
+    [
+     358,
+     4,
+     750
+    ],
+    [
+     200,
+     3,
+     200
+    ],
+    [
+     375,
+     4,
+     392
+    ]
+   ],
+   "holes_after": [
+    300,
+    100,
+    350,
+    0,
+    17,
+    10
+   ]
+  },
+  "worst": {
+   "placed": [
+    [
+     115,
+     4,
+     750
+    ],
+    [
+     500,
+     4,
+     635
+    ],
+    [
+     358,
+     1,
+     600
+    ],
+    [
+     200,
+     2,
+     350
+    ],
+    [
+     375,
+     null,
+     null
+    ]
+   ],
+   "holes_after": [
+    300,
+    242,
+    150,
+    200,
+    135,
+    125
+   ]
+  }
+ },
+ "N3": {
+  "a": 23585,
+  "size": 4096,
+  "p": 5,
+  "d": 3105,
+  "f": 9,
+  "phys": 39969
+ },
+ "N4": {
+  "eat": 104.0,
+  "alpha": 0.875
+ },
+ "N5": {
+  "refs": [
+   2,
+   3,
+   2,
+   1,
+   5,
+   2,
+   4,
+   5,
+   3,
+   2,
+   5,
+   2
+  ],
+  "n": 3,
+  "FIFO": {
+   "faults": 9,
+   "frames": [
+    [
+     2
+    ],
+    [
+     2,
+     3
+    ],
+    [
+     2,
+     3
+    ],
+    [
+     2,
+     3,
+     1
+    ],
+    [
+     5,
+     3,
+     1
+    ],
+    [
+     5,
+     2,
+     1
+    ],
+    [
+     5,
+     2,
+     4
+    ],
+    [
+     5,
+     2,
+     4
+    ],
+    [
+     3,
+     2,
+     4
+    ],
+    [
+     3,
+     2,
+     4
+    ],
+    [
+     3,
+     5,
+     4
+    ],
+    [
+     3,
+     5,
+     2
+    ]
+   ],
+   "fault": [
+    true,
+    true,
+    false,
+    true,
+    true,
+    true,
+    true,
+    false,
+    true,
+    false,
+    true,
+    true
+   ]
+  },
+  "OPT": {
+   "faults": 6,
+   "frames": [
+    [
+     2
+    ],
+    [
+     2,
+     3
+    ],
+    [
+     2,
+     3
+    ],
+    [
+     2,
+     3,
+     1
+    ],
+    [
+     2,
+     3,
+     5
+    ],
+    [
+     2,
+     3,
+     5
+    ],
+    [
+     4,
+     3,
+     5
+    ],
+    [
+     4,
+     3,
+     5
+    ],
+    [
+     4,
+     3,
+     5
+    ],
+    [
+     2,
+     3,
+     5
+    ],
+    [
+     2,
+     3,
+     5
+    ],
+    [
+     2,
+     3,
+     5
+    ]
+   ],
+   "fault": [
+    true,
+    true,
+    false,
+    true,
+    true,
+    false,
+    true,
+    false,
+    false,
+    true,
+    false,
+    false
+   ]
+  },
+  "LRU": {
+   "faults": 7,
+   "frames": [
+    [
+     2
+    ],
+    [
+     2,
+     3
+    ],
+    [
+     2,
+     3
+    ],
+    [
+     2,
+     3,
+     1
+    ],
+    [
+     2,
+     5,
+     1
+    ],
+    [
+     2,
+     5,
+     1
+    ],
+    [
+     2,
+     5,
+     4
+    ],
+    [
+     2,
+     5,
+     4
+    ],
+    [
+     3,
+     5,
+     4
+    ],
+    [
+     3,
+     5,
+     2
+    ],
+    [
+     3,
+     5,
+     2
+    ],
+    [
+     3,
+     5,
+     2
+    ]
+   ],
+   "fault": [
+    true,
+    true,
+    false,
+    true,
+    true,
+    false,
+    true,
+    false,
+    true,
+    true,
+    false,
+    false
+   ]
+  }
+ },
+ "N6": {
+  "eat": 749.985,
+  "pmax": 1.2500312507812695e-06
+ },
+ "N7": {
+  "offset": 6000,
+  "block": 5,
+  "inblock": 880,
+  "last": 6199,
+  "lastblock": 6
+ },
+ "N9": {
+  "amdahl": 4.705882352941176,
+  "u2": 0.4375,
+  "u4": 0.68359375,
+  "n90": 9
+ },
+ "N11": [
+  12,
+  10.0,
+  7.0,
+  8.5
+ ],
+ "S1_FCFS": {
+  "segs": [
+   [
+    "P1",
+    0,
+    6
+   ],
+   [
+    "P2",
+    6,
+    8
+   ],
+   [
+    "P3",
+    8,
+    15
+   ],
+   [
+    "P4",
+    15,
+    18
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 6,
+    "priority": 3,
+    "first": 0,
+    "completion": 6,
+    "turnaround": 6,
+    "waiting": 0,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 2,
+    "priority": 1,
+    "first": 6,
+    "completion": 8,
+    "turnaround": 6,
+    "waiting": 4,
+    "response": 4
+   },
+   "P3": {
+    "arrival": 3,
+    "burst": 7,
+    "priority": 4,
+    "first": 8,
+    "completion": 15,
+    "turnaround": 12,
+    "waiting": 5,
+    "response": 5
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 3,
+    "priority": 2,
+    "first": 15,
+    "completion": 18,
+    "turnaround": 13,
+    "waiting": 10,
+    "response": 10
+   }
+  },
+  "avg": {
+   "waiting": 4.75,
+   "turnaround": 9.25,
+   "response": 4.75
+  },
+  "switches": 3
+ },
+ "S1_PRIO_P": {
+  "segs": [
+   [
+    "P1",
+    0,
+    2
+   ],
+   [
+    "P2",
+    2,
+    4
+   ],
+   [
+    "P1",
+    4,
+    5
+   ],
+   [
+    "P4",
+    5,
+    8
+   ],
+   [
+    "P1",
+    8,
+    11
+   ],
+   [
+    "P3",
+    11,
+    18
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 6,
+    "priority": 3,
+    "first": 0,
+    "completion": 11,
+    "turnaround": 11,
+    "waiting": 5,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 2,
+    "priority": 1,
+    "first": 2,
+    "completion": 4,
+    "turnaround": 2,
+    "waiting": 0,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 3,
+    "burst": 7,
+    "priority": 4,
+    "first": 11,
+    "completion": 18,
+    "turnaround": 15,
+    "waiting": 8,
+    "response": 8
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 3,
+    "priority": 2,
+    "first": 5,
+    "completion": 8,
+    "turnaround": 3,
+    "waiting": 0,
+    "response": 0
+   }
+  },
+  "avg": {
+   "waiting": 3.25,
+   "turnaround": 7.75,
+   "response": 2.0
+  },
+  "switches": 5
+ },
+ "S1_RR2": {
+  "segs": [
+   [
+    "P1",
+    0,
+    2
+   ],
+   [
+    "P2",
+    2,
+    4
+   ],
+   [
+    "P1",
+    4,
+    6
+   ],
+   [
+    "P3",
+    6,
+    8
+   ],
+   [
+    "P4",
+    8,
+    10
+   ],
+   [
+    "P1",
+    10,
+    12
+   ],
+   [
+    "P3",
+    12,
+    14
+   ],
+   [
+    "P4",
+    14,
+    15
+   ],
+   [
+    "P3",
+    15,
+    18
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 6,
+    "priority": 3,
+    "first": 0,
+    "completion": 12,
+    "turnaround": 12,
+    "waiting": 6,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 2,
+    "burst": 2,
+    "priority": 1,
+    "first": 2,
+    "completion": 4,
+    "turnaround": 2,
+    "waiting": 0,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 3,
+    "burst": 7,
+    "priority": 4,
+    "first": 6,
+    "completion": 18,
+    "turnaround": 15,
+    "waiting": 8,
+    "response": 3
+   },
+   "P4": {
+    "arrival": 5,
+    "burst": 3,
+    "priority": 2,
+    "first": 8,
+    "completion": 15,
+    "turnaround": 10,
+    "waiting": 7,
+    "response": 3
+   }
+  },
+  "avg": {
+   "waiting": 5.25,
+   "turnaround": 9.75,
+   "response": 1.5
+  },
+  "switches": 8
+ },
+ "S2": {
+  "a": 5000,
+  "size": 2048,
+  "p": 2,
+  "d": 904,
+  "f": 6,
+  "phys": 13192,
+  "eat": 118.0
+ },
+ "S3": {
+  "first": {
+   "placed": [
+    [
+     280,
+     1,
+     450
+    ]
+   ],
+   "holes_after": [
+    200,
+    170,
+    100,
+    300,
+    500
+   ]
+  },
+  "best": {
+   "placed": [
+    [
+     280,
+     3,
+     300
+    ]
+   ],
+   "holes_after": [
+    200,
+    450,
+    100,
+    20,
+    500
+   ]
+  },
+  "worst": {
+   "placed": [
+    [
+     280,
+     4,
+     500
+    ]
+   ],
+   "holes_after": [
+    200,
+    450,
+    100,
+    300,
+    220
+   ]
+  }
+ },
+ "S4": {
+  "refs": [
+   5,
+   4,
+   1,
+   5,
+   0,
+   5,
+   4,
+   0,
+   2,
+   1,
+   0,
+   1
+  ],
+  "n": 3,
+  "FIFO": {
+   "faults": 9,
+   "frames": [
+    [
+     5
+    ],
+    [
+     5,
+     4
+    ],
+    [
+     5,
+     4,
+     1
+    ],
+    [
+     5,
+     4,
+     1
+    ],
+    [
+     0,
+     4,
+     1
+    ],
+    [
+     0,
+     5,
+     1
+    ],
+    [
+     0,
+     5,
+     4
+    ],
+    [
+     0,
+     5,
+     4
+    ],
+    [
+     2,
+     5,
+     4
+    ],
+    [
+     2,
+     1,
+     4
+    ],
+    [
+     2,
+     1,
+     0
+    ],
+    [
+     2,
+     1,
+     0
+    ]
+   ],
+   "fault": [
+    true,
+    true,
+    true,
+    false,
+    true,
+    true,
+    true,
+    false,
+    true,
+    true,
+    true,
+    false
+   ]
+  },
+  "OPT": {
+   "faults": 6,
+   "frames": [
+    [
+     5
+    ],
+    [
+     5,
+     4
+    ],
+    [
+     5,
+     4,
+     1
+    ],
+    [
+     5,
+     4,
+     1
+    ],
+    [
+     5,
+     4,
+     0
+    ],
+    [
+     5,
+     4,
+     0
+    ],
+    [
+     5,
+     4,
+     0
+    ],
+    [
+     5,
+     4,
+     0
+    ],
+    [
+     2,
+     4,
+     0
+    ],
+    [
+     1,
+     4,
+     0
+    ],
+    [
+     1,
+     4,
+     0
+    ],
+    [
+     1,
+     4,
+     0
+    ]
+   ],
+   "fault": [
+    true,
+    true,
+    true,
+    false,
+    true,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    false
+   ]
+  },
+  "LRU": {
+   "faults": 7,
+   "frames": [
+    [
+     5
+    ],
+    [
+     5,
+     4
+    ],
+    [
+     5,
+     4,
+     1
+    ],
+    [
+     5,
+     4,
+     1
+    ],
+    [
+     5,
+     0,
+     1
+    ],
+    [
+     5,
+     0,
+     1
+    ],
+    [
+     5,
+     0,
+     4
+    ],
+    [
+     5,
+     0,
+     4
+    ],
+    [
+     2,
+     0,
+     4
+    ],
+    [
+     2,
+     0,
+     1
+    ],
+    [
+     2,
+     0,
+     1
+    ],
+    [
+     2,
+     0,
+     1
+    ]
+   ],
+   "fault": [
+    true,
+    true,
+    true,
+    false,
+    true,
+    false,
+    true,
+    false,
+    true,
+    true,
+    false,
+    false
+   ]
+  }
+ },
+ "S5": {
+  "eat": 2599.95
+ },
+ "S6": {
+  "offset": 5000,
+  "block": 9,
+  "inblock": 392,
+  "last": 5049,
+  "lastblock": 9
+ },
+ "S7": {
+  "u": 0.9375,
+  "amdahl": 2.0,
+  "overhead": 0.019607843137254905
+ },
+ "Q1_SRTF": {
+  "segs": [
+   [
+    "P1",
+    0,
+    1
+   ],
+   [
+    "P2",
+    1,
+    3
+   ],
+   [
+    "P3",
+    3,
+    4
+   ],
+   [
+    "P1",
+    4,
+    7
+   ]
+  ],
+  "per": {
+   "P1": {
+    "arrival": 0,
+    "burst": 4,
+    "priority": 0,
+    "first": 0,
+    "completion": 7,
+    "turnaround": 7,
+    "waiting": 3,
+    "response": 0
+   },
+   "P2": {
+    "arrival": 1,
+    "burst": 2,
+    "priority": 0,
+    "first": 1,
+    "completion": 3,
+    "turnaround": 2,
+    "waiting": 0,
+    "response": 0
+   },
+   "P3": {
+    "arrival": 2,
+    "burst": 1,
+    "priority": 0,
+    "first": 3,
+    "completion": 4,
+    "turnaround": 2,
+    "waiting": 1,
+    "response": 1
+   }
+  },
+  "avg": {
+   "waiting": 1.3333333333333333,
+   "turnaround": 3.6666666666666665,
+   "response": 0.3333333333333333
+  },
+  "switches": 3
+ }
+}

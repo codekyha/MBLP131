@@ -1,0 +1,3 @@
+student@okan-lab:~/lab$ sudo whoami
+[sudo] password for student: 
+student is not in the sudoers file.

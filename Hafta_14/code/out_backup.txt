@@ -1,0 +1,21 @@
+student@okan-lab:~/lab/scripts$ ./backup.sh
+Backup created: /home/student/lab/backup/docs_20261012_085013.tar.gz
+Files: 7, size: 4.0K
+student@okan-lab:~/lab/scripts$ ls -l ../backup
+total 4
+-rw-rw-r-- 1 student student 862 Oct 12 08:50 docs_20261012_085013.tar.gz
+student@okan-lab:~/lab/scripts$ tar -tzf ../backup/docs_*.tar.gz
+docs/
+docs/notes_02.txt
+docs/syllabus.txt
+docs/.settings
+docs/notes_01.txt
+docs/notes_03.txt
+docs/linux_quotes.txt
+docs/final report.txt
+student@okan-lab:~/lab/scripts$ sleep 2
+student@okan-lab:~/lab/scripts$ ./backup.sh
+Backup created: /home/student/lab/backup/docs_20261012_085015.tar.gz
+Files: 7, size: 4.0K
+student@okan-lab:~/lab/scripts$ ls ../backup
+docs_20261012_085013.tar.gz  docs_20261012_085015.tar.gz

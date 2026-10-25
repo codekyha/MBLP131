@@ -1,0 +1,9 @@
+student@okan-lab:~/lab$ echo "hello" > me.txt
+student@okan-lab:~/lab$ chmod 074 me.txt
+student@okan-lab:~/lab$ ls -l me.txt
+----rwxr-- 1 student student 6 Oct 12 19:38 me.txt
+student@okan-lab:~/lab$ cat me.txt
+cat: me.txt: Permission denied
+student@okan-lab:~/lab$ chmod 644 me.txt
+student@okan-lab:~/lab$ cat me.txt
+hello

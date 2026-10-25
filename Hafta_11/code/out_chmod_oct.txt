@@ -1,0 +1,19 @@
+student@okan-lab:~/lab$ cd docs
+student@okan-lab:~/lab/docs$ chmod 754 syllabus.txt
+student@okan-lab:~/lab/docs$ ls -l syllabus.txt
+-rwxr-xr-- 1 student student 578 Oct 12 19:38 syllabus.txt
+student@okan-lab:~/lab/docs$ chmod 640 syllabus.txt
+student@okan-lab:~/lab/docs$ chmod 600 notes_01.txt
+student@okan-lab:~/lab/docs$ chmod 644 notes_02.txt
+student@okan-lab:~/lab/docs$ chmod 700 ../backup
+student@okan-lab:~/lab/docs$ stat -c '%a  %A  %n' syllabus.txt notes_01.txt notes_02.txt ../backup
+640  -rw-r-----  syllabus.txt
+600  -rw-------  notes_01.txt
+644  -rw-r--r--  notes_02.txt
+700  drwx------  ../backup
+student@okan-lab:~/lab/docs$ chmod 854 notes_03.txt
+chmod: invalid mode: ‘854’
+Try 'chmod --help' for more information.
+student@okan-lab:~/lab/docs$ chmod rw notes_03.txt
+chmod: invalid mode: ‘rw’
+Try 'chmod --help' for more information.

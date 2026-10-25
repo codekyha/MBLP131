@@ -1,0 +1,646 @@
+% ============================ Hafta 14 gövdesi ============================
+\setlength{\emergencystretch}{3em}
+\lstdefinestyle{inl}{basicstyle=\ttfamily\color{charcoal},keywordstyle=,commentstyle=,stringstyle=,language={},columns=fullflexible,keepspaces=true}
+\lstMakeShortInline[style=inl]`
+\lstdefinestyle{sh}{style=course,language=bash,basicstyle=\ttfamily\footnotesize\color{light},morekeywords={local,read,source,elif,then,fi,do,done,in,exit,return,echo,printf,cd,test}}
+\lstdefinestyle{out}{style=term,basicstyle=\ttfamily\footnotesize\color{light}}
+
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 14 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Kabuk Betiklerine Giriş}\par\smallskip
+{\small\itshape\color{white!70} Bir kez yazın, kaydedin, bin kez çalıştırın.}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Kabuk betiğinin ne olduğunu, neden yararlı olduğunu ve bir betik çalıştırıldığında ne olduğunu (fork, exec, shebang) açıklamak.
+  \item Shebang satırı olan bir betik yazmak, onu \texttt{chmod +x} ile çalıştırılabilir yapmak ve dört olası yolla çalıştırmak.
+  \item Değişkenleri, üç tür tırnaklamayı, komut yerine koymayı \texttt{\$( )} ve tamsayı aritmetiğini \texttt{\$(( ))} kullanmak.
+  \item Argümanları (\texttt{\$0 \$1 \$\# \$@}) ve klavye girdisini (\texttt{read}) okumak.
+  \item Çıkış durumlarını, sayılar, dizgiler ve dosyalar için \texttt{test} / \texttt{[ ]} yapısını ve \texttt{if / elif / else} deyimini kullanmak.
+  \item \texttt{for} ve \texttt{while} döngüleri ile basit fonksiyonlar yazmak.
+  \item Bir betikte \texttt{bash -n} ve \texttt{bash -x} ile hata ayıklamak ve en sık görülen hata iletilerini tanımak.
+  \item İki eksiksiz otomasyon betiğini okuyup uyarlamak: \texttt{backup.sh} ve \texttt{report.sh}.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{13. Haftadan 14. Haftaya}
+
+Geçen hafta \term{süreçlere} (processes) komut satırından baktık: her komut bir PID'si ve bir ebeveyni olan bir süreç olarak çalışır, \cmd{ps} ve \cmd{top} bunları gösterir, işler ön plan ile arka plan arasında taşınabilir ve \cmd{kill} sinyal gönderir. 9--12. haftalarda komutların kendisini öğrendik: dizinlerde gezinme, dosya işlemleri, izinler, yönlendirme ve boru hatları.
+
+Şimdiye kadar her komutu elle yazdık. Bu hafta komutları bir dosyaya kaydediyor ve onları kabuğun bizim yerimize çalıştırmasını sağlıyoruz. Böyle bir dosyaya \term{kabuk betiği} (shell script) denir. Betik de yalnızca bir programdır: onu çalıştırdığınızda kabuk, tıpkı \cmd{ls} ya da \cmd{sleep} için yaptığı gibi onun için yeni bir süreç oluşturur ve 13. haftada gördüğümüz her şey ona da uygulanır.
+
+\paragraph{Bu notları nasıl izlemelisiniz?} Tüm örnek betikler bu notların yanındaki \texttt{code/} klasöründedir. Temiz bir laboratuvar klasörü oluşturun, betikleri kopyalayın ve \texttt{\textasciitilde/lab/scripts} içinde çalışın:
+\begin{lstlisting}[style=term]
+$ bash mcmp117_lab_setup.sh          # ~/lab'ı yeniden oluşturur (herkes için aynı dosyalar)
+$ cp *.sh ~/lab/scripts/             # bunu hafta14/code klasöründe çalıştırın
+$ cd ~/lab/scripts
+\end{lstlisting}
+Bu notlardaki her çıktı, deneme makinemiz \texttt{okan-lab} üzerinde sıradan kullanıcı \texttt{student} olarak, \texttt{LC\_ALL=C.UTF-8} ayarıyla yakalanmıştır. Sizin makinenizde tarihler, saatler, dosya boyutları, PID'ler ve kullanıcı adları farklı olacak; \cmd{ls} ya da \cmd{sort} çıktısının sırası da yerel ayara (locale) göre değişebilir. Türkçe yerel ayarlı bir sistemde (\texttt{LANG=tr\_TR.UTF-8}) birçok ileti Türkçe görünür ve sıralama farklı olabilir; ders çıktıları \texttt{LC\_ALL=C.UTF-8} ile alınmıştır. Kabuk GNU \texttt{bash} 5.2'dir. Örnek betiklerdeki yorumlar ve program iletileri, İngilizce şubeyle ortak olduğu ve Linux belgelerinin dili İngilizce olduğu için İngilizcedir (\texttt{variables.sh} bu yüzden ders kodu olarak \texttt{MCMP117} yazdırır); kendi kopyalarınızda Türkçe yorum yazabilirsiniz.
+
+% =====================================================================
+\section{Neden Betik Yazarız?}
+
+Her sabah bir klasörü yedeklediğinizi, bir günlük (log) dosyasında hata aradığınızı ve dünkü web isteklerini saydığınızı düşünün: doğru sırayla, doğru yollarla yazılması gereken altı yedi komut. Bunları elle yazmak yavaştır, yanlış yapmaya açıktır, bir iş arkadaşınıza anlatması zordur ve siz uyurken olanaksızdır. Bir betik bu dört sorunun hepsini çözer:
+\begin{itemize}
+  \item \textbf{Tekrarlanabilirlik:} tek bir komut, \texttt{./backup.sh}, her seferinde aynı adımları yapar.
+  \item \textbf{Daha az hata:} bir yazım hatası dosyada bir kez düzeltilir ve düzeltilmiş kalır.
+  \item \textbf{Belgeleme:} yorumlarıyla birlikte betiğin kendisi yordamın tanımıdır.
+  \item \textbf{Otomasyon:} \cmd{cron} gibi bir zamanlayıcı, klavye başında kimse yokken bir betiği belirli saatlerde başlatabilir.
+\end{itemize}
+Yararlı bir pratik kural: aynı komut dizisini üçüncü kez yazıyorsanız bir betik yazın. Sistem yöneticileri, DevOps mühendisleri ve gömülü Linux geliştiricileri her gün küçük betikler yazar; Linux'un kendisi de açılırken birçok kabuk betiği çalıştırır.
+
+% =====================================================================
+\section{İlk Betiğiniz}
+
+\subsection{Bir betiğin anatomisi}
+
+Betik düz bir metin dosyasıdır. Onu herhangi bir metin düzenleyiciyle oluşturun, örneğin \cmd{nano hello.sh} (Ctrl+O ve Enter ile kaydedin, Ctrl+X ile çıkın):
+
+\lstinputlisting[style=sh]{../code/hello.sh}
+
+\begin{itemize}
+  \item \textbf{1. satır, shebang:} \texttt{\#!} ve ardından dosyayı çalıştırması gereken programın mutlak yolu. \texttt{\#!/bin/bash} bash'i seçer; \texttt{\#!/usr/bin/python3} bir Python programını tam olarak aynı yolla çalıştırırdı. Bu satır \emph{yalnızca} en ilk satırda özeldir.
+  \item \textbf{Yorumlar:} \texttt{\#} işaretinden sonraki her şey bash tarafından yok sayılır ve insanlar için yazılmıştır.
+  \item \textbf{Komutlar:} tam olarak istemde (prompt) yazacağınız şeyler. \texttt{\$(whoami)} bir \emph{komut yerine koymadır} (command substitution, Bölüm~\ref{sec:subst}).
+\end{itemize}
+\texttt{.sh} uzantısı yalnızca insanlar için bir alışkanlıktır. Linux uzantılara bakmaz (7. hafta: dosya türleri); çalıştırma iznine ve ilk satıra bakarak karar verir.
+
+\subsection{Çalıştırmak}
+\label{sec:running}
+
+\lstinputlisting[style=out,firstline=8]{../code/out_first.txt}
+
+Ne oldu?
+\begin{itemize}
+  \item \cmd{bash hello.sh} bash'i başlatır ve dosya adını ona argüman olarak verir. Bash dosyayı yalnızca \emph{okur}; bu yüzden okuma izni yeterlidir.
+  \item \cmd{./hello.sh} çekirdekten dosyayı \emph{çalıştırmasını} ister; bunun için \texttt{x} izni gerekir. Dosya \texttt{-rw-rw-r--} kipiyle oluşturulmuştu (11. haftanın varsayılan umask değeri $002$ şunu verir: $666 - 002 = 664$); sonuç \texttt{Permission denied} ve çıkış durumu $126$'dır (“bulundu ama çalıştırılamıyor”).
+  \item \cmd{chmod +x hello.sh} komutu kullanıcı, grup ve diğerleri için \texttt{x} iznini ekler: $664 \to 775$, yani \texttt{rwxrwxr-x}. Artık \texttt{./hello.sh} çalışır.
+  \item \texttt{./} olmadan \cmd{hello.sh} \emph{bulunamaz}: kabuk komutları yalnızca \texttt{PATH} değişkeninde listelenen dizinlerde arar (\cmd{echo \$PATH} ile deneyin) ve geçerli dizin bilerek bunlardan biri değildir. \texttt{./} “\emph{bu} dizindeki dosya” demektir.
+\end{itemize}
+
+\subsection{Perde arkasında neler olur?}
+
+\texttt{./hello.sh} çalıştırmak 3., 11. ve 13. haftaların mekanizmalarını kullanır:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[b/.style={rectangle,rounded corners=2pt,minimum height=1.0cm,minimum width=2.6cm,align=center,font=\footnotesize},
+  arr/.style={-{Stealth[length=2mm]},thick,mintdeep}]
+\node[b,fill=charcoal,text=white] (sh) at (0,0) {\textbf{kabuğunuz (bash)}\\komut satırını okur};
+\node[b,fill=light] (fk) at (3.4,0) {\texttt{fork()}\\çocuk süreç};
+\node[b,fill=light] (ex) at (6.8,0) {\texttt{execve("./hello.sh")}\\çekirdek \texttt{x}'i denetler};
+\node[b,fill=mint] (sb) at (10.2,0) {\texttt{\#!/bin/bash}\\çekirdek 1. satırı okur};
+\node[b,fill=charcoal,text=white,minimum width=5.6cm] (run) at (8.5,-1.8) {\texttt{/bin/bash ./hello.sh}\\yeni bir bash dosyayı satır satır çalıştırır};
+\node[b,fill=light] (pr) at (0,-1.8) {istem geri gelir\\(ebeveyn \texttt{wait()} çağırdı)};
+\draw[arr] (sh) -- (fk); \draw[arr] (fk) -- (ex); \draw[arr] (ex) -- (sb);
+\draw[arr] (sb.south) -- (sb.south |- run.north);
+\draw[arr,slate] (run.west) -- node[above,font=\scriptsize\itshape,text=muted]{çıkış durumu $\to$ \texttt{\$?}} (pr.east);
+\end{tikzpicture}
+\caption{Bir betiği çalıştırmak: fork, exec, shebang, yeni bir yorumlayıcı süreci ve ebeveyne dönen çıkış durumu.}
+\end{figure}
+
+Kabuk bir çocuk süreç çatallar (\cmd{fork()}, 3. hafta) ve çocuk dosya üzerinde \cmd{execve()} çağırır. Çekirdek çalıştırma iznini denetler (11. hafta). Metin dosyası makine kodu değildir; bu yüzden çekirdek dosyanın ilk iki baytına bakar: \texttt{\#!} şu anlama gelir: “bu satırda adı verilen programı başlat ve ona betiğin yolunu ver”. Böylece çekirdek aslında \texttt{/bin/bash ./hello.sh} komutunu çalıştırır. Ebeveyn kabuk bekler; betik bittiğinde çıkış durumu (exit status) ebeveyne döner ve \texttt{\$?} içinde kullanılabilir.
+
+\begin{keyidea}[Betik bir çocuk süreçte çalışır]
+Bir betiğin \emph{içinde} ayarladığınız değişkenler ve çalıştırdığınız \cmd{cd} komutları yalnızca çocuk süreci değiştirir. Betik bittiğinde terminaliniz tam olarak bıraktığınız yerdedir. (Bir dosyayı \emph{geçerli} kabukta çalıştırmak için \cmd{source dosya} ya da \cmd{. dosya} kullanılır; \texttt{\textasciitilde/.bashrc} bu şekilde okunur.)
+\end{keyidea}
+
+\subsection{Bir betiği çalıştırmanın dört yolu}
+
+\begin{center}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Komut} & \textbf{Gerekenler} & \textbf{Nerede çalışır} & \textbf{Tipik kullanım}\\
+\midrule
+`bash hello.sh` & \texttt{r} & yeni bir bash süreci & hızlı deneme, \texttt{x} biti yok\\
+`./hello.sh` & \texttt{r}+\texttt{x}, shebang & yeni bir süreç & bu dersteki olağan yol\\
+`hello.sh` & \texttt{r}+\texttt{x}, dizin \texttt{PATH}'te & yeni bir süreç & kurulu araçlar (ör.\ \texttt{\textasciitilde/bin})\\
+`source hello.sh` & \texttt{r} & \emph{geçerli} kabuk & değişken ayarlayan dosyalar\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =====================================================================
+\section{Değişkenler, Tırnaklar ve Girdi}
+
+\subsection{Değişkenler}
+
+Bir \term{değişken} (variable) atamayla oluşturulur ve \texttt{\$} ile kullanılır:
+\lstinputlisting[style=out,lastline=7]{../code/out_variables.txt}
+
+Kurallar kısa ama katıdır:
+\begin{itemize}
+  \item \textbf{\texttt{=} işaretinin çevresinde boşluk yok.} Bash sözcükleri boşluklardan ayırır; bu yüzden `name = Ayse`, \texttt{=} ve \texttt{Ayse} argümanlarıyla çalıştırılan \texttt{name} komutudur; sonuç \texttt{name: command not found} olur. (Ubuntu'da \emph{command-not-found} yardımcısı nedeniyle ileti daha uzundur; anlamı aynıdır.)
+  \item Adlar harf, rakam ve \texttt{\_} içerir, rakamla başlamaz ve büyük/küçük harfe duyarlıdır (\texttt{name} ile \texttt{NAME} farklıdır).
+  \item `${name}` uzun biçimdir; adın ardından harf geliyorsa gereklidir: `"${name}s"`.
+  \item Her değer metindir. `count=5` bir sayı değil, “5” metnini saklar; aritmetik için \texttt{\$(( ))} gerekir.
+  \item Tanımsız bir değişken yalnızca boştur; bash şikâyet etmez.
+  \item Gelenek: ortam değişkenleri için BÜYÜK harfli adlar (\texttt{HOME}, \texttt{USER}, \texttt{PATH}, \texttt{SHELL}), kendi değişkenleriniz için küçük harfli adlar.
+\end{itemize}
+
+\subsection{Komut yerine koyma ve aritmetik}
+\label{sec:subst}
+
+\lstinputlisting[style=sh]{../code/variables.sh}
+\lstinputlisting[style=out,firstline=8,lastline=16]{../code/out_variables.txt}
+
+\begin{itemize}
+  \item \textbf{Komut yerine koyma} (command substitution) `$(command)` komutu çalıştırır ve çıktısını (sondaki satır sonu olmadan) yerleştirir. Ters tırnaklı eski biçim aynı şeyi yapar ama okunması ve iç içe yazılması daha zordur. `wc -l < file` kullanımına dikkat edin: girdi yönlendirmesiyle (12. hafta) \cmd{wc} dosya adı olmadan yalnızca sayıyı yazar --- \texttt{\$( )} içinde tam istediğimiz şey.
+  \item \textbf{Aritmetik genişletme} (arithmetic expansion) `$((expression))` tamsayılarla, \texttt{+ - * / \%} ve parantezlerle, olağan işlem önceliğiyle hesap yapar: $3 + 4 \times 2 = 11$ (yukarıdaki döküme bakın). İçeride değişken adlarının önündeki \texttt{\$} isteğe bağlıdır.
+  \item \textbf{Yalnızca tamsayılar:} bash 64 bitlik tamsayı aritmetiği kullandığı için $7 / 2$ sonucu $3$, $7 \bmod 2 = 1$ olur. Ondalıklı hesap için \cmd{awk} (\texttt{report.sh}'de olduğu gibi) ya da hesap makinesi \cmd{bc} kullanın.
+\end{itemize}
+
+\subsection{Tırnaklar}
+\label{sec:quoting}
+
+\lstinputlisting[style=sh]{../code/quotes.sh}
+\lstinputlisting[style=out,firstline=17]{../code/out_variables.txt}
+
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Biçim} & \textbf{\texttt{\$var}, \texttt{\$( )} genişletilir mi?} & \textbf{Boşluklar korunur mu?}\\
+\midrule
+\texttt{"çift tırnak"} & evet & evet --- tek sözcük\\
+\texttt{'tek tırnak'} & hayır, her şey olduğu gibi & evet --- tek sözcük\\
+ters eğik çizgi \texttt{\textbackslash\$} & \emph{tek} karakteri olduğu gibi bırakır & ---\\
+tırnaksız & evet & hayır --- sözcüklere bölünür, \texttt{*} genişletilir\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\texttt{quotes.sh}'nin son iki satırı, gerçek betiklerdeki en yaygın hatayı gösterir. \texttt{file} değişkeni bir boşluk içerir. Tırnaklıyken \texttt{"\$file"} tek bir argümandır ve \cmd{wc} $2$ satır sayar. Tırnaksızken değer \texttt{final} ve \texttt{report.txt} adlı iki argümana bölünür ve \cmd{wc} iki olmayan dosya bildirir. \textbf{Kural: bir nedeniniz yoksa her \texttt{\$değişkenin} ve her \texttt{\$( )} ifadesinin çevresine çift tırnak koyun.}
+
+İki \texttt{\# shellcheck disable} satırı, tam da bu sorunlar için uyaran ücretsiz bir araç olan \term{ShellCheck} içindir (\url{https://www.shellcheck.net} ya da \cmd{sudo apt install shellcheck}). Bu satırlar araca hataların bilerek yapıldığını söyler. Bu haftanın diğer tüm örnek betikleri ShellCheck'ten uyarısız geçer.
+
+\subsection{Konumsal parametreler}
+
+Betik adından sonra yazılan sözcükler onun \term{argümanlarıdır} (arguments). Betiğin içinde bunlar \texttt{\$1}, \texttt{\$2}, \ldots\ olarak görünür; bunlara \term{konumsal parametreler} (positional parameters) denir:
+
+\lstinputlisting[style=sh]{../code/args.sh}
+\lstinputlisting[style=out]{../code/out_args.txt}
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Değişken} & \textbf{Anlamı}\\
+\midrule
+\texttt{\$0} & betiğin, yazıldığı biçimdeki adı\\
+\texttt{\$1} \ldots\ \texttt{\$9} & 1.\ \ldots\ 9.\ argüman (10.\ için \texttt{\$\{10\}})\\
+\texttt{\$\#} & argüman sayısı\\
+\texttt{"\$@"} & tüm argümanlar, her biri ayrı bir sözcük olarak (döngülerde kullanın)\\
+\texttt{\$*} & tüm argümanlar, tek bir dizgide birleştirilmiş\\
+\texttt{\$?} & son komutun çıkış durumu (Bölüm~\ref{sec:status})\\
+\texttt{\$\$} & geçerli kabuğun PID'si (13. hafta)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Kabuk, betik başlamadan \emph{önce} komut satırını sözcüklere ayırır; bu yüzden \texttt{"green tea"} tek bir argüman olarak gelir: \texttt{\$\#} $4$ değil, $3$'tür. Argüman yoksa \texttt{\$1} boştur ve \texttt{\$\#} $0$'dır; iyi yazılmış betiklerin önce \texttt{\$\#} değerini denetlemesinin nedeni budur. Yukarıdaki döküm bu alt bölümün son gösterimini, \texttt{read} komutunu da içerir.
+
+\subsection{\texttt{read} ile klavyeden girdi}
+
+\lstinputlisting[style=sh]{../code/greet.sh}
+
+Dökümde kullanıcı \texttt{Ayse} ve \texttt{2006} yazdı; yaş $2026 - 2006 = 20$'dir. \cmd{read -r var} bir girdi satırı bekler ve onu saklar; \texttt{-p} önce bir istem yazdırır; \texttt{-r} ters eğik çizgileri yazıldığı gibi tutar (her zaman kullanın). Birden çok adla \cmd{read -r first last} satırı boşluklardan böler.
+
+Argümanlar mı, \texttt{read} mi? Otomasyon için argümanlar daha iyidir: \texttt{./grade.sh 72} başka bir betikten ya da klavye başında kimse yokken \cmd{cron}'dan çağrılabilir. \texttt{read} menüler ve oyunlar gibi etkileşimli araçlar içindir.
+
+% =====================================================================
+\section{Çıkış Durumu ve Testler}
+\label{sec:status}
+
+\subsection{Her komut evet ya da hayır diye yanıt verir}
+
+Bir süreç bittiğinde ebeveynine küçük bir sayı, \term{çıkış durumunu} (exit status) döndürür (C'de \cmd{main}'den \cmd{return n} ya da \cmd{exit(n)}, 3. hafta; ebeveyn bunu \cmd{wait()} ile toplar). Kabuk bu sayıyı \texttt{\$?} içinde saklar:
+
+\lstinputlisting[style=out,lastline=23]{../code/out_status.txt}
+
+\begin{center}
+\small
+\begin{tabular}{@{}cl@{}}
+\toprule
+\texttt{\$?} & \textbf{Geleneksel anlamı}\\
+\midrule
+$0$ & başarı, “doğru”\\
+$1$ & genel hata, “yanlış” (ör.\ \cmd{grep}: bulunamadı)\\
+$2$ & yanlış kullanım ya da ciddi hata (ör.\ olmayan bir dosya için \cmd{ls})\\
+$126$ & komut bulundu ama çalıştırılamıyor (Permission denied)\\
+$127$ & komut bulunamadı\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{keyidea}[0 başarı demektir]
+Kabukta $0$ \emph{başarıdır} (“doğru”), $1$ ile $255$ arasındaki her değer ise başarısızlıktır. Bu, $0$'ın yanlış olduğu C'nin tam tersidir. Mantıklıdır da: başarmanın tek bir yolu, başarısız olmanın ise birçok yolu vardır ve sayı hangisi olduğunu söyleyebilir.
+\end{keyidea}
+
+\texttt{\$?} her zaman \emph{son} komutu gösterir; bu yüzden ona hemen bakın --- \cmd{echo}'nun kendisi onu yeniden $0$ yapar. \cmd{grep -q} hiçbir şey yazdırmaz; yalnızca çıkış durumuyla yanıt verir ve bu onu kararlar için ideal kılar.
+
+\subsection{\texttt{test} ve \texttt{[ ]}}
+
+\cmd{test} sayıları, dizgileri ya da dosyaları karşılaştırır ve çıkış durumuyla yanıt verir. \texttt{[}, son argümanı \texttt{]} olması gereken \texttt{test}'in başka bir adıdır. Döküm, \texttt{[} işaretinin kabuğa gömülü (builtin) bir \emph{komut} olduğunu gösterir. Bu tek olgu tüm boşluk kurallarını açıklar: `[ "$n" -gt 3 ]` içindeki \texttt{[}, \texttt{"\$n"}, \texttt{-gt}, \texttt{3}, \texttt{]} beş sözcüğü \texttt{[} komutunun ayrı argümanlarıdır; bu yüzden boşluklarla ayrılmaları gerekir. \texttt{[\$n} yazmak, bir komut olmayan \texttt{[5} sözcüğünü üretir.
+
+\begin{center}
+\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{1.6cm}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{8.6cm}@{}}
+\toprule
+\textbf{Tür} & \textbf{İşleç} & \textbf{Ne zaman doğru \ldots\ (örnek)}\\
+\midrule
+\endhead
+Sayılar & \texttt{-eq} \ \texttt{-ne} & eşit / eşit değil: `[ "$n" -eq 0 ]`\\
+        & \texttt{-lt} \ \texttt{-le} & küçük / küçük ya da eşit: `[ "$x" -lt 10 ]`\\
+        & \texttt{-gt} \ \texttt{-ge} & büyük / büyük ya da eşit: `[ "$s" -ge 50 ]`\\
+Dizgiler & \texttt{=} \ \texttt{!=} & aynı metin / farklı metin: `[ "$a" = yes ]`\\
+        & \texttt{-z} \ \texttt{-n} & dizgi boş / boş değil: `[ -z "$1" ]`\\
+Dosyalar & \texttt{-e} & yol var (herhangi bir tür): `[ -e "$p" ]`\\
+        & \texttt{-f} \ \texttt{-d} & sıradan dosya / dizin: `[ -d ~/lab ]`\\
+        & \texttt{-r} \ \texttt{-w} \ \texttt{-x} & sizin için okunabilir / yazılabilir / çalıştırılabilir\\
+        & \texttt{-s} & dosya var ve boş değil\\
+Mantık   & \texttt{!} & değilleme: `[ ! -d "$dir" ]`\\
+        & \texttt{\&\&} \ \texttt{||} & iki test arasında ve / veya: `[ -f a ] && [ -f b ]`\\
+\bottomrule
+\end{longtable}
+\end{center}
+
+İki tuzak: sayılar \emph{harflerle} (\texttt{-lt}, \texttt{-gt}), dizgiler simgelerle (\texttt{=}, \texttt{!=}) karşılaştırılır. \texttt{[ ]} içinde \texttt{<} ve \texttt{>} karşılaştırma değil, yönlendirmedir (12. hafta). Ayrıca \texttt{-eq} değerleri, \texttt{=} ise metni karşılaştırır: `[ 05 -eq 5 ]` doğru, `[ 05 = 5 ]` yanlıştır. (Bash daha hoşgörülü bir anahtar sözcük olan \texttt{[[ \ldots\ ]]} yapısını da sunar; biz taşınabilir \texttt{[ ]} kullanıyoruz.)
+
+% =====================================================================
+\section{Karar Verme: \texttt{if}}
+
+\subsection{Bir \texttt{if} deyiminin yapısı}
+
+\begin{lstlisting}[style=sh,numbers=none]
+if TEST; then
+    commands            # TEST başarılı olunca çalışır (çıkış durumu 0)
+elif OTHER_TEST; then
+    commands            # isteğe bağlı, istediğiniz kadar
+else
+    commands            # isteğe bağlı: yukarıdakilerin hiçbiri başarılı olmazsa
+fi                      # tersten "if" bloğu bitirir
+\end{lstlisting}
+\texttt{TEST} \emph{herhangi bir} komut olabilir: \texttt{[ \ldots\ ]}, \cmd{grep -q}, \cmd{mkdir}, \ldots. \texttt{then}'den önceki noktalı virgül gereklidir, çünkü \texttt{then} yeni bir komut başlatmalıdır; \texttt{then}'i bir sonraki satıra yazmak da olur. Bash testleri yukarıdan aşağıya dener ve yalnızca testi başarılı olan ilk dalı çalıştırır.
+
+\subsection{Örnek: \texttt{check.sh}}
+
+\lstinputlisting[style=sh]{../code/check.sh}
+\lstinputlisting[style=out,firstline=26]{../code/out_status.txt}
+
+Her tür yol farklı bir dala gider. \texttt{/dev/null} vardır (\texttt{-e}) ama bir \emph{aygıt dosyasıdır} (9. hafta: \texttt{/dev}); bu yüzden ne \texttt{-f} ne de \texttt{-d} testini geçer. Betik üç iyi alışkanlığı da gösterir: \texttt{\$\#} değerini denetler ve bir \emph{Usage} (kullanım) satırı yazdırır; hata iletilerini \texttt{>\&2} ile standart hataya (stderr) gönderir (12. hafta), böylece \texttt{./check.sh x > out.txt} hatayı yine ekranda gösterir; ve çağıran bir betiğin test edebileceği ayrı çıkış kodları kullanır ($0$ başarı, $1$ başarısızlık, $2$ yanlış kullanım).
+
+\subsection{Sayısal testler: \texttt{grade.sh}}
+
+\lstinputlisting[style=sh]{../code/grade.sh}
+\lstinputlisting[style=out,lastline=10]{../code/out_grade.txt}
+
+\texttt{elif} testleri bir merdiven oluşturur ve sıraları önemlidir: \texttt{-ge 50} önce gelseydi $92$ puan bir C alırdı. \texttt{||} “veya” demektir: ikinci test yalnızca ilki başarısız olursa çalışır. (Ölçek yalnızca bir örnektir, resmî bir not ölçeği değildir.)
+
+\subsection{Hata ayıklama}
+\label{sec:debug}
+
+Üç araç hataların (bug) çoğunu bulur:
+\begin{itemize}
+  \item \cmd{bash -n script.sh} hiçbir şey çalıştırmadan sözdizimini denetler (Bölüm~\ref{sec:errors}).
+  \item \cmd{bash -x script.sh} her komutu, genişletmeden \emph{sonraki} hâliyle ve çalıştırmadan önce, \texttt{+} işaretiyle yazdırır. Betik içinde \cmd{set -x} \ldots\ \cmd{set +x} yalnızca bir kısmı izler.
+  \item Hata iletisini okumak: ileti betiğin adını, \emph{satır numarasını} ve bash'in işleyemediği sözcüğü söyler.
+\end{itemize}
+\lstinputlisting[style=out,firstline=11]{../code/out_grade.txt}
+
+İzleme, \texttt{\$score} değerinin $72$ olduğunu, \texttt{-ge 85} testinin başarısız, \texttt{-ge 70} testinin başarılı olduğunu gösterir. \texttt{abc} ile yapılan çalıştırma gerçek bir hatayı ortaya çıkarır: her sayısal test \texttt{integer expression expected} diye yakınır ve yanlış sayılır; bu yüzden betik \texttt{else} dalına düşer ve F notu yazdırır. (9. satır iki kez görünür, çünkü \texttt{||} ile bağlanan iki test de denenir.) Çözüm, girdiyi kullanmadan önce doğrulamaktır, örneğin
+\begin{lstlisting}[style=sh,numbers=none]
+if ! echo "$score" | grep -qx '[0-9]\{1,3\}'; then
+    echo "Error: not a number: $score" >&2; exit 1
+fi
+\end{lstlisting}
+Burada \cmd{grep -x}, satırın tamamının bir ile üç arasında rakamla eşleşmesini ister (12. haftanın düzenli ifadeleri).
+
+% =====================================================================
+\section{Döngüler}
+
+\subsection{\texttt{for}: her öğe için bir kez}
+
+\lstinputlisting[style=sh]{../code/loops.sh}
+\lstinputlisting[style=out,lastline=11]{../code/out_loops.txt}
+
+Genel biçim \texttt{for VAR in LIST; do \ldots; done} şeklindedir. Liste şunlar olabilir:
+\begin{itemize}
+  \item tek tek yazılmış sözcükler (\texttt{Istanbul Ankara Izmir}) ya da argümanlar \texttt{"\$@"};
+  \item bir küme parantezi genişletmesi (brace expansion) \texttt{\{1..5\}} $\to$ \texttt{1 2 3 4 5} (10. hafta). Küme parantezleri değişken içeremez: \texttt{\{1..\$n\}} çalışmaz; bunun yerine \texttt{\$(seq 1 "\$n")} ya da bir \texttt{while} döngüsü kullanın;
+  \item \texttt{\textasciitilde/lab/docs/*.txt} gibi bir joker karakter (wildcard): kabuk onu eşleşen dosya adlarıyla değiştirir. Döngü değişkeni tırnaklı olduğu için (\texttt{"\$f"}) \texttt{final report.txt} adı tek parça kalır;
+  \item bir komutun çıktısı, \texttt{\$(komut)} (boşluk ve satır sonlarından bölünür).
+\end{itemize}
+Çıktıda \texttt{1 lines} de görülüyor: betik tam olarak kendisine söyleneni yazar; “1 line” yazdırmak bir \texttt{if} gerektirirdi. Bash'te C tarzı bir döngü de vardır, \texttt{for ((i = 1; i <= 5; i++))}; 16. lab alıştırmasında kullanılır. Joker karakter doğrudan istemde de çalışır:
+\lstinputlisting[style=out,firstline=25]{../code/out_loops.txt}
+
+\subsection{\texttt{while}: bir test başarılı olduğu sürece}
+
+\lstinputlisting[style=sh]{../code/while.sh}
+\lstinputlisting[style=out,firstline=12,lastline=17]{../code/out_loops.txt}
+
+İki kalıp kullanımların çoğunu karşılar. \emph{Sayaçlı} döngü değişkenini her turda değiştirir; \texttt{n=\$((n - 1))} satırını unutursanız döngü hiç bitmez (Ctrl+C, yani SIGINT ile durdurun, 13. hafta). \emph{Okuma döngüsü}, \texttt{while read -r x; do \ldots; done < file}, her turda bir satır okur, çünkü \texttt{done}'dan sonraki \texttt{< file} yönlendirmesi döngünün tamamını besler; dosyanın sonunda \texttt{read} başarısız olur ve döngü durur. Sayılar tutuyor: $20$ değerin toplamı $11\,325$'tir ve $11\,325 / 20 = 566{,}25$; tamsayı aritmetiği bunu $566$'ya keser. (\texttt{until TEST; do \ldots; done}, test \emph{başarısız} olduğu sürece döner.)
+
+\subsection{Fonksiyonlar}
+
+\lstinputlisting[style=sh]{../code/functions.sh}
+\lstinputlisting[style=out,firstline=18,lastline=24]{../code/out_loops.txt}
+
+\term{Fonksiyon} (function), kullanılmadan önce \texttt{name() \{ \ldots; \}} ile tanımlanan ve bir komut gibi çağrılan, adı olan bir komut bloğudur. İçinde \texttt{\$1}, \texttt{\$2}, \ldots\ betiğin değil, \emph{fonksiyonun} argümanlarıdır. \texttt{local} bir değişkeni fonksiyona özel tutar. Bir fonksiyonun çıkış durumu son komutununkidir (ya da \texttt{return n} ile ayarlanır, $0$--$255$); bu yüzden \texttt{is\_even} doğrudan bir \texttt{if} içinde kullanılabilir. \emph{Metin} döndürmek için onu \texttt{echo} ile yazdırın ve \texttt{\$( )} ile yakalayın. Neden \texttt{local n} ayrı bir satırda? \texttt{local n=\$(grep \ldots)} yazmak, \cmd{grep}'in çıkış durumunu \texttt{local}'inkinin arkasına gizlerdi.
+
+% =====================================================================
+\section{Sözdizimi Başvuru Tablosu}
+
+\begin{center}
+\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}p{7.9cm}>{\raggedright\arraybackslash}p{2.9cm}@{}}
+\toprule
+\textbf{Yapı} & \textbf{Sözdizimi} & \textbf{Unutmayın}\\
+\midrule
+\endhead
+shebang & `#!/bin/bash` & yalnızca 1. satır\\
+değişken & `name=value`, `"$name"`, `"${name}s"` & \texttt{=} çevresinde boşluk yok\\
+komut yerine koyma & `today=$(date +%F)` & komutun çıktısı\\
+aritmetik & `n=$((n + 1))`, `$((a % b))` & yalnızca tamsayı\\
+argümanlar & `$0 $1 ... $9 $# "$@"` & \texttt{\$\#} denetleyin\\
+girdi & `read -r -p "Name? " name` & her zaman \texttt{-r}\\
+if & `if [ "$n" -gt 0 ]; then ...; elif ...; then ...; else ...; fi` & \texttt{[ ]} içinde boşluk\\
+for (liste) & `for c in a b c; do echo "$c"; done` & \\
+for (aralık) & `for i in {1..5}; do ...; done` & \texttt{\{\}} içinde değişken yok\\
+for (dosyalar) & `for f in *.txt; do wc -l "$f"; done` & \texttt{"\$f"} tırnaklayın\\
+for (C tarzı) & `for ((i = 0; i < 5; i++)); do ...; done` & yalnızca bash\\
+while & `while [ "$n" -gt 0 ]; do n=$((n - 1)); done` & değişkeni değiştirin\\
+dosya okuma & `while read -r line; do ...; done < file` & \texttt{<} \texttt{done}'dan sonra\\
+fonksiyon & `name() { local x=$1; echo "$x"; }` & önce tanımlayın\\
+ve / veya & `mkdir -p d && echo ok`;\ `[ -f f ] || exit 1` & kısa \texttt{if}\\
+exit & `exit 0` (başarı), `exit 1` (başarısızlık) & $0$--$255$\\
+hata ayıklama & `bash -n s.sh` (sözdizimi), `bash -x s.sh` (izleme) & \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\begin{tryit}[İki kullanışlı genişletme (isteğe bağlı)]
+`${var:-default}`, \texttt{var} değişkeninin değerini, boş ya da tanımsızsa \texttt{default} değerini verir: \texttt{n=\$\{1:-7\}} “ilk argüman ya da 7” demektir. 7., 8. ve 14. lab alıştırmaları bunu kullanır. `${#var}`, \texttt{var} içindeki dizginin uzunluğunu verir.
+\end{tryit}
+
+% =====================================================================
+\section{İki Gerçek Otomasyon Betiği}
+
+\subsection{\texttt{backup.sh}: zaman damgalı bir arşiv}
+
+\lstinputlisting[style=sh]{../code/backup.sh}
+
+Satır satır:
+\begin{itemize}
+  \item \texttt{\textasciitilde/lab} yerine \texttt{\$HOME/lab}: tilde çift tırnak içinde genişletil\emph{mez}, \texttt{\$HOME} ise genişletilir.
+  \item `date +%Y%m%d_%H%M%S` \texttt{20261012\_143005} gibi bir ad üretir: (saniye düzeyinde) benzersizdir ve yıl önce geldiği için sıralanabilir.
+  \item `[ ! -d ... ]` kaynak yoksa açık bir iletiyle erkenden durur.
+  \item \cmd{mkdir -p} hedefi gerekirse oluşturur, varsa sessiz kalır.
+  \item \cmd{tar -czf archive -C dir docs} g\textbf{z}ip ile sıkıştırılmış bir arşiv dosyası (\textbf{f}) oluşturur (\textbf{c}); \texttt{-C} önce \texttt{\textasciitilde/lab} dizinine geçer, böylece arşivin içindeki yollar \texttt{docs/} ile başlar. \texttt{if tar \ldots} tar'ın kendi çıkış durumunu test eder.
+  \item \cmd{tar -tzf} arşivi listeler; \cmd{grep -vc '/\$'} \texttt{/} ile \emph{bitmeyen} satırları, yani klasörleri değil dosyaları sayar; \cmd{du -h \textbar\ cut -f1} yalnızca boyutu tutar.
+\end{itemize}
+
+\lstinputlisting[style=out]{../code/out_backup.txt}
+
+Her çalıştırma yeni bir arşiv oluşturur (ikinci çalıştırma iki saniye sonradır); böylece hiçbir şeyin üzerine yazılmaz. Arşivde $7$ dosya vardır: altı görünür belge ve gizli \texttt{.settings} (\cmd{tar} gizli dosyaları da alır). \texttt{final report.txt} doğru arşivlenir, çünkü her değişken tırnaklıdır. Dosyalarınıza dokunmadan geçici bir klasöre geri yüklemek için: \cmd{tar -xzf ../backup/docs\_<damga>.tar.gz -C /tmp}. \cmd{cron} ile, \cmd{crontab -e} içine yazılan \texttt{0 18 * * * \$HOME/lab/scripts/backup.sh} satırı betiği her gün 18.00'de çalıştırırdı (sınav konusu değildir). 13. lab alıştırması eski yedeklerin silinmesini ekler.
+
+\subsection{\texttt{report.sh}: bir günlük dosyasını ve bir CSV dosyasını özetlemek}
+
+\lstinputlisting[style=sh]{../code/report.sh}
+\lstinputlisting[style=out]{../code/out_report.txt}
+
+Betik 12. haftanın boru hatlarını yeniden kullanır: \cmd{awk '\{print \$7\}'} bir alanı çıkarır, \cmd{sort \textbar\ uniq -c \textbar\ sort -rn} sayar ve sıralar, \cmd{tail -n +2} CSV başlığını atlar ve \cmd{cut -d, -f3} bölüm sütununu alır. Yeni olan, \cmd{awk}'ın \emph{ondalıklı} aritmetik yapmasıdır: \texttt{m += \$4} vize sütununu toplar, \texttt{END} bloğu sonda bir kez çalışır ve \texttt{printf "\%.1f"} tek ondalık basamak yazar. \texttt{0.4*\$4 + 0.6*\$5 >= 50} gibi tek başına bir koşul bir awk \emph{örüntüsüdür} (pattern): awk yalnızca bu koşulun doğru olduğu satırları yazdırır ve \cmd{wc -l} bunları sayar. ($40/60$ ağırlıklandırması yalnızca bir örnektir.)
+
+\begin{example}[Raporun sağlaması]
+Tüm sayılar aynı dosyalardan Python ile bağımsız olarak yeniden hesaplandı:
+\begin{itemize}
+  \item $300$ isteğin $98$'inin durum kodu $\ge 400$: $100 \cdot 98 / 300 = 32{,}67$; bash tamsayı aritmetiği $32$ yazar.
+  \item \texttt{/index.html} ve \texttt{/images/logo.png} $33$'er istek aldı; ilk~3'e yalnızca biri sığar ve eşitliği \cmd{sort} bozar.
+  \item Bölümler: $17 + 11 + 10 + 2 = 40$ öğrenci.
+  \item Vize ortalaması $66{,}95$ (yuvarlanarak \texttt{67.0} yazılır), final ortalaması $65{,}6$.
+  \item $40$ öğrencinin $35$'i $0{,}4\,m + 0{,}6\,f \ge 50$ koşulunu sağlar.
+\end{itemize}
+\end{example}
+
+% =====================================================================
+\section{Sık Görülen Hatalar ve Anlamları}
+\label{sec:errors}
+
+\texttt{code/demo\_errors.sh} betiği bozuk beş betik oluşturur. Bunların gerçek hata iletileri:
+
+\lstinputlisting[style=out,lastline=25]{../code/out_errors.txt}
+
+\begin{description}[leftmargin=0pt,itemsep=0.3em]
+  \item[\texttt{=} çevresinde boşluk] \texttt{name: command not found}. Bash \texttt{name} adlı bir komut çalıştırdı. Betiğin durma\emph{dığına} dikkat edin: devam etti ve boş bir değişkenle \texttt{Hello } yazdırdı. Düzeltme: \texttt{name="Ayse"}. Tersi bir hata olan \texttt{name= Ayse}, \texttt{name} değişkeni boşken \texttt{Ayse} komutunu çalıştırır.
+  \item[\texttt{[ ]} içinde boşluk yok] \texttt{[5: command not found}. Düzeltme: \texttt{if [ "\$n" -gt 3 ]; then}.
+  \item[Eksik tırnaklar] \texttt{[: =: unary operator expected}. Boş ve tırnaksız \texttt{\$answer} kayboldu ve geriye \texttt{[ = yes ]} kaldı. Tırnaklarla \texttt{[ "" = yes ]} yalnızca yanlıştır. Boşluklu dosya adları tırnaksız kullanılırsa her yarı için \texttt{No such file or directory} alınır (Bölüm~\ref{sec:quoting}).
+  \item[Eksik \texttt{fi}, \texttt{done} ya da tırnak] \texttt{syntax error: unexpected end of file}: bir blok açıldı ve hiç kapatılmadı. \cmd{bash -n} bunu betiği çalıştırmadan bulur. Bildirilen satır dosyanın \emph{sonudur}; asıl hata daha öncedir.
+  \item[Eksik \texttt{chmod +x}] \texttt{Permission denied}, çıkış durumu $126$ (Bölüm~\ref{sec:running}).
+  \item[Sayı değil] \texttt{-lt}, \texttt{-gt}, \ldots\ işleçlerinden \texttt{integer expression expected} (Bölüm~\ref{sec:debug}).
+\end{description}
+
+\subsection{Windows satır sonları (CRLF)}
+
+Windows düzenleyicileri her satırı iki karakterle, satır başı ve satır besleme ile bitirir (\texttt{\textbackslash r\textbackslash n}, “CRLF”); Linux yalnızca \texttt{\textbackslash n} kullanır. Not Defteri'nde yazılıp Linux'a kopyalanan bir betiğin her satırının sonunda bu yüzden görünmez bir \texttt{\textbackslash r} bulunur ve bu karakter satırın son sözcüğüne yapışır:
+
+\lstinputlisting[style=out,firstline=26]{../code/out_errors.txt}
+
+\begin{itemize}
+  \item \texttt{./win.sh}: çekirdek tam olarak \texttt{/bin/bash\textbackslash r} adlı, var olmayan bir yorumlayıcı arar. Bash 5.2 (burada kullanılan) \texttt{cannot execute: required file not found} bildirir; bash'in eski sürümleri (ör.\ Ubuntu 22.04) klasik \texttt{/bin/bash\^{}M: bad interpreter: No such file or directory} iletisini verir. İkisi de aynı anlama gelir.
+  \item \texttt{bash win.sh} çalışır, ama \cmd{cd} sonunda \texttt{\textbackslash r} bulunan yolu alır (\texttt{\$'\ldots\textbackslash r'} olarak gösterilir) ve başarısız olur.
+  \item \cmd{file} \texttt{with CRLF line terminators} der; \cmd{cat -A} her \texttt{\textbackslash r} karakterini satır sonu işareti \texttt{\$}'dan önce \texttt{\^{}M} olarak gösterir.
+  \item Düzeltme: \cmd{sed -i 's/\textbackslash r\$//' win.sh} her satırın sonundaki \texttt{\textbackslash r} karakterini siler; kuruluysa \cmd{dos2unix win.sh} aynı işi yapar. VS Code'da durum çubuğundaki “CRLF” yazısına tıklayıp “LF”yi seçin.
+\end{itemize}
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Sekiz cümlede 14. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Kabuk betiği, 1.~satırında \texttt{\#!/bin/bash} bulunan, komutlardan oluşan bir metin dosyasıdır; \cmd{chmod +x} sonrası \texttt{./script.sh} ile, fork ve exec ile oluşturulan bir çocuk süreçte çalışır.
+  \item Değişkenler boşluksuz atanır (\texttt{name=value}) ve çift tırnak içinde kullanılır (\texttt{"\$name"}); tek tırnaklar her şeyi olduğu gibi bırakır.
+  \item \texttt{\$(komut)} bir komutun çıktısını yerleştirir, \texttt{\$((ifade))} tamsayılarla hesap yapar.
+  \item Argümanlar \texttt{\$1} \ldots\ \texttt{\$9} olarak, \texttt{\$\#} ve \texttt{"\$@"} ile birlikte gelir; \texttt{read -r} klavyeyi okur.
+  \item Her komut bir çıkış durumu döndürür; $0$ başarı demektir; \texttt{exit n} bir betiğin durumunu ayarlar.
+  \item \texttt{[ ]} sayıları (\texttt{-eq -lt -gt} \ldots), dizgileri (\texttt{= != -z}) ve dosyaları (\texttt{-e -f -d}) test eden bir komuttur; \texttt{if / elif / else / fi} bir dal seçer.
+  \item \texttt{for} sözcükler, aralıklar ve dosyalar üzerinde döner; \texttt{while} bir test başarılı olduğu sürece tekrarlar ya da bir dosyayı satır satır okur; fonksiyonlar bir komut bloğuna ad verir.
+  \item \texttt{bash -n} ve \texttt{bash -x} hata ayıklamaya yardım eder; değişkenlerinizi tırnaklayın ve betikleri LF satır sonlarıyla kaydedin.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Sözlükçe}
+
+\begin{description}[leftmargin=0pt,itemsep=0.15em]
+  \item[Argüman (konumsal parametre)] Betik adından sonra verilen bir sözcük; betiğin içinde \texttt{\$1}, \texttt{\$2}, \ldots
+  \item[Aritmetik genişletme (arithmetic expansion)] \texttt{\$(( ))}: kabuğun yaptığı tamsayı hesabı.
+  \item[Betik (shell script)] Bash gibi bir yorumlayıcının çalıştırdığı, kabuk komutlarından oluşan metin dosyası.
+  \item[Çıkış durumu (exit status)] Her komutun döndürdüğü $0$--$255$ arası sayı; $0$ = başarı; \texttt{\$?} içinde.
+  \item[CRLF] Windows satır sonu \texttt{\textbackslash r\textbackslash n}; Linux'ta betikleri bozar.
+  \item[Fonksiyon (function)] Kendi argümanları olan, adı verilmiş komut bloğu.
+  \item[Komut yerine koyma (command substitution)] \texttt{\$( )}: içindeki komutun çıktısıyla değiştirilir.
+  \item[PATH] Kabuğun komutları aradığı dizinleri listeleyen değişken.
+  \item[Shebang] Çekirdeğe betiği hangi programın çalıştıracağını söyleyen ilk satır \texttt{\#!yorumlayıcı}.
+  \item[test / \texttt{[ ]}] Bir koşulu değerlendirip çıkış durumuyla yanıt veren komut.
+  \item[Tırnaklama (quoting)] Çift tırnak boşlukları korur ve değişkenleri genişletir; tek tırnak her şeyi olduğu gibi bırakır.
+\end{description}
+
+% =====================================================================
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Kendi makinenizde keşfedin]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Bir betiğe \texttt{cd /tmp} ve \texttt{pwd} yazıp çalıştırın. Sonrasında terminaliniz hangi dizinde? Şimdi betiği \cmd{source} ile çalıştırın. Farkı 13. haftayla (süreçler) açıklayın.
+  \item \texttt{hello.sh} dosyasına \texttt{echo "My PID is \$\$, my parent is \$PPID"} satırını ekleyin, iki kez çalıştırın ve istemdeki \cmd{echo \$\$} ile karşılaştırın.
+  \item \cmd{bash -x loops.sh} komutunu çalıştırın. Her döngünün gövdesi kaç kez çalışıyor?
+  \item \texttt{grade.sh}'nin sayısal olmayan girdiyi reddetmesini sağlayın (Bölüm~\ref{sec:debug}'deki \cmd{grep -qx} testini kullanın).
+  \item \cmd{shellcheck} kuruluysa, iki \texttt{\# shellcheck} satırını sildikten sonra onu \texttt{quotes.sh} üzerinde çalıştırın. Ne bildiriyor?
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item \texttt{\#!/bin/bash} satırı ne yapar ve onu kim okur?
+  \item \texttt{./hello.sh} neden çalıştırma izni gerektirirken \texttt{bash hello.sh} gerektirmez?
+  \item Bir betik \texttt{cd /tmp} içeriyor. Betik bittikten sonra terminaliniz hâlâ ev dizininizde. Neden?
+  \item \texttt{"\$name"}, \texttt{'\$name'} ve \texttt{\$name} arasındaki farkı açıklayın.
+  \item Neden \texttt{[ ]} içinde boşluk olmalı, ama bir atamada \texttt{=} çevresinde boşluk olmamalıdır?
+  \item Başarılı bir komut hangi çıkış durumunu döndürür? $126$ ve $127$ ne anlama gelir?
+  \item \texttt{read} ne zaman doğru araçtır, argümanlar ne zaman daha iyidir?
+  \item Windows'tan kopyalanan bir betik için \texttt{bad interpreter} (ya da \texttt{required file not found}) genellikle ne anlama gelir ve nasıl düzeltilir?
+\end{enumerate}
+
+\subsection*{Sayısal ve uygulamalı}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item \texttt{echo \$(( (17 + 3) / 6 * 6 ))} ne yazdırır? Ya \texttt{echo \$(( 17 \% 5 ** 2 ))}?
+  \item \texttt{./args.sh "a b" c "" d}: \texttt{\$\#}, \texttt{\$1} ve \texttt{\$3} nedir?
+  \item Bir \texttt{while} döngüsü \texttt{n=10} ile başlıyor ve \texttt{[ "\$n" -gt 0 ]} olduğu sürece \texttt{n=\$((n - 3))} çalıştırıyor. Gövde kaç kez çalışır ve sonda \texttt{n} kaçtır?
+  \item \texttt{[ 010 -eq 10 ]}, \texttt{[ 010 = 10 ]} ve \texttt{[ -z "" ]} testleri hangi çıkış durumunu döndürür?
+  \item \texttt{s=0} iken \texttt{for i in \{1..4\}; do s=\$((s + i * i)); done}: \texttt{s} kaçtır?
+  \item \texttt{\textasciitilde/lab/backup} klasörü varsa \texttt{OK}, yoksa \texttt{MISSING} yazdıran tek bir satır yazın.
+\end{enumerate}
+
+\subsection*{Sayısal ve uygulamalı soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=9]
+  \item $(17+3)/6 = 20/6 = 3$ (tamsayı), $3 \times 6 = 18$. İkincisinde \texttt{**} (üs alma) \texttt{\%}'den daha sıkı bağlanır: $5^2 = 25$ ve $17 \bmod 25 = 17$.
+  \item $\$\# = 4$ (boş dizgi \texttt{""} de bir argümandır), \texttt{\$1} $=$ \texttt{a b}, \texttt{\$3} boştur.
+  \item $n$: $10 \to 7 \to 4 \to 1 \to -2$; gövde $4$ kez çalışır ve sonda $n = -2$'dir.
+  \item $0$ (sayısal olarak eşit), $1$ (farklı metin), $0$ (dizgi boş).
+  \item $s = 1 + 4 + 9 + 16 = 30$.
+  \item \texttt{[ -d \textasciitilde/lab/backup ] \&\& echo OK || echo MISSING} \ (ya da bir \texttt{if}/\texttt{else}/\texttt{fi}).
+\end{enumerate}
+
+% =====================================================================
+\section{Sırada Ne Var: 15. Hafta}
+
+\begin{itemize}
+  \item \textbf{15. hafta: Final sınavı tekrarı.} Final sınavı dersin tamamını kapsar: 1--7. haftaların kuramı (8. haftanın çalışma kılavuzunu kullanın) ve uygulamalı Linux haftaları 9--14 --- dizinlerde gezinme, dosya işlemleri, izinler, metin işleme ve boru hatları, süreçler ve iş denetimi, kabuk betikleri.
+  \item “Komutu / boru hattını / betiği yazın” türünden sorular bekleyin: aşağıdaki Lab Föyü en iyi hazırlıktır.
+  \item Sınav tarihi, saati ve salonu dersin Telegram kanalında duyurulacaktır.
+\end{itemize}
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley: Bölüm~2.2 (kullanıcı ve işletim sistemi arayüzü: komut yorumlayıcıları, kabuklar) ve Bölüm~3.3 (\texttt{fork()} ve \texttt{exec()} ile süreç oluşturma).
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}, 5.~bölüm, “Interlude: Process API” (bir kabuğun fork, exec ve wait'i nasıl kullandığı): \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-api.pdf}
+  \item GNU Bash başvuru kılavuzu: \url{https://www.gnu.org/software/bash/manual/bash.html}
+  \item W.\ Shotts, \emph{The Linux Command Line}, 4.~kısım “Writing Shell Scripts” (ücretsiz PDF): \url{https://linuxcommand.org/tlcl.php}
+  \item ShellCheck, kabuk betiklerindeki hataları bulur: \url{https://www.shellcheck.net}
+\end{itemize}
+
+% =====================================================================
+\section{Lab Föyü: Notlandırılan Betik Yazma Alıştırmaları}
+
+Her betiği \texttt{\textasciitilde/lab/scripts} içinde, temiz bir laboratuvar klasöründen başlayarak yazın; klasörü şu komut yeniden oluşturur: \cmd{bash \textasciitilde/mcmp117\_lab\_setup.sh}. Her betik \texttt{\#!/bin/bash} ile başlamalı, ne yaptığını söyleyen bir yorum satırı içermeli, çalıştırılabilir olmalı, \cmd{bash -n} denetiminden geçmeli ve değişkenlerini tırnaklamalıdır. Betikleri gösterildiği gibi \texttt{exNN\_ad.sh} biçiminde adlandırın. Derste 2., 6., 11. ve 13. alıştırmalar yapılır ve notlandırılır (“Sınıf İçi Lab” slaytı); geri kalanlar ev ödevi ve sınav alıştırmasıdır. Toplam: $100$ puan. Her alıştırma için önerilen değerlendirme ölçütü: hatasız çalışma \%$40$, doğru çıktı \%$30$, hatalı girdiyi ele alma \%$15$, biçem (yorumlar, tırnaklar, shebang) \%$15$.
+
+\subsection*{A Kısmı --- Temeller (her biri 5 puan)}
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{\texttt{ex01\_myinfo.sh}} Kullanıcı adınızı, ev dizininizi, bugünün tarihini \texttt{YYYY-MM-DD} biçiminde, oturum açma kabuğunuzu ve \texttt{\textasciitilde/lab/data/students.csv} dosyasındaki öğrenci sayısını (satır sayısı eksi başlık) yazdırın.
+  \item \textbf{\texttt{ex02\_power.sh N}} $N$, $N^2$ ve $N^3$ değerlerini yazdırın. Tam olarak bir argüman verilmezse stderr'e bir Usage satırı yazdırın ve $2$ durumuyla çıkın.
+  \item \textbf{\texttt{ex03\_hello\_name.sh NAME [CITY]}} \texttt{Hello NAME from CITY!} yazdırın; şehir verilmezse Istanbul kullanın; ad verilmezse bir Usage satırı yazdırın ve $1$ ile çıkın.
+  \item \textbf{\texttt{ex04\_calc.sh}} \texttt{read} ile iki tamsayı okuyun ve bunların toplamını, farkını, çarpımını ve kalanıyla birlikte tamsayı bölümünü yazdırın. Sıfıra bölmeyi reddedin.
+\end{enumerate}
+
+\subsection*{B Kısmı --- Kararlar ve basit döngüler (her biri 6 puan)}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item \textbf{\texttt{ex05\_sign.sh N}} $N$'nin pozitif, negatif ya da sıfır olduğunu ve tek mi çift mi olduğunu söyleyin.
+  \item \textbf{\texttt{ex06\_what.sh PATH\ldots}} Her argüman için \emph{file} (satır sayısıyla), \emph{directory} ya da \emph{missing} yazdırın. En az bir yol yoksa $1$, yoksa $0$ durumuyla çıkın.
+  \item \textbf{\texttt{ex07\_table.sh [N]}} Bir \texttt{for} döngüsüyle $N \times 1$ \ldots\ $N \times 10$ çarpım tablosunu yazdırın (varsayılan $N = 7$).
+  \item \textbf{\texttt{ex08\_sum.sh [N]}} Bir \texttt{while} döngüsüyle $1 + 2 + \cdots + N$ toplamını hesaplayın (varsayılan $N = 100$) ve $\frac{N(N+1)}{2}$ formülüyle karşılaştırın.
+\end{enumerate}
+
+\subsection*{C Kısmı --- Dosyalar ve veriler (her biri 7 puan)}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item \textbf{\texttt{ex09\_doclines.sh}} \texttt{\textasciitilde/lab/docs} içindeki her \texttt{.txt} dosyası için adını ve satır sayısını yazdırın; en sonda toplamı ve en uzun dosyayı yazdırın.
+  \item \textbf{\texttt{ex10\_minmax.sh}} \texttt{\textasciitilde/lab/data/numbers.txt} dosyasını bir \texttt{while read} döngüsüyle okuyun ve sayıyı, en küçüğü, en büyüğü, toplamı ve tamsayı ortalamayı --- \cmd{sort} kullanmadan --- yazdırın.
+  \item \textbf{\texttt{ex11\_levels.sh}} \texttt{\textasciitilde/lab/logs/system.log} dosyasındaki \texttt{INFO}, \texttt{WARN} ve \texttt{ERROR} satırlarını bir \texttt{for} döngüsü ve \cmd{grep -c} ile sayın ve her sayıyı tüm satırların yüzdesi olarak yazdırın.
+  \item \textbf{\texttt{ex12\_temp.sh}} Santigradı Fahrenhayta çeviren bir \texttt{c2f} fonksiyonu yazın, $F = \frac{9}{5}C + 32$, ve $-10, 0, 10, \ldots, 40$\,°C için bir tablo yazdırın.
+\end{enumerate}
+
+\subsection*{D Kısmı --- Zorlu alıştırmalar (her biri 7 puan)}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item \textbf{\texttt{ex13\_backup\_keep.sh}} \texttt{backup.sh}'yi, \texttt{\textasciitilde/lab/backup} içinde yalnızca en yeni $3$ arşiv kalacak biçimde genişletin; sildiği her arşivin adını yazdırsın. Bir saniye arayla beş kez çalıştırarak deneyin.
+  \item \textbf{\texttt{ex14\_guess.sh [SECRET]}} Bir tahmin oyunu: gizli sayı $1$ ile $100$ arasındadır (argüman ya da \texttt{\$RANDOM} ile rastgele); doğru tahmine kadar tahminleri okuyun, \emph{Too small} / \emph{Too big} diye yanıt verin ve en sonda deneme sayısını yazdırın.
+  \item \textbf{\texttt{ex15\_dept.sh DEPT}} \texttt{students.csv} dosyasından bir bölümün öğrenci sayısını ve final notu ortalamasını (tek ondalık) yazdırın; bilinmeyen bir bölüm için bir iletiyle $1$ durumuyla çıkın.
+  \item \textbf{\texttt{ex16\_status\_bars.sh}} \texttt{access.log} içindeki her HTTP durum kodu için kodu, sayısını ve her $5$ istek için bir \texttt{\#} içeren (aşağı yuvarlanmış) bir çubuk yazdırın.
+\end{enumerate}
+
+\textbf{Puanlar:} $4 \times 5 + 4 \times 6 + 8 \times 7 = 20 + 24 + 56 = 100$.
+
+% =====================================================================
+\section{Lab Föyü Çözümleri}
+
+Bu çözümler \texttt{code/solutions/} klasöründedir. Her biri temiz bir laboratuvar klasöründe bash~5.2 ile çalıştırıldı ve \cmd{bash -n} ile ShellCheck denetimlerinden geçer. Çıktılar gerçektir; hepsi \nolinkurl{code/solutions/out_solutions.txt} dosyasında toplanmıştır. Elbette başka doğru çözümler de olabilir. Önce deneyin, sonra karşılaştırın!
+
+\lstdefinestyle{solsh}{style=sh,basicstyle=\ttfamily\scriptsize\color{light},aboveskip=0.3em,belowskip=0.2em}
+\lstdefinestyle{solout}{style=out,basicstyle=\ttfamily\scriptsize\color{light},aboveskip=0.2em,belowskip=0.4em}
+\newcommand{\sol}[4]{\Needspace{6\baselineskip}\par\smallskip{\headfont\bfseries\color{mintdeep}#1}\lstinputlisting[style=solsh]{../code/solutions/#2}\lstinputlisting[style=solout,firstline=#3,lastline=#4]{../code/solutions/out_solutions.txt}}
+
+\sol{1. ex01\_myinfo.sh}{ex01_myinfo.sh}{1}{6}
+\sol{2. ex02\_power.sh}{ex02_power.sh}{7}{10}
+\sol{3. ex03\_hello\_name.sh}{ex03_hello_name.sh}{11}{14}
+\sol{4. ex04\_calc.sh}{ex04_calc.sh}{15}{21}
+\sol{5. ex05\_sign.sh}{ex05_sign.sh}{22}{27}
+\sol{6. ex06\_what.sh}{ex06_what.sh}{28}{33}
+\texttt{status} değişkeni, döngü diğer argümanlarla sürerken bir başarısızlığı hatırlar.
+\sol{7. ex07\_table.sh}{ex07_table.sh}{34}{44}
+\sol{8. ex08\_sum.sh}{ex08_sum.sh}{45}{47}
+Sağlama: $\frac{100 \cdot 101}{2} = 5050$.
+\sol{9. ex09\_doclines.sh}{ex09_doclines.sh}{48}{55}
+\texttt{printf '\%-18s \%3d'} adı $18$ sütunda sola, sayıyı $3$ sütunda sağa yaslı yazar. Toplam: $2 + 5 + 1 + 1 + 1 + 15 = 25$.
+\sol{10. ex10\_minmax.sh}{ex10_minmax.sh}{56}{57}
+İlk sayı hem \texttt{min} hem \texttt{max} için başlangıç değeridir. Toplam \texttt{while.sh} ile aynıdır: $11\,325$, ortalama $566$ (tamsayı).
+\sol{11. ex11\_levels.sh}{ex11_levels.sh}{58}{61}
+$79 + 28 + 13 = 120$. Yüzdelerin toplamı \%$100$ değil \%$98$'dir, çünkü tamsayı bölmesi keser ($65{,}8 \to 65$, $23{,}3 \to 23$, $10{,}8 \to 10$). \texttt{" \$level "} içindeki boşluklar yalnızca düzey sütununun eşleşmesini sağlar.
+\sol{12. ex12\_temp.sh}{ex12_temp.sh}{62}{69}
+$5$'in katları için $9C/5$ bir tamsayıdır; bu yüzden tamsayı sonucu kesindir: $40 \cdot 9 / 5 + 32 = 104$.
+\sol{13. ex13\_backup\_keep.sh}{ex13_backup_keep.sh}{70}{79}
+\cmd{ls -1t} arşivleri en yeniden başlayarak listeler; \cmd{tail -n +4} en yeni üçünü atlar ve gerisini döngüye verir. \textbf{Dikkat:} \cmd{rm} komutunun geri dönüşüm kutusu yoktur (10. hafta). Böyle bir betiği önce kopyalar üzerinde deneyin ve sildiğini yazdırın. \cmd{ls} çıktısını ayrıştırmak burada yalnızca adlar boşluk içermediği için güvenlidir.
+\sol{14. ex14\_guess.sh}{ex14_guess.sh}{80}{86}
+Oyuncu $50$, $25$ ve $37$ yazdı. Sabit bir gizli sayıyla oyun test edilebilir; argüman verilmezse \texttt{\$RANDOM \% 100 + 1} $1$--$100$ arasında bir değer verir.
+\sol{15. ex15\_dept.sh}{ex15_dept.sh}{87}{92}
+\cmd{grep -cx} bölüm adının \emph{tamamıyla} eşleşen satırları sayar; \texttt{awk -v d=\ldots} kabuk değişkenini awk'a aktarır. Sağlama: ECT final notlarının toplamı $1072$, $1072/17 = 63{,}06$.
+\sol{16. ex16\_status\_bars.sh}{ex16_status_bars.sh}{93}{99}
+\texttt{while read -r count code}, \cmd{uniq -c} çıktısının her satırını iki değişkene böler. Sağlama: $148/5 = 29{,}6 \to 29$ karakter; sayıların toplamı $300$'dür.

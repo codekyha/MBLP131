@@ -1,0 +1,3 @@
+student@okan-lab:~/lab$ mkdir -p archive/{2025,2026}
+student@okan-lab:~/lab$ ls archive
+2025  2026

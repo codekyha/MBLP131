@@ -1,0 +1,52 @@
+student@okan-lab:~/lab$ find docs -name "*.txt"
+docs/notes_02.txt
+docs/syllabus.txt
+docs/notes_01.txt
+docs/notes_03.txt
+docs/linux_quotes.txt
+docs/final report.txt
+student@okan-lab:~/lab$ find . -type d -name src
+./src
+./projects/beta/src
+./projects/alpha/src
+student@okan-lab:~/lab$ find . -size +10k
+./logs/access.log
+student@okan-lab:~/lab$ find photos -iname "*.jp*g" | wc -l
+14
+student@okan-lab:~/lab$ touch -d "2026-09-01" docs/notes_01.txt
+student@okan-lab:~/lab$ find docs -mtime +30
+docs/notes_01.txt
+student@okan-lab:~/lab$ find . -name "*.c" -exec wc -l {} \;
+7 ./src/hello.c
+1 ./projects/beta/src/main.c
+1 ./projects/alpha/src/main.c
+student@okan-lab:~/lab$ find . -name "*.c" | xargs wc -l
+  7 ./src/hello.c
+  1 ./projects/beta/src/main.c
+  1 ./projects/alpha/src/main.c
+  9 total
+student@okan-lab:~/lab$ find docs -name "*.txt" | xargs wc -l
+  1 docs/notes_02.txt
+ 15 docs/syllabus.txt
+  1 docs/notes_01.txt
+  1 docs/notes_03.txt
+  5 docs/linux_quotes.txt
+wc: docs/final: No such file or directory
+wc: report.txt: No such file or directory
+ 23 total
+student@okan-lab:~/lab$ find docs -name "*.txt" -print0 | xargs -0 wc -l
+  1 docs/notes_02.txt
+ 15 docs/syllabus.txt
+  1 docs/notes_01.txt
+  1 docs/notes_03.txt
+  5 docs/linux_quotes.txt
+  2 docs/final report.txt
+ 25 total
+student@okan-lab:~/lab$ mkdir secret && chmod 000 secret
+student@okan-lab:~/lab$ find . -name "*.md"
+./projects/beta/README.md
+./projects/alpha/README.md
+find: ‘./secret’: Permission denied
+student@okan-lab:~/lab$ find . -name "*.md" 2> /dev/null
+./projects/beta/README.md
+./projects/alpha/README.md

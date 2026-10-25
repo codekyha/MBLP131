@@ -1,0 +1,99 @@
+student@okan-lab:~/lab/scripts$ ./ex01_myinfo.sh
+User:      student
+Home:      /home/student
+Date:      2026-10-12
+Shell:     /bin/bash
+Students in students.csv: 40
+student@okan-lab:~/lab/scripts$ ./ex02_power.sh 12
+n = 12, n^2 = 144, n^3 = 1728
+student@okan-lab:~/lab/scripts$ ./ex02_power.sh
+Usage: ./ex02_power.sh NUMBER
+student@okan-lab:~/lab/scripts$ ./ex03_hello_name.sh Elif
+Hello Elif from Istanbul!
+student@okan-lab:~/lab/scripts$ ./ex03_hello_name.sh Can Izmir
+Hello Can from Izmir!
+student@okan-lab:~/lab/scripts$ ./ex04_calc.sh
+First integer:  17
+Second integer: 5
+17 + 5 = 22
+17 - 5 = 12
+17 * 5 = 85
+17 / 5 = 3 remainder 2
+student@okan-lab:~/lab/scripts$ ./ex05_sign.sh -8
+-8 is negative and even
+student@okan-lab:~/lab/scripts$ ./ex05_sign.sh 0
+0 is zero and even
+student@okan-lab:~/lab/scripts$ ./ex05_sign.sh
+Usage: ./ex05_sign.sh INTEGER
+student@okan-lab:~/lab/scripts$ ./ex06_what.sh ../docs/syllabus.txt ../src nothing.txt
+../docs/syllabus.txt: file (15 lines)
+../src: directory
+nothing.txt: missing
+student@okan-lab:~/lab/scripts$ echo $?
+1
+student@okan-lab:~/lab/scripts$ ./ex07_table.sh 7
+7 x 1 = 7
+7 x 2 = 14
+7 x 3 = 21
+7 x 4 = 28
+7 x 5 = 35
+7 x 6 = 42
+7 x 7 = 49
+7 x 8 = 56
+7 x 9 = 63
+7 x 10 = 70
+student@okan-lab:~/lab/scripts$ ./ex08_sum.sh 100
+Loop:    1 + ... + 100 = 5050
+Formula: n(n+1)/2   = 5050
+student@okan-lab:~/lab/scripts$ ./ex09_doclines.sh
+final report.txt     2
+linux_quotes.txt     5
+notes_01.txt         1
+notes_02.txt         1
+notes_03.txt         1
+syllabus.txt        15
+Total: 25 lines; longest: syllabus.txt (15 lines)
+student@okan-lab:~/lab/scripts$ ./ex10_minmax.sh
+count=20 min=280 max=998 sum=11325 average=566
+student@okan-lab:~/lab/scripts$ ./ex11_levels.sh
+INFO: 79 of 120 lines (65%)
+WARN: 28 of 120 lines (23%)
+ERROR: 13 of 120 lines (10%)
+student@okan-lab:~/lab/scripts$ ./ex12_temp.sh
+Celsius  Fahrenheit
+    -10          14
+      0          32
+     10          50
+     20          68
+     30          86
+     40         104
+student@okan-lab:~/lab/scripts$ for _ in 1 2 3 4 5; do ./ex13_backup_keep.sh; sleep 1; done
+Created docs_20261012_085022.tar.gz
+Created docs_20261012_085023.tar.gz
+Created docs_20261012_085024.tar.gz
+Created docs_20261012_085025.tar.gz
+Removing old backup docs_20261012_085022.tar.gz
+Created docs_20261012_085026.tar.gz
+Removing old backup docs_20261012_085023.tar.gz
+student@okan-lab:~/lab/scripts$ ls ../backup
+docs_20261012_085024.tar.gz  docs_20261012_085025.tar.gz  docs_20261012_085026.tar.gz
+student@okan-lab:~/lab/scripts$ ./ex14_guess.sh 37
+Your guess: 50
+Too big
+Your guess: 25
+Too small
+Your guess: 37
+Correct! You needed 3 tries.
+student@okan-lab:~/lab/scripts$ ./ex15_dept.sh ECT
+ECT: 17 students, average final 63.1
+student@okan-lab:~/lab/scripts$ ./ex15_dept.sh EE
+EE: 2 students, average final 63.0
+student@okan-lab:~/lab/scripts$ ./ex15_dept.sh XYZ
+No students in department XYZ
+student@okan-lab:~/lab/scripts$ ./ex16_status_bars.sh
+200  148 #############################
+301   20 ####
+304   34 ######
+403   17 ###
+404   57 ###########
+500   24 ####

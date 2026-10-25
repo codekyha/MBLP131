@@ -1,0 +1,2 @@
+student@okan-lab:~/lab$ grep -c "GET /login " logs/access.log
+22

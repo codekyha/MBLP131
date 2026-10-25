@@ -1,0 +1,40 @@
+student@okan-lab:~/lab$ sort data/cities.txt | head -n 4
+Ankara
+Ankara
+Antalya
+Antalya
+student@okan-lab:~/lab$ tail -n +2 data/students.csv | cut -d, -f5 | sort | head -n 3
+100
+35
+36
+student@okan-lab:~/lab$ tail -n +2 data/students.csv | cut -d, -f5 | sort -n | head -n 3
+35
+36
+36
+student@okan-lab:~/lab$ sort -t, -k5 -nr data/students.csv | head -n 3
+2026010,Onur Dogan,ME,73,100
+2026001,Elif Yilmaz,ECT,96,99
+2026020,Emre Dogan,ME,64,98
+student@okan-lab:~/lab$ uniq -c data/cities.txt | head -n 4
+      1 Antalya
+      1 Trabzon
+      1 Konya
+      1 Bursa
+student@okan-lab:~/lab$ sort data/cities.txt | uniq -c
+      2 Ankara
+      6 Antalya
+      5 Bursa
+      5 Eskisehir
+      1 Istanbul
+      2 Izmir
+      4 Konya
+      5 Trabzon
+student@okan-lab:~/lab$ sort data/cities.txt | uniq -c | sort -rn | head -n 3
+      6 Antalya
+      5 Trabzon
+      5 Eskisehir
+student@okan-lab:~/lab$ cut -d, -f2 data/students.csv | sort | uniq -d
+Elif Yilmaz
+Mehmet Aydin
+Onur Dogan
+Selin Yildiz

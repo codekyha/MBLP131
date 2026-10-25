@@ -1,0 +1,27 @@
+student@okan-lab:~/lab/scripts$ ./grade.sh 92
+Score 92 -> grade A
+student@okan-lab:~/lab/scripts$ ./grade.sh 72
+Score 72 -> grade B
+student@okan-lab:~/lab/scripts$ ./grade.sh 49
+Score 49 -> grade F
+student@okan-lab:~/lab/scripts$ ./grade.sh 150
+Error: score must be between 0 and 100
+student@okan-lab:~/lab/scripts$ ./grade.sh
+Usage: ./grade.sh SCORE (0-100)
+student@okan-lab:~/lab/scripts$ ./grade.sh abc
+./grade.sh: line 9: [: abc: integer expression expected
+./grade.sh: line 9: [: abc: integer expression expected
+./grade.sh: line 12: [: abc: integer expression expected
+./grade.sh: line 14: [: abc: integer expression expected
+./grade.sh: line 16: [: abc: integer expression expected
+Score abc -> grade F
+student@okan-lab:~/lab/scripts$ bash -x grade.sh 72
++ score=72
++ '[' -z 72 ']'
++ '[' 72 -lt 0 ']'
++ '[' 72 -gt 100 ']'
++ '[' 72 -ge 85 ']'
++ '[' 72 -ge 70 ']'
++ letter=B
++ echo 'Score 72 -> grade B'
+Score 72 -> grade B

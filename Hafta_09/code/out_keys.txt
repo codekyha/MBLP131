@@ -1,0 +1,24 @@
+student@okan-lab:~$ cd ~/lab
+student@okan-lab:~/lab$ cd projects/alpha/
+student@okan-lab:~/lab/projects/alpha$ pwd
+/home/student/lab/projects/alpha
+student@okan-lab:~/lab/projects/alpha$ cd
+student@okan-lab:~$ ls ~/lab/docs/syllabus.txt 
+/home/student/lab/docs/syllabus.txt
+student@okan-lab:~$ whoami
+student
+student@okan-lab:~$ !!
+whoami
+student
+student@okan-lab:~$ history
+    1  cd ~/lab
+    2  cd projects/alpha/
+    3  pwd
+    4  cd
+    5  ls ~/lab/docs/syllabus.txt 
+    6  whoami
+    7  whoami
+    8  history
+student@okan-lab:~$ !5
+ls ~/lab/docs/syllabus.txt 
+/home/student/lab/docs/syllabus.txt

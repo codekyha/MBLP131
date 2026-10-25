@@ -1,0 +1,3 @@
+student@okan-lab:~/lab$ chmod 600 docs/syllabus.txt
+student@okan-lab:~/lab$ ls -l docs/syllabus.txt
+-rw------- 1 student student 578 Oct 12 08:50 docs/syllabus.txt

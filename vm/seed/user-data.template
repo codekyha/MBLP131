@@ -1,0 +1,160 @@
+#cloud-config
+# MCMP117 / MBLP131 lab base image - first-boot provisioning.
+#
+# Build-LabVM.ps1 substitutes the upper-case placeholder tokens and delivers this file on a NoCloud
+# seed ISO (volume label "cidata"). Credentials and settings can be changed here.
+# The file must keep LF line endings.
+
+hostname: mcmp117-lab
+manage_etc_hosts: true
+timezone: Europe/Istanbul
+
+users:
+  - name: user
+    gecos: MCMP117 Lab User
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: false
+
+chpasswd:
+  expire: false
+  users:
+    - {name: user, password: '1234', type: text}
+
+ssh_pwauth: true
+package_update: false
+package_upgrade: false
+
+write_files:
+  - path: /opt/lab/lab_install.sh
+    owner: root:root
+    permissions: '0755'
+    encoding: b64
+    content: @@LAB_INSTALL_B64@@
+  - path: /usr/local/bin/verify_lab
+    owner: root:root
+    permissions: '0755'
+    encoding: b64
+    content: @@VERIFY_LAB_B64@@
+@@LAB_SETUP_ENTRY@@
+  # Runs once after lab_install.sh succeeded: makes the image safe to clone.
+  - path: /opt/lab/finalize.sh
+    owner: root:root
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -eu
+      echo "[finalize] start"
+
+      # 1. cloud-init pins the NIC to the build VM's MAC address; every imported copy gets a
+      #    new MAC and would lose its network. Replace the profile with a generic DHCP one.
+      rm -f /etc/netplan/50-cloud-init.yaml
+      install -m 600 /opt/lab/netplan-lab-dhcp.yaml /etc/netplan/01-lab-dhcp.yaml
+
+      # 2. Identity: each copy generates its own SSH host keys (ssh.service drop-in),
+      #    machine-id (systemd, from the empty file) and hostname (lab-firstboot.service).
+      rm -f /etc/ssh/ssh_host_*
+      : > /etc/machine-id
+      touch /var/lib/lab-firstboot-pending
+      systemctl daemon-reload
+      systemctl enable lab-firstboot.service
+
+      # 3. cloud-init has done its job; do not let it run again on the copies.
+      touch /etc/cloud/cloud-init.disabled
+
+      # 4. Housekeeping.
+      apt-get clean
+      rm -rf /var/lib/apt/lists/*
+      rm -f /root/.bash_history
+      touch /var/lib/lab_install.ok
+      echo "[finalize] done"
+
+  - path: /opt/lab/netplan-lab-dhcp.yaml
+    owner: root:root
+    permissions: '0600'
+    content: |
+      network:
+        version: 2
+        ethernets:
+          lab-en:
+            match:
+              name: "e*"
+            dhcp4: true
+            dhcp6: false
+
+  - path: /opt/lab/lab-firstboot.sh
+    owner: root:root
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      # First boot of a freshly imported copy: give it a unique hostname (lab-<last 4 MAC digits>).
+      set -u
+      [ -e /var/lib/lab-firstboot-pending ] || exit 0
+      nic=""
+      for d in /sys/class/net/*; do
+          n=${d##*/}
+          if [ "$n" != "lo" ]; then
+              nic=$n
+              break
+          fi
+      done
+      suffix=""
+      if [ -n "$nic" ] && [ -r "/sys/class/net/$nic/address" ]; then
+          suffix=$(tr -d ':\n' < "/sys/class/net/$nic/address" | tail -c 4)
+      fi
+      if [ -z "$suffix" ]; then
+          suffix=$(head -c 4 /proc/sys/kernel/random/uuid)
+      fi
+      new="lab-$suffix"
+      echo "$new" > /etc/hostname
+      hostname "$new"
+      if grep -q '^127\.0\.1\.1' /etc/hosts; then
+          sed -i "s/^127\.0\.1\.1.*/127.0.1.1 $new/" /etc/hosts
+      else
+          echo "127.0.1.1 $new" >> /etc/hosts
+      fi
+      rm -f /var/lib/lab-firstboot-pending
+
+  - path: /etc/systemd/system/lab-firstboot.service
+    owner: root:root
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=MCMP117 lab image first-boot identity
+      ConditionPathExists=/var/lib/lab-firstboot-pending
+      After=local-fs.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/opt/lab/lab-firstboot.sh
+
+      [Install]
+      WantedBy=multi-user.target
+
+  # Generate missing SSH host keys before sshd validates its configuration.
+  - path: /etc/systemd/system/ssh.service.d/lab-hostkeys.conf
+    owner: root:root
+    permissions: '0644'
+    content: |
+      [Service]
+      ExecStartPre=
+      ExecStartPre=/usr/bin/ssh-keygen -A
+      ExecStartPre=/usr/sbin/sshd -t
+
+  # Ubuntu cloud images disable password logins; the lab VM needs them.
+  - path: /etc/ssh/sshd_config.d/40-lab.conf
+    owner: root:root
+    permissions: '0644'
+    content: |
+      PasswordAuthentication yes
+
+runcmd:
+  - [ bash, -c, "LAB_USER=user LAB_PROFILE=core INSTALL_TR_LOCALE=1 SET_TR_KEYMAP=0 ENABLE_SSH=1 /opt/lab/lab_install.sh >> /var/log/lab_firstboot.log 2>&1 && /opt/lab/finalize.sh >> /var/log/lab_firstboot.log 2>&1" ]
+
+# Power off only if provisioning succeeded; Build-LabVM.ps1 waits for the power-off.
+power_state:
+  mode: poweroff
+  message: MCMP117 lab image provisioned
+  timeout: 30
+  condition: ["test", "-f", "/var/lib/lab_install.ok"]

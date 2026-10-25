@@ -1,0 +1,812 @@
+% ============================ Hafta 12 gövdesi ============================
+% Linux haftasında terminal oturumları uzundur: bir boy küçük yazdır
+\setlength{\emergencystretch}{3em}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}, basicstyle=\ttfamily\footnotesize\color{light}}
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 12 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Metin İşleme, Yönlendirme ve Boru Hatları}\par\smallskip
+{\small\itshape\color{white!70} Çekirdeğin birbirine bağladığı küçük programlar, gerçek veriler hakkındaki gerçek soruları yanıtlar.}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Standart girdiyi, standart çıktıyı ve standart hatayı $0$, $1$ ve $2$ numaralı dosya tanımlayıcıları olarak açıklamak ve bunları 2--3.~haftalardaki \cmd{write(1, \dots)} sistem çağrısına bağlamak.
+  \item \cmd{>}, \cmd{>>}, \cmd{<}, \cmd{2>}, \cmd{2>\&1}, \cmd{\&>} yönlendirmelerini ve \cmd{/dev/null} aygıtını kullanmak; sıralarının etkisini önceden kestirmek.
+  \item Kabuğun yönlendirmeyi ve boruları \cmd{fork()}, \cmd{open()}, \cmd{pipe()}, \cmd{dup2()} ve \cmd{exec()} ile nasıl gerçeklediğini açıklamak ve ilgili \cmd{strace} çıktısını okumak.
+  \item \cmd{grep} (\cmd{-i -n -v -c -w -r} seçenekleri ve basit düzenli ifadelerle), \cmd{sort}, \cmd{uniq}, \cmd{cut}, \cmd{wc}, \cmd{tr}, \cmd{head}, \cmd{tail} ve \cmd{tee} filtrelerini kullanmak.
+  \item Dizin ağacında \cmd{find} ile arama yapmak ve sonuçlar üzerinde \cmd{-exec} ya da \cmd{xargs} ile işlem yapmak.
+  \item Günlük (log) dosyaları ve CSV verileri hakkındaki soruları, her seferinde bir aşama eklenerek kurulan tek satırlık boru hatlarıyla yanıtlamak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{11. Haftadan 12. Haftaya}
+
+Geçen hafta dosyalara dışarıdan baktık: sahipleri kim (\cmd{id}, \texttt{/etc/passwd}), \texttt{-rwxr-x---} kip dizgesi ne anlama geliyor ve \cmd{chmod} bunu sembolik (\cmd{u+x}) ya da sekizli olarak nasıl değiştiriyor ($754$: sahip için $7 = 4+2+1$, grup için $5 = 4+1$, diğerleri için $4$). Bu hafta dosyaların \emph{içine} bakıyoruz. Linux neredeyse her şeyi --- yapılandırmayı, günlükleri, veri dökümlerini --- satır başına bir kayıt olacak biçimde düz metin olarak tutar. Bu yüzden satır okuyan, satırları süzen ve satır yazan küçük bir araç takımı, şaşırtıcı çeşitlilikte soruyu yanıtlayabilir. Bu araçları birbirine bağlayan yapıştırıcıyı işletim sistemi sağlar: \term{yönlendirme} (redirection) ve \term{borular} (pipes). İkisi de daha önce karşılaştığınız tek bir fikre dayanır: \term{dosya tanımlayıcı} (file descriptor).
+
+\paragraph{Bu notları nasıl izlemelisiniz?} Tüm örnekler \texttt{\textasciitilde/lab} alıştırma klasöründe çalışır. Dosyalarınızın bizimkilerle aynı olması için başlamadan önce klasörü yeniden oluşturun:
+\begin{lstlisting}[style=term]
+$ bash mcmp117_lab_setup.sh
+$ cd ~/lab
+\end{lstlisting}
+Burada gösterilen her oturum gerçek çıktıdır; sıradan bir kullanıcı olarak \texttt{code/demo\_*.sh} betikleriyle yakalanmıştır (çıktı dosyaları \texttt{code/out\_*.txt}). Sizin makinenizde tarihler, süreç numaraları (PID), terminal adları (\texttt{/dev/pts/1}) ve kullanıcı adları farklı olacaktır. \cmd{ls} ve \cmd{sort} çıktısının sırası da \emph{yerel ayara} (locale, dil ayarları) bağlı olabilir; biz büyük harflerin küçük harflerden önce sıralandığı \cmd{LC\_ALL=C.UTF-8} ayarını kullandık. Türkçe yerel ayarlı bir sistemde (\cmd{LANG=tr\_TR.UTF-8}) pek çok ileti Türkçe görünür ve sıralama farklı olabilir; sonuçlarınız farklı sıralanıyorsa \cmd{export LC\_ALL=C.UTF-8} yazın. Programların ilettiği metinler (ör.\ \texttt{No such file or directory}) burada yakalandıkları gibi İngilizce bırakılmıştır.
+
+% =====================================================================
+\section{Standart Akışlar ve Dosya Tanımlayıcıları}
+\label{sec:streams}
+
+\subsection{Doğuştan açık üç dosya}
+
+7.~haftada bir sürecin açık bir dosyaya adıyla değil, küçük bir tamsayıyla, yani \term{dosya tanımlayıcıyla} (file descriptor, fd) başvurduğunu gördük: bu sayı, sürecin \emph{süreç başına açık dosya tablosunda} bir sıra numarasıdır. Kabuk bir programı başlattığında üç tanımlayıcı zaten açıktır:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}clll@{}}
+\toprule
+\textbf{fd} & \textbf{Ad} & \textbf{Kullanım} & \textbf{Terminalde varsayılan}\\
+\midrule
+$0$ & standart girdi (stdin) & programın okuduğu veri & klavye\\
+$1$ & standart çıktı (stdout) & normal sonuçlar & terminal ekranı\\
+$2$ & standart hata (stderr) & hata ve tanı iletileri & terminal ekranı\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[b/.style={rectangle,rounded corners=2pt,minimum height=0.9cm,align=center,font=\small},
+  fd/.style={rectangle,minimum width=0.6cm,minimum height=0.55cm,font=\ttfamily\small\bfseries,text=white},
+  nm/.style={rectangle,fill=light,minimum width=2.3cm,minimum height=0.55cm,font=\ttfamily\small},
+  arr/.style={-{Stealth[length=2.5mm]},thick}]
+\node[b,fill=light,minimum width=2.2cm] (kb) at (-0.8,-0.3) {\textbf{Klavye}\\{\scriptsize terminal girdisi}};
+\node[rectangle,rounded corners=3pt,fill=charcoal,minimum width=3.9cm,minimum height=3.2cm] (p) at (4.6,-0.6) {};
+\node[font=\small\bfseries,text=mint] at (4.6,0.65) {Süreç (ör.\ \texttt{ls})};
+\node[font=\scriptsize\itshape,text=white!70] at (4.6,0.25) {dosya tanımlayıcı tablosu};
+\node[fd,fill=mint] (f0) at (3.35,-0.3) {0}; \node[nm,anchor=west] (n0) at (3.75,-0.3) {stdin};
+\node[fd,fill=mint] (f1) at (3.35,-1.0) {1}; \node[nm,anchor=west] (n1) at (3.75,-1.0) {stdout};
+\node[fd,fill=red!70!black] (f2) at (3.35,-1.7) {2}; \node[nm,anchor=west] (n2) at (3.75,-1.7) {stderr};
+\node[b,fill=light,minimum width=2.6cm,minimum height=1.8cm] (scr) at (10.6,-0.9) {\textbf{Terminal ekranı}\\{\scriptsize\ttfamily /dev/pts/1}};
+\draw[arr,mintdeep] (kb.east) -- node[above,font=\scriptsize\ttfamily]{read(0,\,\dots)} (f0.west);
+\draw[arr,mintdeep] ([xshift=0.2cm]n1.east) -- node[above,font=\scriptsize\ttfamily,sloped,pos=0.55]{write(1,\,\dots)} (scr.west |- 0,-0.65);
+\draw[arr,red!70!black] ([xshift=0.2cm]n2.east) -- node[below,font=\scriptsize\ttfamily,sloped,pos=0.55]{write(2,\,\dots)} (scr.west |- 0,-1.2);
+\end{tikzpicture}
+\caption{Üç standart akış. Çıktı ve hatalar, varsayılan olarak aynı ekranda biten iki ayrı kanaldır.}
+\label{fig:streams}
+\end{figure}
+
+Bunları kim açtı? Kabuk; daha doğrusu kabuğu başlatan süreçler zinciri. \cmd{fork()} ile oluşturulan bir çocuk süreç, ebeveyninin tanımlayıcı tablosunun bir kopyasını alır ve \cmd{exec()} bu tabloyu korur (3.~hafta). Dolayısıyla \cmd{bash}, \cmd{ls} komutunu çalıştırdığında \cmd{ls}, \cmd{bash}'in hepsi terminali gösteren $0$, $1$, $2$ tanımlayıcılarını miras alır.
+
+Neden iki çıktı kanalı var? \cmd{ls}'in listesini bir dosyaya kaydettiğini ve argümanlarından birinin var olmadığını düşünün. Hata iletisi listeye karışsaydı dosyanın içinde gizli kalırdı. Hatalar kendi tanımlayıcılarında yol aldığı için yine de ekrana ulaşırlar. Bu basit tasarım kararı, \cmd{2>} yönlendirmesinin var olma nedenidir.
+
+\subsection{Bunu daha önce gördünüz: \texttt{write(1, \dots)}}
+
+2.~haftada \cmd{strace}, \cmd{printf("Hello\dots")} çağrısının sonunda \cmd{write(1, "Hello\dots", n)} sistem çağrısına dönüştüğünü gösterdi; 3.~haftada aynı çağrıyı \texttt{syscall} komutuyla elle yaptık: ilk parametre olan $1$, standart çıktıydı. Şimdi \cmd{ls}'i bir var olan ve bir eksik argümanla izleyelim (\cmd{-o t1.txt}, izi bir dosyaya yazar; böylece iz \cmd{ls}'in çıktısına karışmaz):
+
+\lstinputlisting[style=term,linerange={1-12}]{../code/out_strace.txt}
+
+Hata iletisinin dört parçası \cmd{write(2, \dots)} ile, liste ise \cmd{write(1, \dots)} ile çıkar. \cmd{ls} programı $1$ ve $2$ numaralı tanımlayıcıların \emph{nereye} gittiğini hiç sormaz; bu, program başlamadan önce belirlenmiştir. Kabuk $1$ numaralı tanımlayıcıyı bir dosyaya yöneltirse her \cmd{write(1, \dots)} o dosyaya düşer. Yönlendirmenin bütün sırrı budur.
+
+\paragraph{Küçük bir sürpriz.} Terminalde \cmd{ls}, \texttt{cities.txt\ \ numbers.txt\ \ students.csv} adlarını sütunlar hâlinde yazdı; ama iz (ve aşağıda içine yönlendirdiğimiz her dosya) satır başına bir ad içerir. \cmd{ls}, \cmd{isatty(1)} kütüphane işleviyle $1$ numaralı tanımlayıcının bir terminal olup olmadığını denetler ve biçimini buna göre seçer. Programların çoğu bununla ilgilenmez; birkaçı (\cmd{ls}, \cmd{grep -{}-color=auto}) ilgilenir.
+
+\subsection{Tanımlayıcıları görmek: \texttt{/proc/self/fd}}
+
+\texttt{/proc} dosya sistemi (3.~hafta) çekirdeğin her sürece bakışını gösterir. \texttt{/proc/self}, bakan sürecin kendisidir; \texttt{/proc/self/fd} ise onun tanımlayıcılarını sembolik bağlantılar olarak listeler. Bu yüzden \cmd{ls -l /proc/self/fd} komutu \cmd{ls}'in kendi tanımlayıcılarını gösterir:
+
+\lstinputlisting[style=term,linerange={5-23}]{../code/out_streams.txt}
+
+\begin{itemize}
+  \item Normalde $0$, $1$ ve $2$'nin üçü de \texttt{/dev/pts/1} terminal aygıtını gösterir. $3$ numaralı tanımlayıcı, \cmd{ls}'in o anda okuduğu dizindir.
+  \item \cmd{> fd.txt} ile $1$ numaralı tanımlayıcı \texttt{/home/student/lab/fd.txt} dosyasını gösterir; \cmd{ls} kendi listesini bu dosyaya yazdı. \texttt{l-wx------} kipi, dosyanın yalnızca yazma için açık olduğunu gösterir.
+  \item \cmd{< docs/syllabus.txt} ile $0$ numaralı tanımlayıcı salt okunur açılmış dosyadır (\texttt{lr-x------}).
+  \item \cmd{2> /dev/null} ile (bkz.\ \texttt{code/out\_streams.txt}) $2$ numaralı tanımlayıcı \texttt{/dev/null} aygıtını gösterir.
+\end{itemize}
+
+% =====================================================================
+\section{Yönlendirme}
+\label{sec:redir}
+
+\subsection{Çıktı: \texttt{>} ve \texttt{>>}}
+
+\lstinputlisting[style=term,linerange={1-10}]{../code/out_redirect.txt}
+
+\cmd{komut > dosya}, gerekirse dosyayı oluşturur, \emph{içini boşaltır} ($0$ bayta kırpar, truncate) ve $1$ numaralı tanımlayıcıyı ona bağlar. \cmd{komut >> dosya} ise dosyayı \emph{sona ekleme} (append) için açar: yeni veri sona gider. Yukarıdaki üçüncü \cmd{echo} iki satırın ikisinin de yerini aldı: eski içerik gitti; geri alma da çöp kutusu da yok (10.~hafta). Bash sizi koruyabilir: \cmd{set -o noclobber} komutundan sonra kabuk, var olan bir dosyanın üzerine \cmd{>} ile yazmayı reddeder (\cmd{>|} işleci bunu zorlar).
+
+\subsection{Girdi: \texttt{<}}
+
+\lstinputlisting[style=term,linerange={11-14}]{../code/out_redirect.txt}
+
+\cmd{wc -l logs/access.log} komutunda dosyayı \cmd{wc} kendisi açar ve adını bilir, bu yüzden adı da yazar. \cmd{wc -l < logs/access.log} komutunda ise dosyayı $0$ numaralı tanımlayıcı olarak \emph{kabuk} açar ve \cmd{wc} yalnızca standart girdisini okur: yazacak bir adı yoktur. Bu çıplak sayı betiklerde kullanışlıdır (14.~hafta).
+
+\begin{keyidea}[Filtre geleneği]
+Metin araçlarının çoğu birer \term{filtredir} (filter): komut satırında adı verilen dosyaları, hiç dosya verilmemişse standart girdiyi okurlar ve sonuçlarını standart çıktıya yazarlar. Hata iletileri standart hataya gider. Bu gelenek sayesinde her filtre bir dosyadan, klavyeden ya da başka bir programdan beslenebilir --- ve çıktısı ekrana, bir dosyaya ya da başka bir programa gidebilir.
+\end{keyidea}
+
+\subsection{Hatalar: \texttt{2>}, \texttt{2>\&1}, \texttt{\&>} ve \texttt{/dev/null}}
+
+Bir yönlendirmenin genel biçimi \texttt{n>dosya}'dır; burada \texttt{n} bir tanımlayıcı numarasıdır. Tek başına \texttt{>}, \texttt{1>} demektir; tek başına \texttt{<} ise \texttt{0<} demektir.
+
+\lstinputlisting[style=term,linerange={15-33}]{../code/out_redirect.txt}
+\lstinputlisting[style=term,linerange={41-44}]{../code/out_redirect.txt}
+
+\begin{itemize}
+  \item \cmd{> out.txt} yalnızca standart çıktıyı taşır; bu yüzden hata yine ekranda görünür.
+  \item \cmd{2> err.txt} yalnızca standart hatayı taşır: liste görünür, hata dosyadadır.
+  \item \cmd{> all.txt 2>\&1} ikisini de dosyaya koyar. \cmd{2>\&1}, ``$2$ numaralı tanımlayıcıyı $1$ numaralının kopyası yap'' diye okunur.
+  \item \cmd{\&> all.txt}, aynı işin bash kısaltmasıdır (daha basit olan \cmd{sh}/\cmd{dash} kabuklarında çalışmaz).
+  \item \cmd{2> /dev/null} hataları atar. \texttt{/dev/null} bir \emph{aygıt dosyasıdır}: ona yazılan her şey kaybolur, ondan okumak ise hemen dosya sonu (end-of-file) döndürür.
+\end{itemize}
+
+\subsection{Sıra önemlidir}
+
+Yönlendirmeler \emph{soldan sağa} işlenir ve \cmd{2>\&1}, $1$ numaralı tanımlayıcıyı \emph{o anki hâliyle} kopyalar; kalıcı bir bağ kurmaz. Karşılaştırın:
+
+\lstinputlisting[style=term,linerange={34-40}]{../code/out_redirect.txt}
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[st/.style={rectangle,rounded corners=1.5pt,fill=charcoal,text=white,minimum width=2.1cm,minimum height=0.55cm,font=\ttfamily\footnotesize},
+  t/.style={rectangle,rounded corners=1.5pt,fill=light,minimum width=2.7cm,minimum height=0.55cm,font=\ttfamily\footnotesize},
+  f/.style={rectangle,rounded corners=1.5pt,fill=mint,minimum width=2.7cm,minimum height=0.55cm,font=\ttfamily\footnotesize\bfseries}]
+\begin{scope}
+\node[font=\small\ttfamily\bfseries] at (2.85,0.7) {ls data nosuch > all.txt 2>\&1};
+\node[st] at (0,0) {başlangıç}; \node[t] at (2.85,0) {fd 1 → terminal}; \node[t] at (5.75,0) {fd 2 → terminal};
+\node[st] at (0,-0.75) {> all.txt}; \node[f] at (2.85,-0.75) {fd 1 → all.txt}; \node[t] at (5.75,-0.75) {fd 2 → terminal};
+\node[st] at (0,-1.5) {2>\&1}; \node[f] at (2.85,-1.5) {fd 1 → all.txt}; \node[f] at (5.75,-1.5) {fd 2 → all.txt};
+\node[font=\footnotesize\itshape,text=mintdeep] at (2.85,-2.15) {iki akış da dosyaya gider};
+\end{scope}
+\begin{scope}[xshift=9.0cm]
+\node[font=\small\ttfamily\bfseries] at (2.85,0.7) {ls data nosuch 2>\&1 > out2.txt};
+\node[st] at (0,0) {başlangıç}; \node[t] at (2.85,0) {fd 1 → terminal}; \node[t] at (5.75,0) {fd 2 → terminal};
+\node[st] at (0,-0.75) {2>\&1}; \node[t] at (2.85,-0.75) {fd 1 → terminal}; \node[t] at (5.75,-0.75) {fd 2 → terminal};
+\node[st] at (0,-1.5) {> out2.txt}; \node[f] at (2.85,-1.5) {fd 1 → out2.txt}; \node[t] at (5.75,-1.5) {fd 2 → terminal};
+\node[font=\footnotesize\itshape,text=red!60!black] at (2.85,-2.15) {hata yine ekrana ulaşır};
+\end{scope}
+\end{tikzpicture}}
+\caption{Soldan sağa işlenen her yönlendirmeden sonra tanımlayıcı tablosu.}
+\label{fig:order}
+\end{figure}
+
+\subsection{Kabuk bunu nasıl yapar?}
+\label{sec:dup2}
+
+3.~haftada UNIX'in süreçleri neden iki ayrı çağrıyla, \cmd{fork()} ve \cmd{exec()} ile oluşturduğunu sorduk ve şöyle yanıtladık: ikisinin arasında çocuk kendi ortamını hazırlayabilir, örneğin çıktısını yönlendirebilir. İşte kanıtı. \cmd{ls data > list.txt} komutunu çalıştıran etkileşimsiz bir \cmd{bash}'i, çocukları da izleyerek (\cmd{-f}) ve yalnızca üç sistem çağrısını göstererek izliyoruz:
+
+\lstinputlisting[style=term,linerange={13-18}]{../code/out_strace.txt}
+
+Her satırdaki ilk sayı PID'dir: $15726$ \cmd{bash}'tir, $15727$ ise onun çocuğu (\cmd{fork()}'un arkasındaki Linux sistem çağrısı olan \cmd{clone()} ile oluşturulmuştur; burada izlenmedi). Çocuk
+\begin{enumerate}[leftmargin=1.4em]
+  \item \texttt{list.txt}'yi yazmak için açar; \texttt{O\_CREAT} dosyayı oluşturur, \texttt{O\_TRUNC} içini boşaltır (önceki bölümdeki ``\cmd{>} eski içeriği yok eder'' durumu budur) ve çekirdek en küçük boş tanımlayıcıyı, $3$'ü döndürür;
+  \item \cmd{dup2(3, 1)} çağırır: $1$ numaralı tanımlayıcı $3$'ün kopyası olur, böylece standart çıktı artık dosyaya gider (kabuk ardından fazladan kalan $3$ numaralı tanımlayıcıyı kapatır);
+  \item \cmd{execve("/usr/bin/ls", \dots)} çağırır: program \cmd{ls} ile değiştirilir, ama tanımlayıcı tablosu sağ kalır. \cmd{ls} $1$ numaralı tanımlayıcıya --- yani dosyaya --- yazar ve yönlendirildiğini hiç bilmez.
+\end{enumerate}
+Aynı biçimde \cmd{>>}, \texttt{O\_TRUNC} yerine \texttt{O\_APPEND} ile açar; \cmd{<} dosyayı salt okunur açıp $0$ numaralı tanımlayıcının üzerine kopyalar; \cmd{2>\&1} ise düpedüz \cmd{dup2(1, 2)} çağrısıdır. Yönlendirme ne \cmd{ls}'in ne de başka bir komutun özelliğidir: onu kabuk, sıradan sistem çağrılarıyla yapar.
+
+% =====================================================================
+\section{Borular}
+\label{sec:pipes}
+
+\subsection{Süreçleri birbirine bağlamak}
+
+Yönlendirme bir süreci bir \emph{dosyaya} bağlar. \cmd{kmt1 | kmt2} biçiminde yazılan bir \term{boru} (pipe) ise bir süreci başka bir \emph{sürece} bağlar: \cmd{kmt1}'in standart çıktısı \cmd{kmt2}'nin standart girdisi olur. Borularla birleştirilmiş komutlar zincirine \term{boru hattı} (pipeline) denir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[pr/.style={rectangle,rounded corners=2pt,fill=charcoal,text=white,minimum height=0.9cm,align=center,font=\ttfamily\small},
+  pp/.style={rectangle,rounded corners=2pt,fill=mint,minimum width=1.5cm,minimum height=0.5cm,font=\small},
+  arr/.style={-{Stealth[length=2.5mm]},thick,mintdeep}, lb/.style={font=\scriptsize\bfseries,text=mintdeep}]
+\fill[light,draw=slate!40,dashed] (-0.9,-2.65) rectangle (13.6,-1.35);
+\node[font=\scriptsize\itshape\bfseries,text=slate,anchor=west] at (-0.8,-1.55) {çekirdek: boru tamponları};
+\node[rectangle,fill=light,draw=slate!30,minimum height=0.9cm,font=\ttfamily\small,align=center] (file) at (0,0) {access.log\\[-2pt]{\scriptsize\rmfamily dosya}};
+\node[pr,minimum width=2.5cm] (cut) at (3.0,0) {cut -d" " -f9};
+\node[pr,minimum width=1.6cm] (sort) at (6.6,0) {sort};
+\node[pr,minimum width=1.6cm] (uniq) at (9.9,0) {uniq -c};
+\node[rectangle,fill=light,draw=slate!30,minimum height=0.9cm,font=\small] (term) at (12.6,0) {Terminal};
+\node[pp] (p1) at (4.8,-2.1) {boru}; \node[pp] (p2) at (8.25,-2.1) {boru};
+\draw[arr,slate] (file) -- (cut);
+\draw[arr] (cut.south east) ++(-0.3,0) -- node[lb,left]{fd 1} (p1.north west);
+\draw[arr] (p1.north east) -- node[lb,right]{fd 0} ([xshift=0.2cm]sort.south west);
+\draw[arr] ([xshift=-0.2cm]sort.south east) -- node[lb,left]{fd 1} (p2.north west);
+\draw[arr] (p2.north east) -- node[lb,right]{fd 0} ([xshift=0.2cm]uniq.south west);
+\draw[arr] (uniq) -- node[lb,above]{fd 1} (term);
+\end{tikzpicture}
+\caption{\cmd{cut -d" " -f9 logs/access.log | sort | uniq -c} boru hattı: çekirdek içindeki iki tamponla bağlanmış, aynı anda çalışan üç süreç. Her aşamanın standart hatası (fd~$2$) yine terminale gider.}
+\label{fig:pipeline}
+\end{figure}
+
+\lstinputlisting[style=term,linerange={11-17}]{../code/out_analysis.txt}
+
+\cmd{cut} her satırdan $9$.~alanı (HTTP durum kodunu) çıkarır, \cmd{sort} eşit kodları bir araya getirir, \cmd{uniq -c} her grubu sayar. Hiç geçici dosya oluşturulmaz: veri, çekirdeğe ait bellek tamponlarından akar. Her aşama kendi PID'i olan bağımsız bir süreçtir (3.~hafta) ve hepsini kabuk başlatır.
+
+\subsection{Kabuk bir boruyu nasıl kurar?}
+
+Bir boru \cmd{pipe()} sistem çağrısıyla (güncel Linux'ta \cmd{pipe2()}) oluşturulur; bu çağrı \emph{iki} tanımlayıcı döndürür: biri okuma, biri yazma için. İki aşamalı bir boru hattının izi:
+
+\lstinputlisting[style=term,linerange={19-29}]{../code/out_strace.txt}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \cmd{pipe2([3, 4], 0)}: \cmd{bash} ($15736$) bir boru alır: $3$ numaralı tanımlayıcı okuma ucu, $4$ yazma ucudur.
+  \item İki \cmd{clone()} çağrısı (= \cmd{fork()}) $15737$ ve $15738$ numaralı çocukları oluşturur; ikisi de $3$ ve $4$ numaralı tanımlayıcıları miras alır.
+  \item İlk çocuk \cmd{dup2(4, 1)} çağırır: standart çıktısı artık yazma ucudur. Ardından \cmd{grep}'i çalıştırır.
+  \item İkinci çocuk \cmd{dup2(3, 0)} çağırır: standart girdisi okuma ucudur. \cmd{wc}'yi çalıştırır.
+  \item Kullanılmayan uçlar kapatılır (\cmd{close()} izlenmedi) ve \cmd{bash} iki çocuğu da bekler (izin burada atlanan geri kalan satırları, iki çıkışı ve çekirdeğin bir çocuğun sonlandığını ebeveyne bildirdiği \texttt{SIGCHLD} sinyalini gösterir).
+\end{enumerate}
+Bu çalıştırmada \cmd{wc}'nin \cmd{grep}'ten \emph{önce} çalıştırıldığına dikkat edin: iki çocuk eşzamanlı çalışır ve kimin önce gideceğine zamanlayıcı (scheduler, 4.~hafta) karar verir. İki süreç aynı anda sistem çağrısı yaptığında \cmd{strace} bir çağrıyı \texttt{<unfinished \dots>} ve \texttt{<\dots{} resumed>} diye işaretlenmiş iki yarıda yazabilir; bu normaldir.
+
+Bir boru \texttt{/proc} içinde de görünür: \cmd{ls -l /proc/self/fd | cat} komutunda \cmd{ls}'in $1$ numaralı tanımlayıcısı \texttt{1 -> pipe:[29942]} olarak gösterilir; bu, çekirdek içinde bir numarayla tanımlanan bir borudur (tam çıktı \texttt{code/out\_pipes.txt} içinde).
+
+\begin{keyidea}[Dört sistem çağrısında yönlendirme ve borular]
+\cmd{pipe()} kanalı oluşturur, \cmd{fork()} süreçleri oluşturur, \cmd{dup2()} kanalı (ya da \cmd{open()} ile açılmış bir dosyayı) $0$, $1$ veya $2$ numaralı tanımlayıcıya takar, \cmd{exec()} ise tesisatı farkında olmadan miras alan programı başlatır.
+\end{keyidea}
+
+\subsection{Boru sınırlı bir tampondur (5. hafta)}
+
+Bir borunun sınırlı bir kapasitesi vardır: Linux'ta varsayılan değer $64$~KiB $= 16 \times 4096 = 65\,536$ bayttır (on altı adet $4$~KiB'lık sayfa). Çekirdek üç kural uygular:
+\begin{itemize}
+  \item \textbf{Tampon dolu:} \cmd{write()} bloke olur --- okuyan veri alana kadar yazan uyutulur.
+  \item \textbf{Tampon boş:} \cmd{read()} bloke olur --- veri gelene kadar okuyan uyur.
+  \item \textbf{Hiç yazan kalmadı ve tampon boş:} \cmd{read()} $0$ döndürür, bu da dosya sonu demektir; okuyan işini bitirir. \textbf{Hiç okuyan kalmadı:} yazan, kendisini sonlandıran \texttt{SIGPIPE} sinyalini alır.
+\end{itemize}
+Bu tam olarak 5.~haftanın \emph{sınırlı tampon} (bounded buffer, üretici--tüketici) problemidir ve çekirdek içinde çözülmüştür: tampon doluyken üretici, boşken tüketici beklemek zorundadır. İki deney bunun sonuçlarını gösterir:
+
+\lstinputlisting[style=term,linerange={9-19}]{../code/out_pipes.txt}
+
+\cmd{sleep 2 | sleep 2} $4$~s değil $2{,}0$~s sürer: aşamalar \emph{eşzamanlı} çalışır. \cmd{yes} sonsuza kadar \texttt{y} yazar, yine de boru hattı durur: üç satırdan sonra \cmd{head} çıkar, borunun okuyanı kalmaz ve \cmd{yes}'in bir sonraki \cmd{write()} çağrısı \texttt{SIGPIPE} sinyalini tetikler. (Sinyaller 13.~haftanın konusudur.) Son boru hattı $100\,000$ satırı, yaklaşık $800$~kB'ı, iki adet $64$~KiB'lık tampondan sorunsuzca geçirir: veri üretildiği hızla tüketilir.
+
+\begin{histnote}[Borular ve UNIX felsefesi]
+Bell Labs'tan Doug McIlroy, 1964 tarihli bir notunda programların ``bahçe hortumu gibi --- veriyi başka bir biçimde işlemek gerektiğinde bir parça daha vidalayarak'' bağlanması gerektiğini yazdı. Borular 1973'te UNIX'in 3.~sürümünde, Ken Thompson \cmd{pipe()} sistem çağrısını ve kabuğa \texttt{|} gösterimini eklediğinde ortaya çıktı. McIlroy daha sonra ortaya çıkan üslubu şöyle özetledi: tek bir iş yapan ve onu iyi yapan programlar yazın; birlikte çalışan programlar yazın; metin akışlarını işleyen programlar yazın, çünkü bu evrensel bir arayüzdür. \cmd{grep}'in adı da \cmd{ed} metin düzenleyicisinin \texttt{g/re/p} (``global regular expression print'') komutundan gelir.
+\end{histnote}
+
+% =====================================================================
+\section{Satır Aramak: \texttt{grep}}
+\label{sec:grep}
+
+\cmd{grep [seçenekler] KALIP [dosyalar]}, kalıbı içeren satırları yazdırır.
+
+\lstinputlisting[style=term,linerange={1-20}]{../code/out_grep.txt}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lp{11.5cm}@{}}
+\toprule
+\textbf{Seçenek} & \textbf{Anlamı}\\
+\midrule
+\cmd{-i} & büyük ve küçük harf arasındaki farkı yok say\\
+\cmd{-n} & her satırın önüne satır numarasını yaz\\
+\cmd{-v} & tersine çevir: eşleş\emph{meyen} satırları yazdır\\
+\cmd{-c} & yalnızca eşleşen \emph{satırların} sayısını yazdır (geçiş sayısını değil)\\
+\cmd{-w} & eşleşme tam bir sözcük olmalı\\
+\cmd{-r} & bir dizinin altındaki tüm dosyalarda (özyinelemeli) ara\\
+\cmd{-l} & yalnızca eşleşme içeren dosyaların adlarını yazdır\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Seçenekler birleştirilebilir: \cmd{grep -vc INFO}, INFO olmayan satırları sayar: $41$. (İleride bunların $13$ ERROR ve $28$ WARN satırı olduğunu göreceğiz; $13 + 28 = 41$.) \texttt{system.log}'daki dakikalar bir saat içinde sıralı değildir; bu üretilmiş alıştırma verisidir, gerçek günlükler ise zaman sırasındadır.
+
+\subsection{Tam sözcükler ve tüm dizinler}
+
+\lstinputlisting[style=term,linerange={21-33}]{../code/out_grep.txt}
+
+\texttt{Week 1} kalıbı \texttt{Week 10} \dots\ \texttt{Week 15} içinde de geçer. \cmd{-w} ile eşleşmenin önünde ya da arkasında harf, rakam veya alt çizgi bulunamaz. \cmd{-r} ile \cmd{grep}, \texttt{projects} altındaki her dosyada arar ve her satırın önüne dosya adını yazar; dosyalar alfabetik değil, dizindeki sırayla görünür.
+
+\subsection{Basit düzenli ifadeler}
+
+\cmd{grep}'in kalıbı bir \term{düzenli ifadedir} (regular expression, regex): dizgi kümelerini betimleyen küçük bir dil. Karakterlerin çoğu kendisiyle eşleşir; birkaçının özel anlamı vardır.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lp{4.6cm}lp{3.6cm}@{}}
+\toprule
+\textbf{Simge} & \textbf{Eşleştiği} & \textbf{Örnek} & \textbf{Örneğin şununla eşleşir}\\
+\midrule
+\texttt{\textasciicircum} & satırın başı & \texttt{\textasciicircum Week} & \texttt{Week} ile başlayan satırlar\\
+\texttt{\$} & satırın sonu & \texttt{s\$} & \texttt{s} ile biten satırlar\\
+\texttt{.} & herhangi \emph{tek} bir karakter & \texttt{c.de} & \texttt{code}, \texttt{cxde}\\
+\texttt{[ ]} & bir küme ya da aralıktan tek karakter & \texttt{[0-9]}, \texttt{[aeiou]} & \texttt{7}, \texttt{e}\\
+\texttt{*} & önündeki öğe, $0$ ya da daha çok kez & \texttt{[0-9]*} & boş, \texttt{4}, \texttt{2026}\\
+\texttt{\textbackslash.} & gerçek bir nokta (\texttt{\textbackslash} özel anlamı kaldırır) & \texttt{5\textbackslash.38} & yalnızca \texttt{5.38}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ grep "^Week [0-9] " docs/syllabus.txt
+Week 1  Introduction and history
+Week 2  Definitions, goals, components, structures
+Week 3  OS services, system calls, processes
+...
+student@okan-lab:~/lab$ grep "s$" docs/syllabus.txt
+Week 2  Definitions, goals, components, structures
+Week 3  OS services, system calls, processes
+Week 4  Threads and CPU scheduling basics
+...
+student@okan-lab:~/lab$ grep "c.de" docs/linux_quotes.txt
+Talk is cheap. Show me the code.
+student@okan-lab:~/lab$ grep -c "5.38" logs/access.log
+39
+student@okan-lab:~/lab$ grep -c "5\.38" logs/access.log
+37
+student@okan-lab:~/lab$ grep "5.38" logs/access.log | grep -v "5\.38"
+10.0.6.45 - - [12/Oct/2026:15:53:47 +0300] "GET /courses/mcmp117 HTTP/1.1" 200 5438
+10.0.2.17 - - [12/Oct/2026:15:38:02 +0300] "GET /login HTTP/1.1" 200 1357
+student@okan-lab:~/lab$ grep ",ECT,[0-9]*,9[0-9]$" data/students.csv
+2026001,Elif Yilmaz,ECT,96,99
+2026015,Deniz Celik,ECT,95,96
+student@okan-lab:~/lab$ grep "^2026-10-12 1[0-1]:.*ERROR" logs/system.log
+2026-10-12 10:40:00 ERROR failed to mount /dev/sdb1
+2026-10-12 10:35:00 ERROR failed to mount /dev/sdb1
+2026-10-12 10:30:00 ERROR failed to mount /dev/sdb1
+2026-10-12 10:03:00 ERROR failed to mount /dev/sdb1
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{\textasciicircum Week [0-9] } (sondaki boşluğa dikkat) satır başında \texttt{Week}, bir boşluk, tek bir rakam ve bir boşlukla eşleşir: tek basamaklı $1$--$9$.~haftalar.
+  \item Kaçışsız nokta klasik bir tuzaktır. \texttt{10.0.5.38} IP adresinin isteklerini \texttt{5.38} kalıbıyla saymak $39$ verir, ama doğru yanıt $37$'dir: nokta, \texttt{15:38} saatindeki \texttt{:} karakteriyle ve \texttt{5438} bayt sayısındaki \texttt{4} rakamıyla da eşleşti. Son \cmd{grep} boru hattı tam olarak bu iki fazla satırı gösterir.
+  \item \texttt{,ECT,[0-9]*,9[0-9]\$}, \emph{final} notu (son alan) $90$ ile $99$ arasında olan ECT öğrencilerini bulur.
+  \item \texttt{.*}, ``herhangi sayıda herhangi karakter'' demektir: \texttt{\textasciicircum 2026-10-12 1[0-1]:.*ERROR}, $10$:00 ile $11$:59 arasındaki ERROR satırlarını bulur.
+\end{itemize}
+
+\begin{keyidea}[Düzenli ifadeler joker karakter değildir]
+Kabukta (10.~hafta) \texttt{*} ``herhangi bir dizgi'', \texttt{?} ise ``herhangi bir karakter'' demektir. Düzenli ifadede \texttt{*} ``önceki öğeyi tekrarla'', \texttt{.} ise ``herhangi bir karakter'' demektir. Kabuğun \texttt{*}, \texttt{[ ]} ya da boşlukları \cmd{grep} görmeden önce genişletmeye çalışmaması için kalıbı her zaman tırnak içine alın. (\cmd{grep -E}, \texttt{+}, \texttt{?}, \texttt{|} ve gruplar içeren \emph{genişletilmiş} düzenli ifadeleri etkinleştirir; bu hafta bunlara ihtiyacımız yok.)
+\end{keyidea}
+
+% =====================================================================
+\section{Sıralamak ve Saymak: \texttt{sort} ve \texttt{uniq}}
+\label{sec:sort}
+
+\lstinputlisting[style=term,linerange={1-17}]{../code/out_sort_uniq.txt}
+
+Seçeneksiz \cmd{sort} satırları \emph{karakter karakter} karşılaştırır; bu yüzden \texttt{100}, \texttt{35}'ten önce gelir (\texttt{1} karakteri \texttt{3}'ten küçüktür). \cmd{-n} ile sayıları karşılaştırır. Başlıca seçenekler:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lp{11.5cm}@{}}
+\toprule
+\cmd{-n} & sayısal sıra ($35 < 100$)\\
+\cmd{-r} & ters sıra (en büyük önce)\\
+\cmd{-t,} & alan ayırıcı virgüldür (varsayılan: boşluklar)\\
+\cmd{-k5} & $5$.~alana göre sırala ($5$.~alandan satır sonuna kadar; \cmd{-k5,5} yalnızca $5$.~alan demektir)\\
+\cmd{-u} & her farklı satırı yalnızca bir kez yaz\\
+\cmd{-o dosya} & sonucu \emph{dosyaya} yaz; \emph{dosya} girdinin kendisi olsa bile güvenlidir\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\cmd{tail -n +2} komutu bir dosyayı $2$.~satırdan itibaren yazdırır ve \texttt{id,\allowbreak name,\allowbreak department,\allowbreak midterm,\allowbreak final} CSV başlığını atlar (sütunlar: numara, ad, bölüm, vize, final); unutursanız ne olacağı için bkz.\ Bölüm~\ref{sec:errors}.
+
+\cmd{uniq} \emph{bitişik} yinelenen satırları kaldırır; \cmd{-c} her satırın önüne tekrar sayısını yazar, \cmd{-d} yalnızca tekrarlanan satırları yazdırır. \cmd{uniq} bir satırı yalnızca hemen önceki satırla karşılaştırdığından neredeyse her zaman \cmd{sort}'tan sonra gelmelidir:
+
+\lstinputlisting[style=term,linerange={18-40}]{../code/out_sort_uniq.txt}
+
+Sıralanmamış dosyada \cmd{uniq -c}, Antalya $6$ kez geçtiği hâlde \texttt{1 Antalya} bildirir: altı satır yan yana değildir. \cmd{sort}'tan sonra sayılar doğrudur ve toplamları tutar: $2 + 6 + 5 + 5 + 1 + 2 + 4 + 5 = 30$ satır. Şu bileşim
+\[
+\texttt{sort | uniq -c | sort -rn}
+\]
+``her birinden kaç tane, en sık olan önce'' sorusunu yanıtlar ve bu haftanın en yararlı boru hattıdır. Eşit sayılar (Trabzon ve Eskisehir, her biri $5$) satırın geri kalanına göre sıralanır ve \cmd{-r} bu sırayı da ters çevirir. Son olarak \cmd{uniq -d}, \texttt{students.csv}'de dört adın iki kez geçtiğini gösterir: aynı adı taşıyan farklı öğrenciler (farklı numaralar).
+
+% =====================================================================
+\section{Sütunlar, Sayımlar ve Karakterler: \texttt{cut}, \texttt{wc}, \texttt{tr}}
+\label{sec:cut}
+
+\subsection{\texttt{cut}}
+
+\lstinputlisting[style=term,linerange={1-23}]{../code/out_cut_tr_wc.txt}
+
+\cmd{cut -d AYIRICI -f LİSTE}, her satırı tek bir \texttt{AYIRICI} karakterinde böler ve listelenen alanları (1'den sayılarak) tutar: \cmd{-f2,5} $2$. ve $5$.~alanlar, \cmd{-f2-4} $2$--$4$.~alanlar, \cmd{-f4-} $4$.~alandan sona kadar. \cmd{cut -c 12-16}, $12$--$16$.~karakterleri tutar; sabit genişlikli sütunlar için kullanışlıdır.
+
+\texttt{system.log}'da düzey beş karaktere tamamlanmıştır (\texttt{INFO\textvisiblespace\textvisiblespace network}); bu yüzden \texttt{INFO} ile ileti arasında \emph{iki} boşluk vardır. \cmd{cut} her boşluğu bir ayırıcı sayar, aralarında boş bir alan görür ve $4$.~alan boştur --- üç boş satırın nedeni budur. \cmd{tr -s " "} önce boşluk dizilerini tek bir boşluğa sıkıştırır.
+
+\subsection{\texttt{wc}}
+
+\lstinputlisting[style=term,linerange={24-30}]{../code/out_cut_tr_wc.txt}
+
+\cmd{wc} satır, sözcük ve bayt sayısını yazar: \texttt{system.log} $120$ satır, $669$ sözcük ve $5207$ bayttır. \cmd{-l}, \cmd{-w} ve \cmd{-c} bunlardan birini seçer; birden çok dosyada bir \texttt{total} (toplam) satırı eklenir. Satır sayısı, satır sonu karakterlerinin sayısıdır; bu yüzden sonunda satır sonu olmayan bir son satır sayılmaz.
+
+\subsection{\texttt{tr}}
+
+\lstinputlisting[style=term,linerange={31-38}]{../code/out_cut_tr_wc.txt}
+
+\cmd{tr KÜME1 KÜME2}, \texttt{KÜME1}'deki her karakteri \texttt{KÜME2}'deki karşılığıyla değiştirir; \cmd{tr -d KÜME} karakterleri siler; \cmd{tr -s KÜME} tekrarları sıkıştırır. \cmd{tr} sözcüklerle değil tek tek karakterlerle çalışır (\cmd{tr "cat" "dog"} her yerde c'yi d, a'yı o ve t'yi g yapar) ve yalnızca standart girdiyi okur: asla dosya adı almaz; bu yüzden \cmd{<} ya da bir boru kullanın.
+
+% =====================================================================
+\section{Diğer Araçlar: \texttt{head}, \texttt{tail}, \texttt{tee}, \texttt{find}, \texttt{xargs}}
+\label{sec:more}
+
+\subsection{Boru hatlarında \texttt{head} ve \texttt{tail}; \texttt{tee}}
+
+\lstinputlisting[style=term,linerange={7-18}]{../code/out_head_tail_tee.txt}
+
+\cmd{head -n N} ilk $N$ satırı, \cmd{tail -n N} son $N$ satırı, \cmd{tail -n +N} ise $N$.~satırdan itibaren her şeyi tutar. Birlikte kullanıldığında \cmd{head -n 120 | tail -n 1} tam olarak $120$.~satırı çıkarır. \cmd{tail -f dosya} dosyayı açık tutar ve eklenen yeni satırları yazdırır: bir günlüğü canlı izlemenin standart yolu (Ctrl+C ile durdurun).
+
+\cmd{tee dosya} bir T bağlantısıdır (adını tesisatçının T parçasından alır): standart girdisini hem dosyaya hem de standart çıktısına kopyalar; böylece bir boru hattı ara sonucu kaydedip devam edebilir. \cmd{tee -a} sona ekler. 11.~haftayla bir bağlantı: \cmd{sudo echo metin > /etc/dosya} başarısız olur, çünkü yönlendirmeyi \cmd{sudo} daha başlamadan, root hakları olmayan \emph{sizin} kabuğunuz yapar; \cmd{echo metin | sudo tee /etc/dosya} ise çalışır, çünkü dosyayı root olarak çalışan \cmd{tee} açar.
+
+\subsection{\texttt{find}}
+
+\cmd{find NEREDE SINAMALAR}, \texttt{NEREDE}'nin altındaki bütün dizin ağacını dolaşır ve tüm sınamaları geçen her yolu yazdırır.
+
+\lstinputlisting[style=term,linerange={1-18}]{../code/out_find_xargs.txt}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lp{10.5cm}@{}}
+\toprule
+\textbf{Sınama} & \textbf{Anlamı}\\
+\midrule
+\cmd{-name "*.txt"} & ad, joker karakterli kalıpla eşleşir (tırnakları bırakmayın!)\\
+\cmd{-iname} & aynısı, harf büyüklüğüne bakmadan\\
+\cmd{-type f}, \cmd{-type d} & normal dosya, dizin\\
+\cmd{-size +10k}, \cmd{-size -10k} & $10$~KiB $= 10\,240$ bayttan büyük / küçük\\
+\cmd{-mtime +30}, \cmd{-mtime -1} & $30$ günden daha önce / son $24$ saat içinde değiştirilmiş\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\cmd{-name "*.txt"} içindeki tırnaklar olmasaydı, kabuk \texttt{*.txt}'yi \cmd{find} başlamadan önce \emph{şu anki} dizinde genişletirdi (10.~hafta). Yalnızca \texttt{access.log} ($23\,604$ bayt) $10$~KiB'ı aşar. $14$ fotoğraf şunlardır: on iki \texttt{img0NN.jpg}, \texttt{IMG\_014.JPG} ve \texttt{holiday.jpeg}; \texttt{img013.png} eşleşmez. Lab dosyalarının hepsi yeni oluşturulduğu için, \cmd{-mtime +30}'un bir şey bulabilmesi amacıyla \texttt{notes\_01.txt}'ye \cmd{touch -d} ile eski bir değiştirilme zamanı verdik (10.~hafta). \cmd{grep -r} gibi \cmd{find} da girdileri dizin sırasıyla listeler; sabit bir sıra gerekiyorsa çıktıyı boruyla \cmd{sort}'a verin.
+
+\paragraph{\texttt{find} hataları.} \cmd{find} okumasına izin verilmeyen bir dizinle karşılaştığında (11.~hafta) bir hata bildirir --- standart hata üzerinden; bu yüzden hata ayrıca atılabilir:
+\lstinputlisting[style=term,linerange={45-52}]{../code/out_find_xargs.txt}
+(\texttt{secret}'ın izinlerini \cmd{chmod 000} ile kaldırdık; sonrasında izinleri \cmd{chmod 755 secret} ile geri verin ve dizini \cmd{rmdir secret} ile silin.)
+
+\subsection{\texttt{-exec} ve \texttt{xargs}}
+
+\lstinputlisting[style=term,linerange={19-44}]{../code/out_find_xargs.txt}
+
+\begin{itemize}
+  \item \cmd{-exec kmt \{\} \textbackslash;}, bulunan her dosya için \cmd{kmt}'yi bir kez çalıştırır; \texttt{\{\}} dosyanın adıyla değiştirilir. \texttt{\textbackslash;} komutun sonunu işaretler (ters eğik çizgi, kabuğun \texttt{;} karakterini yorumlamasını engeller).
+  \item \cmd{xargs kmt}, standart girdisinden sözcükleri okur ve bunları \cmd{kmt}'ye \emph{argüman} olarak verir: tek bir \cmd{wc} üç adı birden alır ve bir toplam yazar. Veri ile argüman arasındaki fark budur: \cmd{find \dots{} | wc -l} \emph{adları} sayar; \cmd{find \dots{} | xargs wc -l} ise \emph{dosyaların içindeki} satırları sayar.
+  \item \cmd{xargs} varsayılan olarak boşluklarda böler; bu yüzden \texttt{final report.txt} var olmayan iki ada, \texttt{docs/\allowbreak final} ve \texttt{report.txt}'ye dönüştü ve toplam ($23$) dosyanın $2$ satırını kaçırdı. \cmd{find -print0} her adı bir sıfır baytıyla bitirir (bu bayt bir dosya adında bulunamaz) ve \cmd{xargs -0} yalnızca orada böler: toplam $25$.
+\end{itemize}
+
+\begin{tryit}[Güvenlik: silmeden önce bakın]
+\cmd{find \dots{} -exec rm \{\} \textbackslash;} ve \cmd{find \dots{} | xargs rm}, listedeki her dosyayı sormadan ve çöp kutusu olmadan siler. Aynı komutu her zaman önce \cmd{rm} \emph{olmadan} çalıştırın, listeyi okuyun ve \cmd{rm}'yi ancak ondan sonra ekleyin. Aynısı \cmd{rm -r} için de geçerlidir.
+\end{tryit}
+
+% =====================================================================
+\section{Tek Satırlık Boru Hatlarıyla Gerçek Analizler}
+\label{sec:analysis}
+
+\subsection{Verinizi tanıyın}
+
+Bir boru hattı yazmadan önce birkaç satıra bakın (\cmd{head -n 3}) ve alanların nasıl ayrıldığına karar verin.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[f/.style={rectangle,fill=light,minimum height=0.55cm,font=\ttfamily\footnotesize,inner xsep=3pt},
+  h/.style={f,fill=mint!60}, n/.style={font=\scriptsize\bfseries,text=mintdeep}, l/.style={font=\scriptsize\itshape,text=muted}]
+\node[font=\small\bfseries,anchor=west] at (0,0.85) {\texttt{logs/access.log}: tek boşluklarla ayrılmış, \texttt{cut -d" " -fN}};
+\foreach \t/\c/\lab [count=\i] in {10.0.1.10/h/IP, -/f/{}, -/f/{}, {[12/Oct/2026:08:00:00}/f/tarih ve saat, +0300]/f/dilim, "GET/f/yöntem, {/about.html}/h/sayfa, {HTTP/1.1"}/f/protokol, 404/h/durum, 442/f/bayt} {
+  \ifnum\i=1 \node[\c,anchor=west] (a\i) at (0,0) {\t};
+  \else \pgfmathtruncatemacro{\j}{\i-1}\node[\c,anchor=west] (a\i) at ([xshift=3pt]a\j.east) {\t}; \fi
+  \node[n,above=0pt of a\i] {-f\i};
+  \node[l,below=0pt of a\i] {\lab};
+}
+\node[font=\small\bfseries,anchor=west] at (0,-1.0) {\texttt{logs/system.log}: sabit sütunlar, \texttt{cut -cA-B}};
+\node[f,anchor=west] (s1) at (0,-1.85) {2026-10-12}; \node[n,above=0pt of s1] {-c1-10}; \node[l,below=0pt of s1] {tarih};
+\node[f,anchor=west] (s2) at ([xshift=0.6cm]s1.east) {09:11:00}; \node[n,above=0pt of s2] {-c12-19}; \node[l,below=0pt of s2] {zaman (saat: 12--13)};
+\node[h,anchor=west] (s3) at ([xshift=0.6cm]s2.east) {WARN\textvisiblespace}; \node[n,above=0pt of s3] {-c21-25}; \node[l,below=0pt of s3] {düzey};
+\node[h,anchor=west] (s4) at ([xshift=0.6cm]s3.east) {high memory usage}; \node[n,above=0pt of s4] {-c27-}; \node[l,below=0pt of s4] {ileti};
+\node[font=\small\bfseries,anchor=west] at (0,-2.85) {\texttt{data/students.csv}: virgüllerle ayrılmış, \texttt{cut -d, -fN}};
+\foreach \t/\c/\lab [count=\i] in {2026001/f/numara, Elif Yilmaz/f/ad, ECT/h/bölüm, 96/h/vize, 99/h/final} {
+  \ifnum\i=1 \node[\c,anchor=west,minimum width=1.6cm] (c\i) at (0,-3.7) {\t};
+  \else \pgfmathtruncatemacro{\j}{\i-1}\node[\c,anchor=west,minimum width=1.6cm] (c\i) at ([xshift=0.3cm]c\j.east) {\t}; \fi
+  \node[n,above=0pt of c\i] {-f\i};
+  \node[l,below=0pt of c\i] {\lab};
+}
+\end{tikzpicture}
+\caption{Üç lab dosyasında alanların yerleri. \texttt{students.csv}'nin 1.~satırı bir başlıktır.}
+\label{fig:fields}
+\end{figure}
+
+Web sunucusu günlüğü yaygın olarak kullanılan \emph{ortak günlük biçimini} (common log format) kullanır. $4$.~alan tarihi ve saati içerir; saati almak için iki noktalarda da kesebilirsiniz: \cmd{cut -d: -f2} \texttt{08} verir. HTTP durum kodları beş sınıf oluşturur: \texttt{2xx} başarı (\texttt{200} OK), \texttt{3xx} yeniden yönlendirme (\texttt{301} kalıcı olarak taşındı, \texttt{304} değişmedi: önbellekteki kopyanızı kullanın), \texttt{4xx} istemci hataları (\texttt{403} yasak, \texttt{404} bulunamadı) ve \texttt{5xx} sunucu hataları (\texttt{500} iç sunucu hatası).
+
+\subsection{Yöntem: her seferinde bir aşama}
+
+\lstinputlisting[style=term,linerange={3-10}]{../code/out_analysis.txt}
+\lstinputlisting[style=term,linerange={18-24}]{../code/out_analysis.txt}
+
+Her sayma sorusu aynı dört adımı izler:
+\begin{enumerate}[leftmargin=1.4em]
+  \item Gereken sütunu \textbf{çıkarın} (\cmd{cut}); gerekirse önce ilgili satırları \textbf{süzün} (\cmd{grep}); \cmd{head} ile denetleyin.
+  \item \textbf{Gruplayın}: \cmd{sort} eşit değerleri bir araya getirir.
+  \item \textbf{Sayın}: \cmd{uniq -c}.
+  \item \textbf{Sıralayın}: \cmd{sort -rn}, ardından ilk~$N$ için \cmd{head -n N}.
+\end{enumerate}
+Altı aşamalı bir boru hattını asla tek seferde yazmayın: yukarı oka basın, bir aşama ekleyin, sonuca bakın, tekrarlayın. Sonuçları elinizden geldiğince denetleyin. Burada sayıların toplamı satır sayısını verir: $148 + 57 + 34 + 24 + 20 + 17 = 300$; başarılı isteklerin payı ise $148/300 \approx \%49{,}3$'tür.
+
+\subsection{access.log: sayfalar, ziyaretçiler, kırık bağlantılar}
+
+\lstinputlisting[style=term,linerange={25-38}]{../code/out_analysis.txt}
+
+Aynı tarif, $7$.~alanla (sayfa) ve $1$.~alanla (IP adresi). Üçüncü boru hattı önce \texttt{404} satırlarını süzer, sonra sayfayı çıkarır: en sık görülen kırık bağlantı \texttt{/images/logo.png}'dir ($9$ kez). \texttt{" 404 "} içindeki boşluklar önemlidir: onlar olmadan \texttt{4042} gibi bir bayt sayısı ya da bir IP parçası da eşleşebilirdi. Küçük verilerde eşitlikler sık görülür: \texttt{/index.html} ve \texttt{/images/logo.png}'nin ikisi de $33$ istek almıştır.
+
+\subsection{system.log ve students.csv}
+
+\lstinputlisting[style=term,linerange={39-62}]{../code/out_analysis.txt}
+
+\begin{itemize}
+  \item \textbf{Saat başına hatalar.} Burada \cmd{uniq -c}, \cmd{sort} olmadan çalışır; çünkü günlük zaten saat sırasındadır, dolayısıyla eşit saatler bitişiktir. Hata olmayan saatler ($11$ ve $15$) yalnızca eksiktir: \cmd{uniq} orada olmayanı sayamaz. Denetim: $3 + 4 + 1 + 3 + 2 = 13$.
+  \item \textbf{Uyarılar.} \cmd{cut -c27-} iletiyi tutar; $11 + 17 = 28$ WARN satırı.
+  \item \textbf{Bölümler.} $17 + 11 + 10 + 2 = 40$ öğrenci $= 41$ satır eksi başlık.
+  \item \textbf{En iyi final notları.} Önce bütün satırları $5$.~alana göre sıralayın, gösterilecek sütunları en sonda kesin; önce kesmek, sıralama yaptığınız sütunu kaybettirir.
+\end{itemize}
+
+% =====================================================================
+\section{Komut Başvuru Tablosu}
+\label{sec:ref}
+
+{\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{longtable}{@{}p{4.6cm}p{10.9cm}@{}}
+\toprule
+\textbf{Komut / sözdizimi} & \textbf{Anlamı}\\
+\midrule
+\endhead
+\cmd{kmt > f} & standart çıktı \texttt{f}'ye (önce oluştur ya da boşalt)\\
+\cmd{kmt >> f} & standart çıktı \texttt{f}'nin sonuna eklenir\\
+\cmd{kmt < f} & standart girdi \texttt{f}'den\\
+\cmd{kmt 2> f}, \cmd{2>> f} & standart hata \texttt{f}'ye (üzerine yaz, sona ekle)\\
+\cmd{kmt > f 2>\&1}, \cmd{kmt \&> f} & iki akış da \texttt{f}'ye\\
+\cmd{kmt 2> /dev/null} & hata iletilerini at\\
+\cmd{kmt1 | kmt2} & \texttt{kmt1}'in standart çıktısı \texttt{kmt2}'nin standart girdisine\\
+\cmd{set -o noclobber} & \cmd{>} var olan dosyaların üzerine yazmayı reddeder (\cmd{>|} zorlar)\\
+\midrule
+\cmd{grep KALIP dosyalar} & \texttt{KALIP} düzenli ifadesini içeren satırlar\\
+\quad \cmd{-i -n -v -c -w -r -l} & harf büyüklüğünü yok say, satır numaraları, tersine çevir, say, tam sözcük, özyinelemeli, yalnızca dosya adları\\
+\cmd{sort} & satırları sırala; \cmd{-n} sayısal, \cmd{-r} ters, \cmd{-t,} ayırıcı, \cmd{-k5} anahtar alan, \cmd{-u} benzersiz, \cmd{-o f} çıktı dosyası\\
+\cmd{uniq} & bitişik tekrarları birleştir; \cmd{-c} say, \cmd{-d} yalnızca tekrarlananlar\\
+\cmd{cut -d, -f2,5} & virgülle ayrılmış satırların $2$. ve $5$.~alanları; \cmd{-f4-} $4$.~alandan sona\\
+\cmd{cut -c12-16} & $12$--$16$.~karakterler\\
+\cmd{wc} & satır, sözcük, bayt; \cmd{-l}, \cmd{-w}, \cmd{-c}\\
+\cmd{tr a-z A-Z} & karakterleri dönüştür (yalnızca stdin okur); \cmd{-d} sil, \cmd{-s} sıkıştır\\
+\cmd{head -n N}, \cmd{tail -n N} & ilk / son $N$ satır\\
+\cmd{tail -n +N} & $N$.~satırdan sona kadar ($N = 2$ ile başlığı atla)\\
+\cmd{tail -f f} & büyüyen bir dosyayı izle (Ctrl+C durdurur)\\
+\cmd{tee f}, \cmd{tee -a f} & stdin'i \texttt{f}'ye ve stdout'a kopyala\\
+\midrule
+\cmd{find DİZİN -name "*.c"} & \texttt{DİZİN} altında adı eşleşen dosyalar; \cmd{-iname} harf büyüklüğüne bakmaz\\
+\quad \cmd{-type f|d}, \cmd{-size +10k}, \cmd{-mtime +30} & dosya türü, boyut, gün olarak yaş\\
+\quad \cmd{-exec kmt \{\} \textbackslash;} & bulunan her dosyada \texttt{kmt}'yi çalıştır\\
+\quad \cmd{-print0 | xargs -0 kmt} & adları (boşluklu olsalar bile) \texttt{kmt}'ye argüman olarak ver\\
+\cmd{strace -f -e trace=\dots{} kmt} & \texttt{kmt}'nin ve çocuklarının sistem çağrılarını göster\\
+\bottomrule
+\end{longtable}
+}
+
+% =====================================================================
+\section{Sık Yapılan Hatalar ve Anlamları}
+\label{sec:errors}
+
+Aşağıdakilerin hepsi bilerek üretildi (\cmd{code/demo\_mistakes.sh}; tırnaksız \cmd{grep}'in yazdırdığı $15$ satır kısaltıldı):
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ cp data/cities.txt c.txt
+student@okan-lab:~/lab$ sort c.txt > c.txt
+student@okan-lab:~/lab$ wc -l c.txt
+0 c.txt
+student@okan-lab:~/lab$ grep user login logs/system.log
+grep: login: No such file or directory
+logs/system.log:2026-10-12 09:44:00 INFO  user login
+...
+logs/system.log:2026-10-12 14:43:00 INFO  user login
+logs/system.log:2026-10-12 14:27:00 INFO  user login
+student@okan-lab:~/lab$ grep "user login" logs/system.log | wc -l
+15
+student@okan-lab:~/lab$ ls data > wc
+student@okan-lab:~/lab$ ls
+README.txt  c.txt  docs  photos    scripts  wc
+backup      data   logs  projects  src
+student@okan-lab:~/lab$ cat wc
+cities.txt
+numbers.txt
+students.csv
+student@okan-lab:~/lab$ sort -t, -k5 -n data/students.csv | head -n 2
+id,name,department,midterm,final
+2026032,Onur Dogan,ECT,41,35
+\end{lstlisting}
+
+\begin{description}[leftmargin=0pt,itemsep=0.3em]
+  \item[\texttt{sort c.txt > c.txt} boş bir dosya bırakır.] Kabuk yönlendirmeyi \emph{önce} yapar: \texttt{c.txt}'yi $0$ bayta kırpar, sonra boş bir dosya okuyan \cmd{sort}'u başlatır. Aynısı her \cmd{kmt f > f} için olur. Yeni bir dosyaya yazıp adını değiştirin (\cmd{sort c.txt > c2.txt \&\& mv c2.txt c.txt}) ya da \cmd{sort -o c.txt c.txt} kullanın.
+  \item[\texttt{grep: login: No such file or directory}.] Tırnaklar olmadığında \cmd{grep}, \texttt{user} kalıbını iki ayrı dosyada arar: \texttt{login} ve \texttt{logs/system.log}. Boşluk içeren kalıpları tırnak içine alın: \cmd{grep "user login" logs/system.log}.
+  \item[\texttt{wc} adlı bir dosya ortaya çıkar.] \cmd{ls data > wc}, \texttt{wc} adlı bir dosyaya yönlendirir; \cmd{wc}'yi çalıştırmaz. Boruyu kullanın: \cmd{ls data | wc -l}.
+  \item[Başlık satırı sonuçta görünür.] \texttt{id,name,\dots} bir sayı değildir; bu yüzden \cmd{sort -n} onu $0$ sayar ve başa koyar. \cmd{tail -n +2} ile atlayın.
+  \item[\texttt{uniq -c} hep $1$ sayar.] Girdi sıralanmamıştı; \cmd{sort | uniq -c} kullanın.
+  \item[\texttt{2>\&1} yazdığınız hâlde hatalar görünüyor.] Sıra \cmd{2>\&1 > f} idi; \cmd{> f 2>\&1} yazın (Şekil~\ref{fig:order}).
+  \item[\texttt{cut} boş satırlar yazdırır.] Ayırıcı art arda iki kez geçiyor (tamamlanmış sütunlar); önce \cmd{tr -s " "} ile sıkıştırın ya da \cmd{cut -c} kullanın.
+  \item[\texttt{xargs}: adın yarısı için \texttt{No such file or directory}.] Bir dosya adı boşluk içeriyor; \cmd{find \dots{} -print0 | xargs -0 \dots} kullanın.
+  \item[\texttt{find}'dan \texttt{Permission denied} satırları.] Okuma izniniz olmayan dizinler (11.~hafta). Önemli değillerse \cmd{2> /dev/null} ekleyin.
+  \item[Boru hattı takılmış gibi görünüyor.] Dosya argümanı olmayan bir komut klavyeden girdi bekler (ör.\ tek başına \cmd{sort} ya da dosyasız \cmd{grep ERROR}). Ctrl+D (girdi sonu) ya da Ctrl+C'ye basın.
+  \item[\texttt{tr: extra operand}.] \cmd{tr} dosya adı almaz; \cmd{tr a-z A-Z < dosya} kullanın.
+\end{description}
+
+% =====================================================================
+\section{Lab Föyü}
+\label{sec:lab}
+
+\textbf{Hazırlık:} \cmd{bash mcmp117\_lab\_setup.sh}, ardından \cmd{cd \textasciitilde/lab}. Her alıştırma için tek bir komut satırı (bir boru hattı tek satır sayılır) ve çıktısını yazın. Puanlar köşeli parantez içindedir, toplam $100$. Çözümler Bölüm~\ref{sec:sol}'dadır; önce kendiniz deneyin!
+
+\subsection*{A Bölümü --- Yönlendirme (20 puan)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{A\arabic*}]
+  \item {[4]} \texttt{data/} içindeki dosyaların listesini \texttt{list.txt}'ye kaydedin, sonra \texttt{docs/} listesini aynı dosyanın sonuna ekleyin. \texttt{list.txt} kaç satırdır?
+  \item {[4]} \cmd{ls data nosuch} komutunu, liste \texttt{ok.txt}'ye, hata iletisi \texttt{err.txt}'ye gidecek ve ekranda hiçbir şey görünmeyecek biçimde çalıştırın.
+  \item {[4]} \texttt{logs/system.log}'un yalnızca satır sayısını, dosya adı olmadan yazdırın.
+  \item {[4]} Önce tahmin edin, sonra denetleyin: \cmd{ls data nosuch > both.txt 2>\&1} ve \cmd{ls data nosuch 2>\&1 > both.txt} komutlarından hangisi ekrana bir şey yazar ve neden?
+  \item {[4]} \cmd{mkdir secret \&\& chmod 000 secret} ile okunamayan bir dizin oluşturun. \cmd{find . -name "*.md"} komutu artık bir hata yazdırıyor. Komutu yalnızca sonuçlar görünecek biçimde değiştirin.
+\end{enumerate}
+
+\subsection*{B Bölümü --- grep (22 puan)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{B\arabic*}]
+  \item {[4]} \texttt{logs/system.log} kaç ERROR satırı içeriyor?
+  \item {[4]} \texttt{system.log}'un INFO satırı \emph{olmayan} ilk $3$ satırını satır numaralarıyla gösterin.
+  \item {[4]} \texttt{access.log}'daki kaç istek $404$ durum kodunu aldı?
+  \item {[4]} Hangi öğrenciler EE bölümündedir?
+  \item {[6]} \texttt{10.0.5.38} IP adresinden kaç istek geldi? Noktaların başka karakterlerle eşleşemeyeceğinden ve yalnızca ilk alanın eşleşebileceğinden emin olun.
+\end{enumerate}
+
+\subsection*{C Bölümü --- Tek satırlık boru hatları (36 puan, her biri 6)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{C\arabic*}]
+  \item Her bölümde kaç öğrenci var (başlık hariç)?
+  \item Final notu en yüksek $3$ öğrencinin adlarını ve final notlarını yazdırın.
+  \item Durum kodu başına istekleri, en sık olan önce gelecek biçimde sayın.
+  \item En çok istenen $3$ sayfa hangileridir?
+  \item En çok $404$ hatasını hangi sayfa üretti ve kaç tane?
+  \item \texttt{system.log} her saatte kaç ERROR satırı içeriyor?
+\end{enumerate}
+
+\subsection*{D Bölümü --- Zorlu sorular (22 puan)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{D\arabic*}]
+  \item {[5]} \texttt{students.csv}'de hangi öğrenci adları birden çok kez geçiyor?
+  \item {[5]} Tek bir komut satırında, durumu $500$ olan bütün satırları \texttt{errors\_500.txt}'ye kaydedin \emph{ve} kaç tane olduklarını yazdırın.
+  \item {[6]} \cmd{find} ve \cmd{xargs} ile \texttt{docs/} altındaki tüm \texttt{.txt} dosyalarının satırlarını, \texttt{final report.txt} dâhil, sayın. Toplam nedir?
+  \item {[6]} \texttt{access.log}'da kaç farklı IP adresi görünüyor? En az isteği hangi adres yaptı ve kaç tane?
+\end{enumerate}
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Yedi cümlede 12. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Her süreç üç açık dosya tanımlayıcıyla başlar: $0$ stdin, $1$ stdout, $2$ stderr --- 2--3.~haftalarda \cmd{write(1, \dots)} çağrısının kullandığı aynı $1$ numaralı tanımlayıcı.
+  \item Yönlendirme (\cmd{> >> < 2> 2>\&1 \&> /dev/null}) bu tanımlayıcıların nereyi gösterdiğini değiştirir; kabuk bunu \cmd{fork()} ile \cmd{exec()} arasında \cmd{open()} ve \cmd{dup2()} ile yapar, böylece program bunu hiç bilmez.
+  \item Yönlendirmeler soldan sağa uygulanır: \cmd{> f 2>\&1} iki akışı da yakalar, \cmd{2>\&1 > f} yakalamaz.
+  \item \cmd{pipe()} ile oluşturulan \cmd{kmt1 | kmt2} borusu, eşzamanlı çalışan iki süreci, 5.~haftanın sınırlı tamponu gibi davranan bir çekirdek tamponuyla bağlar.
+  \item Filtreler dosyaları ya da stdin'i okur ve stdout'a yazar: \cmd{grep} (\texttt{\textasciicircum\ \$ . [ ] *} ile), \cmd{sort}, \cmd{uniq}, \cmd{cut}, \cmd{wc}, \cmd{tr}, \cmd{head}, \cmd{tail}, \cmd{tee}.
+  \item \cmd{find} ağaçta ad, tür, boyut ve yaşa göre arar; \cmd{-exec} ya da \cmd{xargs} sonuçlar üzerinde işlem yapar, boşluklu adlar için \cmd{-print0 | xargs -0}.
+  \item Sayma soruları tek bir tarifi izler: çıkar $\to$ \cmd{sort} $\to$ \cmd{uniq -c} $\to$ \cmd{sort -rn} $\to$ \cmd{head}; her seferinde bir aşama eklenerek kurulur ve toplamlarla denetlenir.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\section{Sözlük}
+
+\begin{description}[leftmargin=0pt,itemsep=0.15em]
+  \item[Dosya tanımlayıcı (file descriptor)] Bir sürecin açık dosyalar tablosunda sıra numarası olan küçük tamsayı; $0$, $1$, $2$ standart akışlardır.
+  \item[Standart girdi / çıktı / hata] $0$, $1$, $2$ numaralı tanımlayıcılardaki akışlar; varsayılan olarak klavye ve ekran.
+  \item[Yönlendirme (redirection)] Bir standart akışın terminal yerine bir dosyayı göstermesini sağlamak (\cmd{>}, \cmd{>>}, \cmd{<}, \cmd{2>}).
+  \item[\texttt{dup2(eski, yeni)}] \texttt{yeni} tanımlayıcıyı \texttt{eski}'nin kopyası yapan sistem çağrısı.
+  \item[Boru (pipe)] Okuma ve yazma ucu olan, bir sürecin çıktısını başka bir sürecin girdisine bağlayan çekirdek tamponu.
+  \item[Boru hattı (pipeline)] Borularla bağlanmış, eşzamanlı çalışan komutlar.
+  \item[\texttt{SIGPIPE}] Okuyanı olmayan bir boruya yazan sürece gönderilen sinyal; varsayılan olarak süreci sonlandırır.
+  \item[Filtre (filter)] Girdisini dosyalardan ya da stdin'den okuyan ve sonucunu stdout'a yazan program.
+  \item[Düzenli ifade (regular expression)] Dizgi kümelerini betimleyen, \cmd{grep}'in kullandığı kalıp dili.
+  \item[\texttt{/dev/null}] Kendisine yazılan her şeyi atan aygıt dosyası.
+\end{description}
+
+% =====================================================================
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Daha fazla deney]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Önce \cmd{ls -l /proc/self/fd | cat}, sonra \cmd{ls -l /proc/self/fd 2>\&1 | cat} komutunu çalıştırın. Her durumda hangi tanımlayıcılar borudur?
+  \item \cmd{ls docs} ve \cmd{ls docs | cat} komutlarını çalıştırın. Birincisi neden \texttt{'final report.txt'} adını tırnaklı ve sütunlar hâlinde yazıyor da ikincisi yazmıyor?
+  \item Kendi kurduğunuz üç aşamalı bir boru hattında \cmd{strace -f -o t.txt -e trace=pipe2,dup2,execve bash -c "..."} kullanın. Kaç \cmd{pipe2()} çağrısı görüyorsunuz? (Aşama sayısından bir eksik.)
+  \item Bir terminalde \cmd{tail -f logs/system.log} çalıştırın; ikinci bir terminalde \cmd{echo "2026-10-12 15:00:00 ERROR test" >> logs/system.log} çalıştırın. Birinci terminalde ne olur?
+  \item \texttt{access.log}'da en çok isteğin geldiği saati bulun (ipucu: \cmd{cut -d: -f2}). Bu üretilmiş dosya için yanıt neden şaşırtıcıdır?
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item Standart girdi, standart çıktı ve standart hata nedir? Hangi dosya tanımlayıcılarını kullanırlar ve standart hata neden standart çıktıdan ayrıdır?
+  \item Kabuğun \cmd{sort data/cities.txt > sorted.txt} komutunu çalıştırmak için ne yaptığını adım adım (sistem çağrılarıyla) açıklayın.
+  \item \cmd{kmt 2>\&1 > f} neden hata iletilerini yine ekrana yazar?
+  \item \cmd{fork()} ve \cmd{exec()}'in ayrı çağrılar olmasının yönlendirmeyi neden kolaylaştırdığını açıklayın.
+  \item Boru sınırlı bir tampondur. Yazan okuyandan hızlıysa ne olur? Okuyan erken çıkarsa?
+  \item \cmd{uniq -c}'nin girdisi neden normalde sıralanmış olmalıdır?
+  \item \cmd{find docs -name "*.txt" | wc -l} ile \cmd{find docs -name "*.txt" | xargs wc -l} arasındaki fark nedir?
+  \item \texttt{*} karakterinin \cmd{ls *.txt} içindeki ve \cmd{grep "[0-9]*"} içindeki farklı anlamlarını açıklayın.
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item Bir boru tamponu $4096$ baytlık $16$ sayfa tutar. Yazan bloke olmadan önce tampona \texttt{MCMP117\textbackslash n} biçiminde (her biri $8$ bayt) kaç satır sığar?
+  \item \texttt{access.log}'da $300$ isteğin $148$'i $200$, $57$'si $404$ döndürdü; $17$ istek de $403$ döndürdüğüne göre isteklerin yüzde kaçı istemci hatasıdır (\texttt{4xx})?
+  \item \cmd{grep -c "5.38"} $39$ satır, \cmd{grep -c "5\textbackslash.38"} ise $37$ satır sayar. Kaç satır yalnızca kaçışsız nokta yüzünden eşleşti?
+  \item Bir boru hattının $k$ aşaması var. Kabuğun en az kaç sürece, kaç \cmd{pipe()} ve kaç \cmd{dup2()} çağrısına ihtiyacı vardır (dosyalara yönlendirmeler hariç)?
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=9]
+  \item $16 \times 4096 = 65\,536$ bayt; $65\,536 / 8 = 8192$ satır.
+  \item $57 + 17 = 74$ istemci hatası; $74/300 \approx \%24{,}7$.
+  \item $39 - 37 = 2$ satır (\texttt{15:38} saati ve \texttt{5438} bayt sayısı).
+  \item $k$ süreç, $k-1$ boru ve $2(k-1)$ \cmd{dup2()} çağrısı: her boru, yazanında bir \cmd{dup2()} ($1$ numaralı tanımlayıcıya) ve okuyanında bir \cmd{dup2()} ($0$ numaralı tanımlayıcıya) gerektirir. $k = 2$ için: $2$ süreç, $1$ boru, $2$ \cmd{dup2()} çağrısı; tıpkı Bölüm~\ref{sec:pipes}'teki izde olduğu gibi.
+\end{enumerate}
+
+% =====================================================================
+\section{Lab Föyü Çözümleri}
+\label{sec:sol}
+
+Tüm çözümler yeni oluşturulmuş bir labda çalıştırıldı; \cmd{code/lab\_solutions.sh} betiği hepsini çalıştırır ve tam gerçek çıktısı \cmd{code/out\_lab\_solutions.txt} içindedir. Öğretici bölümlerde zaten görünen çıktılar özetlenmiştir. Başka doğru çözümler de vardır; önemli olan doğru çıktı ve makul bir yöntemdir.
+
+{\small
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{@{}p{0.8cm}>{\raggedright\arraybackslash}p{8.4cm}>{\raggedright\arraybackslash}p{6.3cm}@{}}
+\toprule
+& \textbf{Komut satırı} & \textbf{Beklenen çıktı / yanıt}\\
+\midrule
+\endhead
+\textbf{A1} & \texttt{ls data > list.txt}\newline \texttt{ls docs >> list.txt}\newline \texttt{wc -l list.txt} & \texttt{9 list.txt}: \texttt{data/}'dan $3$ ad ve \texttt{docs/}'tan görünen $6$ ad (\texttt{.settings} gizlidir).\\
+\textbf{A2} & \texttt{ls data nosuch > ok.txt 2> err.txt}\newline \texttt{cat err.txt} & Ekranda hiçbir şey yok; \texttt{err.txt} şunu içerir: \texttt{ls: cannot access \textquotesingle nosuch\textquotesingle: No such file or directory}.\\
+\textbf{A3} & \texttt{wc -l < logs/system.log} & \texttt{120}\\
+\textbf{A4} & \texttt{ls data nosuch > both.txt 2>\&1}\newline \texttt{ls data nosuch 2>\&1 > both.txt} & Hatayı yalnızca ikincisi yazdırır: \cmd{2>\&1}, $1$ numaralı tanımlayıcıyı o henüz terminali gösterirken kopyalar (Şekil~\ref{fig:order}).\\
+\textbf{A5} & \texttt{find . -name "*.md" 2> /dev/null} & \texttt{./projects/beta/README.md} ve \texttt{./projects/alpha/README.md}, hata satırı yok.\\
+\textbf{B1} & \texttt{grep -c ERROR logs/system.log} & \texttt{13}\\
+\textbf{B2} & \texttt{grep -vn INFO logs/system.log |\allowbreak{} head -n 3} & $2$., $3$. (WARN high memory usage) ve $13$.~satırlar (ERROR failed to mount /dev/sdb1).\\
+\textbf{B3} & \texttt{grep -c " 404 " logs/access.log} & \texttt{57}\\
+\textbf{B4} & \texttt{grep ",EE," data/students.csv} & Deniz Aydin ve Ece Ozturk (\texttt{2026011}, \texttt{2026031}).\\
+\textbf{B5} & \texttt{grep -c "\textasciicircum{}10\textbackslash{}.0\textbackslash{}.5\textbackslash{}.38 " logs/access.log} & \texttt{37}. Noktalar kaçışlı, kalıp satır başına bağlı ve ardından bir boşluk geliyor; bu yüzden ne \texttt{15:38}, ne \texttt{5438} ne de \texttt{10.0.5.380} eşleşebilir.\\
+\textbf{C1} & \texttt{tail -n +2 data/students.csv |\allowbreak{} cut -d, -f3 |\allowbreak{} sort |\allowbreak{} uniq -c} & CS $10$, ECT $17$, EE $2$, ME $11$.\\
+\textbf{C2} & \texttt{tail -n +2 data/students.csv |\allowbreak{} sort -t, -k5 -nr |\allowbreak{} head -n 3 |\allowbreak{} cut -d, -f2,5} & Onur Dogan $100$, Elif Yilmaz $99$, Emre Dogan $98$.\\
+\textbf{C3} & \texttt{cut -d" " -f9 logs/access.log |\allowbreak{} sort |\allowbreak{} uniq -c |\allowbreak{} sort -rn} & $200$: $148$, $404$: $57$, $304$: $34$, $500$: $24$, $301$: $20$, $403$: $17$ (toplam $300$).\\
+\textbf{C4} & \texttt{cut -d" " -f7 logs/access.log |\allowbreak{} sort |\allowbreak{} uniq -c |\allowbreak{} sort -rn |\allowbreak{} head -n 3} & \texttt{/courses/mcmp117} $41$, \texttt{/about.html} $37$, \texttt{/index.html} $33$ --- \texttt{/images/logo.png} ($33$) ile eşit; eşitlik fark edildiyse ikisi de kabul edilir.\\
+\textbf{C5} & \texttt{grep " 404 " logs/access.log |\allowbreak{} cut -d" " -f7 |\allowbreak{} sort |\allowbreak{} uniq -c |\allowbreak{} sort -rn |\allowbreak{} head -n 1} & \texttt{/images/logo.png}, $9$ kez.\\
+\textbf{C6} & \texttt{grep ERROR logs/system.log |\allowbreak{} cut -c12-13 |\allowbreak{} uniq -c} & $09$: $3$, $10$: $4$, $12$: $1$, $13$: $3$, $14$: $2$ ($11$ ve $15$: yok; toplam $13$).\\
+\textbf{D1} & \texttt{cut -d, -f2 data/students.csv |\allowbreak{} sort |\allowbreak{} uniq -d} & Elif Yilmaz, Mehmet Aydin, Onur Dogan, Selin Yildiz. Başlık yinelenemez, bu yüzden çıkarılması gerekmez.\\
+\textbf{D2} & \texttt{grep " 500 " logs/access.log |\allowbreak{} tee errors\_500.txt |\allowbreak{} wc -l} & \texttt{24}; \texttt{errors\_500.txt} $24$ satırı tutar.\\
+\textbf{D3} & \texttt{find docs -name "*.txt" -print0 |\allowbreak{} xargs -0 wc -l} & Toplam $25$ satır (düz \cmd{xargs} ile boşluklu ad bozulur ve toplam $23$ olur).\\
+\textbf{D4} & \texttt{cut -d" " -f1 logs/access.log |\allowbreak{} sort -u |\allowbreak{} wc -l}\newline \texttt{cut -d" " -f1 logs/access.log |\allowbreak{} sort |\allowbreak{} uniq -c |\allowbreak{} sort -n |\allowbreak{} head -n 1} & $6$ adres; en az isteği \texttt{10.0.5.38} yaptı, $37$.\\
+\bottomrule
+\end{longtable}
+}
+
+\paragraph{Puanlama ipuçları.} Doğru çıktı veren, çalışan tek bir komut satırına tam puan; çıktı doğru ama birden çok komutla ya da geçici dosyalarla elde edilmişse (alıştırma dosya istemiyorsa) yarım puan; elle sayılarak bulunan doğru bir sayıya puan verilmez.
+
+% =====================================================================
+\section{İleriye Bakış: 13. Hafta}
+
+\begin{itemize}
+  \item \textbf{13. hafta: Süreçler ve İş Denetimi.} Bugün kabuk bizim için süreçler oluşturdu ve onları borularla bağladı. Gelecek hafta süreçleri dışarıdan izliyoruz: \cmd{ps}, \cmd{pstree} ve \cmd{top} (PID'ler, ebeveyn PID'leri ve 3.~haftadaki süreç durumları), ön plan ve arka plan işleri (\cmd{\&}, \cmd{jobs}, \cmd{fg}, \cmd{bg}, Ctrl+Z, Ctrl+C), sinyaller (\cmd{kill}, \texttt{SIGTERM} ile \texttt{SIGKILL} --- ve bugün \cmd{yes}'i durduran \texttt{SIGPIPE}), \cmd{nice} ile öncelikler (5.~hafta) ve kendi gözünüzle görebileceğiniz bir zombi süreç.
+  \item \textbf{14. hafta:} kabuk betikleri; bugünkü boru hatları otomatik raporların yapı taşlarına dönüşecek.
+\end{itemize}
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley: Kısım~2.2 (kullanıcı arayüzleri, komut yorumlayıcısı), Kısım~3.3 (\cmd{fork()} ve \cmd{exec()} ile süreç oluşturma) ve Kısım~3.7.4 (Pipes).
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}:
+  \begin{itemize}
+    \item Bölüm~5, ``Interlude: Process API'' (Kısım~5.4, bir kabuğun çıktıyı \cmd{fork()} ile \cmd{exec()} arasında nasıl yönlendirdiğini gösterir): \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-api.pdf}
+    \item Bölüm~39, ``Interlude: Files and Directories'' (dosya tanımlayıcılar, \cmd{dup()}): \url{https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf}
+  \end{itemize}
+  \item GNU Bash kılavuzu, ``Redirections'': \url{https://www.gnu.org/software/bash/manual/html_node/Redirections.html}
+  \item GNU Coreutils kılavuzu (\cmd{sort}, \cmd{uniq}, \cmd{cut}, \cmd{tr}, \cmd{wc}, \cmd{head}, \cmd{tail}, \cmd{tee}): \url{https://www.gnu.org/software/coreutils/manual/coreutils.html}
+\end{itemize}

@@ -1,0 +1,26 @@
+student@okan-lab:~/lab/scripts$ cat hello.sh
+#!/bin/bash
+# hello.sh -- my first shell script
+# Run: bash hello.sh   or: chmod +x hello.sh; ./hello.sh
+echo "Hello from a shell script!"
+echo "I am running as: $(whoami)"
+echo "Current folder:  $(pwd)"
+student@okan-lab:~/lab/scripts$ bash hello.sh
+Hello from a shell script!
+I am running as: student
+Current folder:  /home/student/lab/scripts
+student@okan-lab:~/lab/scripts$ ./hello.sh
+bash: ./hello.sh: Permission denied
+student@okan-lab:~/lab/scripts$ echo $?
+126
+student@okan-lab:~/lab/scripts$ ls -l hello.sh
+-rw-rw-r-- 1 student student 204 Oct 12 17:18 hello.sh
+student@okan-lab:~/lab/scripts$ chmod +x hello.sh
+student@okan-lab:~/lab/scripts$ ls -l hello.sh
+-rwxrwxr-x 1 student student 204 Oct 12 17:18 hello.sh
+student@okan-lab:~/lab/scripts$ ./hello.sh
+Hello from a shell script!
+I am running as: student
+Current folder:  /home/student/lab/scripts
+student@okan-lab:~/lab/scripts$ hello.sh
+bash: hello.sh: command not found

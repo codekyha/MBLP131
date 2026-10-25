@@ -1,0 +1,21 @@
+student@okan-lab:~/lab$ strace -e trace=mkdir,mkdirat mkdir newdir
+mkdir("newdir", 0777)                   = 0
++++ exited with 0 +++
+student@okan-lab:~/lab$ strace -e trace=rename,renameat,renameat2 mv newdir olddir
+renameat2(AT_FDCWD, "newdir", AT_FDCWD, "olddir", RENAME_NOREPLACE) = 0
++++ exited with 0 +++
+student@okan-lab:~/lab$ touch file1
+student@okan-lab:~/lab$ strace -e trace=link,linkat ln file1 file2
+linkat(AT_FDCWD, "file1", AT_FDCWD, "file2", 0) = 0
++++ exited with 0 +++
+student@okan-lab:~/lab$ strace -e trace=symlink,symlinkat ln -s olddir sym
+symlinkat("olddir", AT_FDCWD, "sym")    = 0
++++ exited with 0 +++
+student@okan-lab:~/lab$ strace -e trace=unlink,unlinkat rm file1 file2 sym
+unlinkat(AT_FDCWD, "file1", 0)          = 0
+unlinkat(AT_FDCWD, "file2", 0)          = 0
+unlinkat(AT_FDCWD, "sym", 0)            = 0
++++ exited with 0 +++
+student@okan-lab:~/lab$ strace -e trace=rmdir,unlinkat rmdir olddir
+rmdir("olddir")                         = 0
++++ exited with 0 +++

@@ -1,0 +1,120 @@
+% ===================== MBLP131 Ara Sınav (Vize) -- ÖRNEK KÂĞIT: CEVAP ANAHTARI (öğretim üyesi sürümü) =====================
+% Dersin ön belgesiyle derlenir:
+%   python3 ../../lib/assemble_notes.py tr 8 vize_cevap_body.tex MBLP131_Vize_CevapAnahtari.tex "Ara Sınav (Vize) Örnek Kâğıdı: Cevap Anahtarı"
+% Her sayı ../code/sample_exam.py ile denetlendi (çıktı ../code/out_sample.txt);
+% Gantt şemaları ve tablolar ../code/gen_tables.py ile üretildi, Türkçe başlıklar ../code/make_tex_tr.py ile (../code/tex_tr/sa_*.tex).
+\fancyhead[R]{\small\color{muted}Vize Örnek Kâğıdı --- Cevap Anahtarı}
+\setlength{\emergencystretch}{3em}
+\definecolor{amber}{HTML}{C98A1B}
+\colorlet{colA}{mint}\colorlet{txtA}{dark}
+\colorlet{colB}{slate}\colorlet{txtB}{white}
+\colorlet{colC}{amber}\colorlet{txtC}{white}
+\colorlet{colD}{charcoal}\colorlet{txtD}{white}
+\newcommand{\gantt}[2]{%
+\begin{tikzpicture}[x=#1cm,y=1cm]
+\foreach \p/\a/\b in {#2} {
+  \fill[col\p] (\a,0) rectangle (\b,0.62);
+  \draw[white,line width=1.2pt] (\a,0) -- (\a,0.62);
+  \node[font=\small\bfseries,text=txt\p] at ({(\a+\b)/2},0.31) {\p};
+  \draw[muted] (\a,0) -- (\a,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1.5pt] {\a};
+  \draw[muted] (\b,0) -- (\b,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1.5pt] {\b};
+}
+\end{tikzpicture}}
+\newcommand{\gen}[1]{\input{../code/tex_tr/#1}}
+\newtcolorbox{rubric}{enhanced,breakable,colback=white,colframe=mint,boxrule=0.6pt,arc=2pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,fontupper=\small,before upper={\textbf{\color{mintdeep}Puanlama.}\ }}
+
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=14pt,bottom=14pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, İşletim Sistemleri Temelleri \,·\, Öğretim üyesi nüshası}}\par\smallskip
+{\headfont\fontsize{22}{26}\selectfont\bfseries Vize Örnek Kâğıdı --- Cevap Anahtarı}\par\smallskip
+{\small \texttt{MBLP131\_Vize\_Ornek.pdf} için çözümler ve puanlama yönergesi (100 puan, [90] dakika)}
+\end{tcolorbox}
+
+\textbf{Genel puanlama kuralları.} Sayısal problemlerde puanların çoğunu yöntem kazandırır: formül, yerine koyma, birimiyle sonuç. Yöntem doğruysa bir aritmetik hata kısım başına en çok $1$ puana mal olur ve sonraki kısımlar öğrencinin kendi (yanlış) önceki sonucuna göre değerlendirilir (``hatayı taşıma'', follow-through). Hiçbir işlem gösterilmeden yazılan doğru bir sonuç o kısmın puanının yarısını alır. Farklı ama açıkça belirtilmiş bir uzlaşım kullanan yanıtlar (örneğin sadeleştirilmiş TLB formülü) tutarlı uygulanmışsa kabul edilir; uzlaşımı belirtmemek $1$ puan kırdırır. Aşağıdaki bütün sayılar \texttt{code/sample\_exam.py} ile doğrulandı.
+
+% ---------------------------------------------------------------------
+\section*{A Bölümü --- Çoktan seçmeli (20 puan, her biri 2, kısmi puan yok)}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}*{10}{c}@{}}
+\toprule
+A1 & A2 & A3 & A4 & A5 & A6 & A7 & A8 & A9 & A10 \\
+\midrule
+(b) & (c) & (b) & (c) & (c) & (b) & (b) & (c) & (a) & (d) \\
+\bottomrule
+\end{tabular}
+\end{center}
+Gerekçeler (sınav sonrası tartışma için): A1 CTSS (1961; Multics 1965'te başladı). A2 monolitik çekirdek (2.~haftanın karşılaştırma tablosu). A3 \cmd{fork()} çocukta $0$, ebeveynde çocuğun PID'sini döndürür. A4 bekleyen bir süreç önce hazır olmalıdır. A5 zamanlayıcı yalnızca hazır kuyruğunda geçen süreyi değiştirir. A6 birebir. A7 $q$ her patlamadan büyükse hiçbir süreç kesilmez: FCFS. A8 her erişim çalışma anında MMU tarafından çevrilir. A9 çeviri önbelleği (translation look-aside buffer) $(p, f)$ çiftlerini önbellekte tutar. A10 boşa çalışma süreç başına çok az çerçeve demektir; bellekte daha az süreç, her birine daha çok çerçeve verir.
+
+% ---------------------------------------------------------------------
+\section*{B Bölümü --- Kısa yanıt (20 puan)}
+\textbf{B1.} \emph{Genişletilmiş makine} (yukarıdan aşağı): işletim sistemi çirkin donanımı temiz soyutlamaların arkasına gizler; örneğin disk kesimleri yerine dosyalar, yazmaçlar ve kesme hatları yerine süreçler. \emph{Kaynak yöneticisi} (aşağıdan yukarı): birçok program donanım için yarışır ve işletim sistemi kimin neyi ne zaman alacağına karar verir. Zamanda çoğullama: programlar işlemciyi sırayla kullanır (ya da bir yazıcı belgeleri birbiri ardına basar). Uzayda çoğullama: ana bellek aynı anda birkaç program tutar; bir disk birçok kullanıcının dosyalarını tutar.
+\begin{rubric}Bakış açısı başına 2 puan (tanım $1$ + örnek $1$); doğru zamanda ve uzayda çoğullama örnekleri için $1$ puan.\end{rubric}
+
+\textbf{B2.} Kullanıcı düzeyi iş parçacıkları: $+$ oluşturma ve geçiş sıradan fonksiyon çağrılarıdır (hızlı, sistem çağrısı yok); $-$ bloklayan bir sistem çağrısı bütün süreci bloklar ve iş parçacıkları iki çekirdekte çalışamaz. Çekirdek düzeyi iş parçacıkları: $+$ biri bloklandığında çekirdek sürecin başka bir iş parçacığını çalıştırır ve iş parçacıkları birkaç çekirdekte paralel çalışabilir; $-$ oluşturma ve geçiş sistem çağrısı gerektirir (daha yavaş). Çoktan bire modelde tek bir bloklayan çağrı sürecin \emph{bütün} kullanıcı iş parçacıklarını bloklar, çünkü hepsi tek bir çekirdek iş parçacığını paylaşır.
+\begin{rubric}Dört üstünlük/zayıflığın her biri için 1 puan; çoktan bire bloklanma yanıtı için 1 puan.\end{rubric}
+
+\textbf{B3.} P0 \texttt{wait(S)} yürütür ($S$: $1 \to 0$) ve kesilir; P1 \texttt{wait(Q)} yürütür ($Q$: $1 \to 0$). Şimdi P0 \texttt{wait(Q)} içinde, P1 \texttt{wait(S)} içinde bloklanır. Her biri yalnızca diğerinin yapabileceği bir \texttt{signal}'i bekler; bu yüzden hiçbiri devam edemez: kilitlenme. Önlem: bütün iş parçacıkları kilitleri aynı genel sırayla alır (örneğin her zaman önce $S$, sonra $Q$).
+\begin{rubric}Kilitlenmeye yol açan bir sıra için 2, açıklama için (her biri diğerini bekler) 2, önleme kuralı için 1 puan. Durumu ``açlık'' diye adlandıran, aksi hâlde doğru bir yanıt 1 puan kaybeder.\end{rubric}
+
+\textbf{B4.} Sabit bağlantı aynı düğüm (inode) için ikinci bir dizin girdisidir; düğümün bağlantı sayısı onun kaç adı olduğunu kaydeder. Sembolik bağlantı, içeriği bir yol adı olan küçük bir dosyadır. \cmd{rm a.txt} komutundan sonra \texttt{h.txt} hâlâ çalışır: bağlantı sayısı $2$'den $1$'e düşer ve veri ancak sayı $0$ olunca serbest bırakılır. \texttt{s.txt} boşta kalır: artık var olmayan \texttt{a.txt} yolunu saklar (``No such file or directory'').
+\begin{rubric}Tanım başına 1 puan; iki sonucun her biri gerekçesiyle $1.5$ puan.\end{rubric}
+
+% ---------------------------------------------------------------------
+\section*{C Bölümü --- Problemler (60 puan)}
+\subsection*{C1 (16 puan)}
+\textit{\texttt{sample\_exam.py} ile üretildi; uzlaşımlar kâğıtta yazıldığı gibi.}
+
+\textbf{(a) SJF (kesintisiz).} $t=6$'da hazır kuyruğunda B (5), C (2), D (4) vardır: önce C, sonra D, sonra B.\\[0.2em]
+\gen{sa_gantt_sjf}\\[0.3em]
+{\small\gen{sa_sched_sjf}}
+
+\textbf{(b) Öncelikli (kesintili).} $t=2$: B (öncelik $2$) A'yı ($3$) keser; $t=3$: C ($1$) B'yi keser; C $5$'e kadar çalışır, B $5$--$9$ arası biter, A $9$--$13$, D (en düşük) $13$--$17$.\\[0.2em]
+\gen{sa_gantt_prio}\\[0.3em]
+{\small\gen{sa_sched_prio}}
+
+\Needspace{14\baselineskip}
+\textbf{(c) Round Robin, $q = 3$.} $t=3$: C tam A'nın zaman dilimi biterken gelir; dolayısıyla kuyruk B, C, A'dır. $t=6$: D ($5$'te geldi) kuyruğa A'nın arkasından girer, onu B ($2$~ms kaldı) izler: C, A, D, B. C $8$'de, A $11$'de biter; D $11$--$14$ ($1$ kaldı), B $14$--$16$, D $16$--$17$.\\[0.2em]
+\gen{sa_gantt_rr3}\\[0.3em]
+{\small\gen{sa_sched_rr3}}
+
+\textbf{(d)} En küçük ortalama bekleme süresini $4$~ms ile SJF verir (öncelikli $4.25$~ms, RR $6.25$~ms).
+\begin{rubric}(a), (b), (c): her biri 5 puan --- Gantt şeması 2, süreç başına bitiş/dönüş/bekleme 2, ortalamalar 1. (d): 1 puan. (c)'de $t=3$'te A'yı C'den önce koyan öğrenci (öbür uzlaşım) 1 puan kaybeder, geri kalanı hatayı taşıma ilkesiyle değerlendirilir. Yanıt süresi ayrıca puanlanmaz.\end{rubric}
+
+\subsection*{C2 (12 puan)}
+\textbf{(a)} Denetim $a < \text{sınır} = \texttt{0x0A00}$'dır:
+\texttt{0x09FF} $<$ \texttt{0x0A00} $\Rightarrow$ $\texttt{0x6000} + \texttt{0x09FF} = \texttt{0x69FF}$ ($= 27135$);
+\texttt{0x0A00} sınırdan küçük değil $\Rightarrow$ \textbf{tuzak};
+\texttt{0x0150} $\Rightarrow$ \texttt{0x6150} ($= 24912$).
+Geçerli fiziksel aralık: \texttt{0x6000}--\texttt{0x69FF}.
+
+\textbf{(b)} $\langle 2, 1099\rangle$: $1099 < 1100 \Rightarrow 4300 + 1099 = 5399$. \quad $\langle 1, 400\rangle$: $400 \ge 400 \Rightarrow$ \textbf{tuzak}. \quad $\langle 3, 512\rangle$: $512 < 1000 \Rightarrow 3200 + 512 = 3712$.
+
+\textbf{(c)} $\alpha = 0.8$: $\text{EAT} = 0.8 \times 120 + 0.2 \times 220 = 96 + 44 = 140$~ns $= 20 + (2 - 0.8)\times 100$. TLB olmadan: $2t_m = 200$~ns. $128$~ns için: $20 + (2-\alpha)\,100 = 128 \Rightarrow 2 - \alpha = 1.08 \Rightarrow \alpha = 0.92$.
+\begin{rubric}(a) adres başına 1, aralık için 1 puan; (b) adres başına $4/3$ puan (tam sayıya yuvarlayın); (c) $140$~ns için 1, $200$~ns için 1, $\alpha = 0.92$ için 2 puan (denklem için 1). \texttt{0x0A00}'ı geçerli saymak o adresin puanının tamamını kaybettirir.\end{rubric}
+
+\subsection*{C3 (12 puan)}
+\textit{Üretilmiş tablolar; nane = yeni yüklenen sayfa, soluk = hata sütunu, gri = isabet.}
+\begin{center}
+\begin{minipage}{\linewidth}\centering\textbf{FIFO: 8 hata}\\[0.2em]\gen{sa_frames_FIFO}\end{minipage}\\[0.8em]
+\begin{minipage}{\linewidth}\centering\textbf{LRU: 7 hata}\\[0.2em]\gen{sa_frames_LRU}\end{minipage}\\[0.8em]
+\begin{minipage}{\linewidth}\centering\textbf{OPT: 5 hata}\\[0.2em]\gen{sa_frames_OPT}\end{minipage}
+\end{center}
+Sağlamalar: dizide $5$ farklı sayfa ($0$--$4$) var, dolayısıyla en az $5$ zorunlu hata; OPT tam bu en küçük sayıya ulaşır. Anahtar kararlar --- LRU, $3$'e başvuruda ($9$. konum): çerçeveler $2, 1, 0$ ve en uzun süredir kullanılmayan $0$; OPT, $2$'ye başvuruda ($4$. konum): sonraki kullanımlar $1$ ($5$. konum), $0$ ($6$. konum), $4$ (hiç) $\Rightarrow$ $4$ çıkar.
+\begin{rubric}Algoritma başına 4 puan: tablo 3 (yanlış sütun başına 1 puan kesin, en çok 3), sayı 1 (öğrencinin kendi tablosuna göre hatayı taşıma).\end{rubric}
+
+\subsection*{C4 (10 puan)}
+\textit{Üretilmiş tablo.}
+\begin{center}\small\gen{sa_fits}\end{center}
+İlk uyan dördünü de yerleştirir (ilk deliğin kalan $380@470$ parçası B'yi alır). En iyi uyan ve en kötü uyan D'yi yerleştiremez: ikisinde de $1210$~KB boştur, ama en büyük delik yalnızca $320$~KB (en iyi uyan) ya da $380$~KB'tır (en kötü uyan) --- dış parçalanma. (Burada ilk uyan kazanır; slaytlardaki örnekte en iyi uyan kazanmıştı: hiçbir strateji her zaman en iyi değildir.)
+\begin{rubric}Strateji başına 3 puan (yanlış yerleştirme başına 1 puan kesin; öğrencinin kendi delik listesine göre hatayı taşıma); nedeni dış parçalanma olarak adlandırmak için 1 puan.\end{rubric}
+
+\subsection*{C5 (10 puan)}
+\textbf{(a)} $45$. kayıt: bayt konumu $45 \times 300 = 13\,500$; blok $\lfloor 13\,500/1024 \rfloor = 13$; konum $13\,500 - 13 \times 1024 = 188$; son bayt $13\,799$ da $13$. bloktadır. $58$. kayıt: konum $58 \times 300 = 17\,400$, blok $\lfloor 17\,400/1024\rfloor = 16$, blok içi konum $1016$; son bayt $17\,699$, $\lfloor 17\,699/1024 \rfloor = 17$: kayıt $17$. bloğa taşar ve tek bir bloğa \emph{sığmaz}.
+
+\textbf{(b)} İlk \cmd{fork()}'tan sonra $2$ süreç vardır: \texttt{X} $2$ kez yazılır. Sonraki iki fork'u her süreç yürütür: $2 \times 2 \times 2 = 8$ süreç, \texttt{Y} $8$ kez yazılır; toplam $8$ süreç ($7$'si yeni). (\cmd{os.fork()} ile gerçek bir çalıştırmayla doğrulandı.)
+
+\textbf{(c)} $q = 5\ \text{ms} = 5000\ \mu$s: $s/(q+s) = 20/5020 \approx 0.0040 = 0.40\%$.
+\begin{rubric}(a) $45$. kayıt için 2 (blok ve konum), $58$. kayıt için 2 puan (ikinci puan için son baytın denetlenmesi gerekir). (b) X için 1, Y için 1, süreç sayısı için 1 puan. (c) tutarlı birimlerle formül için 2, sonuç için 1 puan.\end{rubric}

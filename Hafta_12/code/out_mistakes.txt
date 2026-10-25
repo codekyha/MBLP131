@@ -1,0 +1,34 @@
+student@okan-lab:~/lab$ cp data/cities.txt c.txt
+student@okan-lab:~/lab$ sort c.txt > c.txt
+student@okan-lab:~/lab$ wc -l c.txt
+0 c.txt
+student@okan-lab:~/lab$ grep user login logs/system.log
+grep: login: No such file or directory
+logs/system.log:2026-10-12 09:44:00 INFO  user login
+logs/system.log:2026-10-12 09:17:00 INFO  user login
+logs/system.log:2026-10-12 09:45:00 INFO  user login
+logs/system.log:2026-10-12 11:20:00 INFO  user login
+logs/system.log:2026-10-12 11:15:00 INFO  user login
+logs/system.log:2026-10-12 11:32:00 INFO  user login
+logs/system.log:2026-10-12 11:43:00 INFO  user login
+logs/system.log:2026-10-12 12:22:00 INFO  user login
+logs/system.log:2026-10-12 12:23:00 INFO  user login
+logs/system.log:2026-10-12 12:45:00 INFO  user login
+logs/system.log:2026-10-12 12:29:00 INFO  user login
+logs/system.log:2026-10-12 13:13:00 INFO  user login
+logs/system.log:2026-10-12 13:19:00 INFO  user login
+logs/system.log:2026-10-12 14:43:00 INFO  user login
+logs/system.log:2026-10-12 14:27:00 INFO  user login
+student@okan-lab:~/lab$ grep "user login" logs/system.log | wc -l
+15
+student@okan-lab:~/lab$ ls data > wc
+student@okan-lab:~/lab$ ls
+README.txt  c.txt  docs  photos    scripts  wc
+backup      data   logs  projects  src
+student@okan-lab:~/lab$ cat wc
+cities.txt
+numbers.txt
+students.csv
+student@okan-lab:~/lab$ sort -t, -k5 -n data/students.csv | head -n 2
+id,name,department,midterm,final
+2026032,Onur Dogan,ECT,41,35

@@ -1,0 +1,24 @@
+student@okan-lab:~/lab/scripts$ name="Ayse"
+student@okan-lab:~/lab/scripts$ echo $name
+Ayse
+student@okan-lab:~/lab/scripts$ echo "Hello, $name!"
+Hello, Ayse!
+student@okan-lab:~/lab/scripts$ name = Ayse
+bash: name: command not found
+student@okan-lab:~/lab/scripts$ echo "Files in docs: $(ls ../docs | wc -l)"
+Files in docs: 6
+student@okan-lab:~/lab/scripts$ echo $((3 + 4 * 2))
+11
+student@okan-lab:~/lab/scripts$ ./variables.sh
+Student: Ayse, course: MCMP117, week 14
+Today is 2026-10-12; the syllabus has 15 lines
+Weeks left until the final exam: 1
+7 / 2 = 3 remainder 1   (integers only!)
+student@okan-lab:~/lab/scripts$ ./quotes.sh
+Single: Hello $name
+Double: Hello Ayse
+Escaped: it costs $5
+2 final report.txt
+wc: final: No such file or directory
+wc: report.txt: No such file or directory
+0 total

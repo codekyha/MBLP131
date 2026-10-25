@@ -1,0 +1,50 @@
+== 1. Base (relocation) + limit registers ==
+  base=14000 limit=3000 logical=346: physical=14346
+  base=14000 limit=3000 logical=2999: physical=16999
+  base=14000 limit=3000 logical=3500: TRAP (addressing error)
+  base=0x4000 limit=0x1000 logical=0x02a4: physical=0x42a4 (17060)
+  base=0x4000 limit=0x1000 logical=0x1200: TRAP
+  0x4000 = 16384, 0x1000 = 4096, 0x02A4 = 676, 0x1200 = 4608
+
+== 2. Swapping ==
+  swap out 100 MB at 50 MB/s = 2.0 s; out + in = 4.0 s
+  one 4 KB page at 50 MB/s (1 MB = 10^6 B): 81.9 us
+
+== 3. 50-percent rule ==
+  N=1000 allocated blocks, 0.5N=500 lost -> fraction unusable = 0.3333 (one third)
+
+== 4. Paging: split and translate (4 KB pages, 16-bit addresses) ==
+  0x3a7f = 14975: p=3, d=0xa7f=2687 -> frame 7 -> 0x7a7f = 31359  (check 7*4096+2687)
+  0x1234 = 4660: p=1, d=0x234=564 -> frame 9 -> 0x9234 = 37428  (check 9*4096+564)
+  0x5000 = 20480: p=5, d=0x000=0 -> invalid
+  bits: m=16, n=12 -> p has 4 bits -> 16 pages of 4096 B
+  32-bit, 4 KB: p has 20 bits -> 1048576 pages
+
+== 5. Internal fragmentation in paging ==
+  10000 B / 4096 = 2 full pages + 1808 B -> 3 frames, waste 2288 B
+
+== 6. Page-table size ==
+  32-bit, 4 KB pages: 1048576 entries x 4 B = 4194304 B = 4.0 MB
+  100 processes -> 400.0 MB
+  two-level 10+10+12: outer table 1024 entries x 4 B = 4096 B
+  x86-64 48-bit, 4 levels 9+9+9+9+12; one table = 512 x 8 B = 4096 B
+  flat 48-bit table with 8-B entries: 512.0 GB
+
+== 7. TLB: effective access time ==
+  alpha=0.8: EAT = 140.0 ns  (= t_TLB + (2-a)t_m = 140.0); slowdown 40%;  simplified (t_TLB=0): 120.0 ns
+  alpha=0.98: EAT = 122.0 ns  (= t_TLB + (2-a)t_m = 122.0); slowdown 22%;  simplified (t_TLB=0): 102.0 ns
+  alpha=0.99: EAT = 121.0 ns  (= t_TLB + (2-a)t_m = 121.0); slowdown 21%;  simplified (t_TLB=0): 101.0 ns
+  no TLB at all: 2*t_m = 200 ns
+  alpha=0.80 terms: 96.0 + 44.0
+  alpha=0.98 terms: 117.6 + 4.4
+
+== 8. Segmentation ==
+  seg 0: base 2000, limit 1200, occupies 2000-3199
+  seg 1: base 6500, limit 300, occupies 6500-6799
+  seg 2: base 4800, limit 600, occupies 4800-5399
+  seg 3: base 3400, limit 900, occupies 3400-4299
+  seg 4: base 5600, limit 700, occupies 5600-6299
+  (s=2, d=53): physical 4853
+  (s=3, d=852): physical 4252
+  (s=1, d=299): physical 6799
+  (s=0, d=1222): TRAP (1222 >= limit 1200)

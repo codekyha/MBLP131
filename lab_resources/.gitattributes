@@ -1,0 +1,4 @@
+# The Windows launchers keep the CRLF line endings they ship with (the repository default would convert them to LF).
+*.cmd -text
+# The code pack is a compressed archive; never touch it.
+*.tar.gz binary

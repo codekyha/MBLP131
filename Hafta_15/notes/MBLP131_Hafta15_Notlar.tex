@@ -1,0 +1,676 @@
+% =====================================================================
+%  MBLP131 -- İşletim Sistemleri Temelleri
+%  Hafta 15 Ders Notları: Final Sınavı Tekrarı ve Alıştırma
+%  XeLaTeX ile iki kez derleyin:  xelatex MBLP131_Hafta15_Notlar.tex
+%  ./figures/ ve ../code/ klasörlerine ihtiyaç duyar.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\newcommand{\weeknum}{15}
+% ---------- Page & fonts ---------------------------------------------
+\usepackage[a4paper,margin=2.3cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{turkish}
+\IfFontExistsTF{Calibri}{\setmainfont{Calibri}}{\setmainfont{Carlito}}
+\IfFontExistsTF{Cambria}{\newfontfamily\headfont{Cambria}}{\newfontfamily\headfont{Caladea}}
+\IfFontExistsTF{Consolas}{\setmonofont[Scale=0.95]{Consolas}}{\setmonofont[Scale=0.88]{DejaVu Sans Mono}}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\linespread{1.12}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+% ---------- Colours (course design system) ----------------------------
+\usepackage{xcolor}
+\definecolor{dark}{HTML}{212121}
+\definecolor{charcoal}{HTML}{36454F}
+\definecolor{slate}{HTML}{50808E}
+\definecolor{mint}{HTML}{02C39A}
+\definecolor{mintdeep}{HTML}{028090}
+\definecolor{light}{HTML}{F2F2F2}
+\definecolor{muted}{HTML}{6B7679}
+
+% ---------- Packages ---------------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{needspace}
+\graphicspath{{figures/}}
+\usepackage[font=small,labelfont={bf,color=mintdeep},justification=centering]{caption}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\setlist{itemsep=0.25em,topsep=0.3em}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=mintdeep,urlcolor=mintdeep,citecolor=mintdeep]{hyperref}
+
+% ---------- Headings ----------------------------------------------------
+\titleformat{\section}{\headfont\Large\bfseries\color{charcoal}}{\color{mint}\thesection}{0.7em}{}
+\titleformat{\subsection}{\headfont\large\bfseries\color{charcoal}}{\color{mintdeep}\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\headfont\normalsize\bfseries\color{mintdeep}}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+
+% ---------- Header / footer -----------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}MBLP131 --- İşletim Sistemleri Temelleri}
+\fancyhead[R]{\small\color{muted}Hafta \weeknum{} Ders Notları}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% ---------- Boxes ---------------------------------------------------------
+\newtcolorbox{keyidea}[1][Key idea]{enhanced,breakable,colback=charcoal,colframe=charcoal,
+  coltext=white,fonttitle=\headfont\bfseries\color{mint},title={#1},
+  attach title to upper={\par\smallskip},boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{example}[1][Worked example]{enhanced,colback=light,colframe=light,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{tryit}[1][Try it yourself]{enhanced,breakable,colback=white,colframe=mint,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.8pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{histnote}[1][Historical note]{enhanced,breakable,colback=white,colframe=slate!40,
+  fonttitle=\headfont\bfseries\color{slate},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.5pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt,fontupper=\small}
+
+% Photo helper: fits image inside a box, never distorted (keepaspectratio)
+\newcommand{\photo}[3]{\includegraphics[width=#1,height=#2,keepaspectratio]{#3}}
+
+\newcommand{\term}[1]{\textbf{\color{mintdeep}#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+
+% ---------- Code listings ----------------------------------------------------
+\usepackage{listings}
+\lstdefinestyle{course}{
+  basicstyle=\ttfamily\small, columns=fullflexible, keepspaces=true,
+  backgroundcolor=\color{dark}, rulecolor=\color{dark}, frame=single, framesep=6pt,
+  xleftmargin=8pt, xrightmargin=8pt, aboveskip=0.8em, belowskip=0.6em,
+  basicstyle=\ttfamily\small\color{light},
+  keywordstyle=\color{mint}\bfseries, commentstyle=\color{white!60}\itshape,
+  stringstyle=\color{orange!70!yellow}, numberstyle=\tiny\color{muted},
+  numbers=left, numbersep=10pt, showstringspaces=false, breaklines=true,
+  tabsize=4, upquote=true}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}}
+\lstset{style=course,language=C}
+\usepackage{textcomp}
+
+% listings 1.9 + XeLaTeX: Turkish letters above U+00FF (ı İ ğ Ğ ş Ş) must be declared as letters
+\makeatletter
+\lst@CCPut \lst@ProcessLetter {"130}{"131}{"11E}{"11F}{"15E}{"15F}\z@
+\lst@AddToHook{SelectCharTable}{\catcode"130=13 \catcode"131=13 \catcode"11E=13
+  \catcode"11F=13 \catcode"15E=13 \catcode"15F=13 }
+\makeatother
+
+\begin{document}
+% ============================ Hafta 15 gövdesi ============================
+% Final sınavı çalışma kılavuzu. Kuram sayıları: code/theory_check.py (out_theory_check.txt);
+% terminal oturumları: code/out_*.txt (İngilizce haftanın kayıtları, değiştirilmeden kullanıldı).
+\setlength{\emergencystretch}{3em}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}, basicstyle=\ttfamily\footnotesize\color{light}}
+\lstdefinestyle{sh}{style=course,language=bash,basicstyle=\ttfamily\footnotesize\color{light},
+  morekeywords={elif,then,fi,do,done,in,exit,echo}}
+% Gantt şeması yardımcıları (renkler slaytlarla ve 5. haftayla aynı)
+\definecolor{amber}{HTML}{C98A1B}
+\colorlet{colP1}{mint}\colorlet{txtP1}{dark}
+\colorlet{colP2}{slate}\colorlet{txtP2}{white}
+\colorlet{colP3}{amber}\colorlet{txtP3}{white}
+\colorlet{colP4}{charcoal}\colorlet{txtP4}{white}
+% \gantt{ms başına cm}{P/başlangıç/bitiş, ...}
+\newcommand{\gantt}[2]{%
+\begin{tikzpicture}[x=#1cm,y=1cm]
+\foreach \p/\a/\b in {#2} {
+  \fill[col\p] (\a,0) rectangle (\b,0.62);
+  \draw[white,line width=1.2pt] (\a,0) -- (\a,0.62);
+  \node[font=\small\bfseries,text=txt\p] at ({(\a+\b)/2},0.31) {\p};
+  \draw[muted] (\a,0) -- (\a,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1.5pt] {\a};
+  \draw[muted] (\b,0) -- (\b,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1.5pt] {\b};
+}
+\end{tikzpicture}}
+% çerçeve tabloları: yeni yüklenen sayfa ve hata işareti
+\newcommand{\nw}[1]{\textbf{\color{mintdeep}#1}}
+\newcommand{\F}{\textcolor{red!70!black}{\textbf{F}}}
+\newcommand{\pts}[1]{\hfill\textcolor{mintdeep}{\textbf{[#1~puan]}}}
+
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 15 \,·\, Çalışma Kılavuzu}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Final Sınavı Tekrarı ve Alıştırma}\par\smallskip
+{\small\itshape\color{white!70} On beş hafta, tek sınav: ilk toplu iş sistemlerinden kendi kabuk betiklerinize.}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Final sınavı için yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item 1--7. haftaların temel fikirlerini dersin kendi terimleriyle açıklamak: işletim sisteminin bakış açıları ve hedefleri, ikili mod, sistem çağrıları, süreçler ve iş parçacıkları, zamanlama, eşzamanlama, bellek yönetimi, sanal bellek ve dosya sistemleri.
+  \item Standart sayısal problemleri çözmek: kullanım oranı, Amdahl yasası, bekleme ve dönüş süreleriyle Gantt şemaları, adres çevirisi, TLB ile ve sayfa hatalarıyla EAT, sayfa değiştirme çerçeve tabloları, blok hesabı.
+  \item 9--13. haftaların Linux komutlarını ezberden yazmak: gezinme, dosya işlemleri, izinler, yönlendirme, süreç ve iş denetimi.
+  \item Metin verisi (günlükler, CSV dosyaları) hakkındaki soruları yanıtlayan tek satırlık boru hatları kurmak.
+  \item Argüman denetimi, döngü, sınama, aritmetik ve doğru çıkış durumu içeren kısa bir Bash betiği yazmak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{Bu Kılavuz Nasıl Kullanılır?}
+
+Bu kılavuz dersin \emph{tamamını} kapsar. Kısım~\ref{sec:theory}, 1--7. kuram haftalarını kısaca tekrar eder; haftalık notlardaki terimleri, gösterimi ve uzlaşımları aynen kullanır. (8. haftanın vize çalışma kılavuzu aynı haftaları daha ayrıntılı ele alır ve hâlâ geçerlidir.) Kısım~\ref{sec:practical}, 9--14. Linux haftalarını gerçek terminal çıktısıyla tekrar eder. Kısım~\ref{sec:sheet} tek sayfalık bir formül ve komut kâğıdıdır. Kısım~\ref{sec:lecture} ders slaytlarındaki çözümlü problemleri tam çözümleriyle yineler; Kısım~\ref{sec:mistakes} sık yapılan hataları ve bir sınav stratejisini listeler. Ardından eksiksiz bir \textbf{Alıştırma Finali} (Kısım~\ref{sec:pf}) ve çözümleri (Kısım~\ref{sec:pfsol}) gelir. Ayrıca dağıtılan örnek kâğıdın soruları \emph{farklıdır}; bu kılavuzu bitirdikten sonra onu süre tutarak bir prova olarak kullanın.
+
+\subsection{Sınavla ilgili bilgiler}
+Köşeli parantez içindekiler henüz resmî değildir; geçerli olan, dersin Telegram kanalındaki duyurudur.
+\begin{itemize}
+  \item \textbf{Tarih, saat, salon:} [dersin Telegram kanalında duyurulacak].
+  \item \textbf{Süre:} [90] dakika. \textbf{Toplam:} altı bölümde (A--F) 100 puan.
+  \item \textbf{Yanınızda:} öğrenci kimliği, kalem; [basit, programlanamayan hesap makinesi --- serbest olup olmadığı kesinleşecek].
+  \item \textbf{Kurallar:} kitap kapalı [kesinleşecek]; [formül kâğıdı verilir / verilmez --- kesinleşecek]; telefonlar kapalı.
+  \item \textbf{Ağırlık:} [finalin ders notuna katkısı \%\_\_ --- izlenceye bakın].
+\end{itemize}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}c>{\raggedright\arraybackslash}Xll@{}}
+\toprule
+\textbf{Bölüm} & \textbf{Soru türü} & \textbf{Haftalar} & \textbf{Puan*} \\
+\midrule
+A & Çoktan seçmeli: kavramlar ve komutlar & 1--7, 9--14 & 20 \\
+B & Kısa yanıt: açıkla, karşılaştır, sırala & 1--7 & 12 \\
+C & Sayısal problemler & 4--7 (+1, 3) & 36 \\
+D & Komutu yazın & 9--13 & 14 \\
+E & Boru hattını yazın & 12 & 9 \\
+F & Kısa bir Bash betiği yazın & 14 & 9 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+{\small *Örnek kâğıdın ve aşağıdaki Alıştırma Finalinin puan dağılımı [gerçek kâğıt biraz farklı olabilir --- kesinleşecek].}
+
+% =====================================================================
+\section{Kuram Tekrarı: 1--7. Haftalar}
+\label{sec:theory}
+
+Her hafta için: kısa bir özet, kutu içinde formüller ve tipik sınav soruları. Buradaki bir satır size yabancı geliyorsa o haftanın notlarına dönün ve tekrar sorularını yeniden çözün.
+
+\subsection{1. hafta: Giriş ve tarihçe}
+Bir bilgisayar komutları izler (girdi $\to$ işlem $\to$ çıktı, program bellekte saklanır); işletim sisteminin ilk çalışma tanımı \emph{önce başlayan ve diğer her şeyi yöneten program}dır. Tarihçe yazılımsız dönemden (ENIAC, 1945), \term{yerleşik monitörlü} (resident monitor) \term{toplu işleme} (batch processing; GM-NAA I/O, 1956), bir makine ailesi için tek işletim sistemi (IBM System/360, 1964), \term{çoklu programlama} (multiprogramming) ve \term{zaman paylaşımı} (time-sharing; CTSS 1961, Multics), UNIX (1969) ve kişisel bilgisayar üzerinden Linux'a (1991), telefonlara (iPhone 2007, Android 2008) ve buluta uzanır. Her adımı boşta kalan işlemcinin maliyeti yönlendirdi.
+\begin{example}[1. hafta formülleri]
+\[
+U = \frac{t_{\text{çalışma}}}{t_{\text{çalışma}} + t_{\text{hazırlık}}}, \qquad U(n) = 1 - p^{\,n}\quad(p = \text{bir işin G/Ç beklediği zaman kesri}).
+\]
+\end{example}
+\textit{Tipik sorular:} kilometre taşlarını sıraya koyun; neden toplu iş, neden çoklu programlama, neden zaman paylaşımı; $U$'yu hesaplayın, ör.\ $t_{\text{çalışma}} = 2$~dk, $t_{\text{hazırlık}} = 3$~dk ise $U = 2/5 = 0.4$; $p = 0.6$, $n=3$ ise $U(3) = 1 - 0.216 = 0.784$.
+
+\subsection{2. hafta: Tanımlar, hedefler, bileşenler, yapılar}
+İki klasik bakış: \term{genişletilmiş makine} (extended machine; soyutlama, yukarıdan aşağıya) olarak ve \term{kaynak yöneticisi} (resource manager; zamanda ve uzayda paylaştırma, aşağıdan yukarıya) olarak işletim sistemi; bellekte sürekli duran özü \term{çekirdektir} (kernel). Tasarım hedefleri: kolaylık, verimlilik, gelişebilirlik. Bir bilgisayar sisteminin dört bileşeni vardır: donanım, işletim sistemi, uygulama programları, kullanıcılar. Aygıtlar işlemciye \term{kesmelerle} (interrupt) haber verir. Bellek hiyerarşisi yazmaçlardan ($\approx 0.3$~ns) önbellek, RAM ($\approx 100$~ns) ve SSD üzerinden HDD'ye ($\approx 5$~ms) iner; yazmaçlar, önbellek ve RAM uçucudur. \term{İkili mod çalışması} (dual-mode operation): mod biti $0$ = çekirdek modu (tüm komutlara izin var), $1$ = kullanıcı modu (ayrıcalıklı komutlar yasak); bir \term{sistem çağrısı} (system call) çekirdek moduna geçer ve bir fonksiyon çağrısından çok daha pahalıdır. Yapılar: basit (MS-DOS), monolitik (UNIX, Linux), katmanlı (THE), mikroçekirdek (MINIX~3, QNX, seL4), modüler (yüklenebilir çekirdek modülleri), hibrit (Windows, macOS, Android).
+\textit{Tipik sorular:} iki bakış açısı; koruma neden donanım ister; monolitik ve mikroçekirdeği karşılaştırın (hız ve güvenilirlik).
+
+\subsection{3. hafta: İşletim sistemi hizmetleri, sistem çağrıları, süreçler}
+Hizmetler kullanıcıya (kullanıcı arayüzü, program yürütme, G/Ç, dosya sistemleri, iletişim, hata algılama) ve sisteme (kaynak tahsisi, hesap tutma, koruma ve güvenlik) yardım eder. Program bir API fonksiyonunu çağırır; ince bir kütüphane \term{sarmalayıcısı} (wrapper) sistem çağrısı \emph{numarasını} bir yazmaca koyar (x86-64 Linux'ta \texttt{rax}) ve tuzak (trap) komutunu çalıştırır; çekirdek bu numarayı \term{sistem çağrısı tablosunda} (system-call table) indeks olarak kullanır. Parametreler yazmaçlarda, bir bellek bloğunda ya da yığıtta aktarılır.
+
+\term{Süreç} (process) yürütülmekte olan bir programdır; text, data, bss, öbek (heap) ve yığıt (stack) bölümleri vardır. Şu durumlardan geçer: \emph{yeni, hazır, çalışıyor, bekliyor, sonlandı}; geçişler: kabul edildi, zamanlayıcı görevlendirir (dispatch), kesme, G/Ç ya da olay bekleme, G/Ç ya da olay tamamlandı, çıkış. Bekleyen bir süreç hiçbir zaman doğrudan çalışıyor durumuna geçemez. \term{Süreç denetim bloğu} (PCB) durumu, program sayacını, yazmaçları, zamanlama, bellek ve dosya bilgilerini saklar. \term{Bağlam değişimi} (context switch) bir PCB'yi kaydedip diğerini yükler ve saf ek yüktür. \cmd{fork()} bir kopya oluşturur, \cmd{exec()} yeni bir program yükler, \cmd{wait()} bir çocuğu bekler.
+\begin{example}[3. hafta formülleri]
+\[
+\text{geçiş ek yükü} = \frac{s}{q + s}, \qquad \text{döngüde } n \text{ fork} \Rightarrow 2^{n} \text{ süreç } (2^{n}-1 \text{ tanesini } \cmd{fork()} \text{ oluşturur}).
+\]
+$s = 0.1$~ms ve $q = 4$~ms ile $0.1/4.1 = 0.0244$: işlemci zamanının \%2,44'ü geçişte harcanır.
+\end{example}
+
+\subsection{4. hafta: İş parçacıkları ve işlemci zamanlamasının temelleri}
+Bir \term{iş parçacığının} (thread) kendine ait iş parçacığı kimliği, program sayacı, yazmaçları ve yığıtı vardır; bir sürecin iş parçacıkları kodu, veriyi, öbeği ve açık dosyaları paylaşır. Yararları: yanıt verebilirlik, kaynak paylaşımı, ekonomi, ölçeklenebilirlik. \term{Eşzamanlılık} (concurrency) birden çok görevin ilerlemesi demektir; \term{paralellik} (parallelism) birden çok çekirdek ister. Çoklu iş parçacığı modelleri: çoktan bire, birebir (Linux, Windows), çoktan çoka. Süreçler CPU ve G/Ç patlamaları (burst) arasında gidip gelir; kısa vadeli zamanlayıcı hazır kuyruğundan seçer, dağıtıcı (dispatcher) geçişi yapar; kesintili (preemptive) zamanlayıcılar çalışan bir süreci kesebilir.
+\begin{example}[4. hafta formülleri]
+\begin{align*}
+\text{hızlanma}(N) &\le \frac{1}{S + \dfrac{1-S}{N}}, \qquad \lim_{N\to\infty} = \frac{1}{S};\\
+T_{\text{dönüş}} &= T_{\text{tamamlanma}} - T_{\text{geliş}},\qquad
+T_{\text{bekleme}} = T_{\text{dönüş}} - T_{\text{patlama}},\\
+T_{\text{yanıt}} &= T_{\text{ilk çalışma}} - T_{\text{geliş}};\\
+\text{işlemci kullanımı} &= \frac{B}{T}, \qquad \text{üretilen iş} = \frac{n}{T}.
+\end{align*}
+\end{example}
+\textit{Tipik sorular:} iş parçacıkları neyi paylaşır; modelleri karşılaştırın; Amdahl ($S = 0.2$, $N = 4$: $1/(0.2+0.2) = 2.5$, asla $5$'ten fazla değil); ölçütler (kullanım oranını ve üretilen işi en büyük; dönüş, bekleme ve yanıt süresini en küçük yap).
+
+\subsection{5. hafta: Zamanlama algoritmaları ve eşzamanlama}
+\textbf{FCFS} (konvoy etkisi), \textbf{SJF} (tüm işler birlikte hazırsa en küçük ortalama bekleme süresi), \textbf{SRTF} (kesintili sürümü), \textbf{Öncelik} (küçük numara = yüksek öncelik; açlık, \term{yaşlandırma} (aging) ile giderilir), \textbf{Round Robin} (zaman dilimi $q$; iki sıra arası bekleme en çok $(n-1)q$; $q$ çok büyükse $\to$ FCFS, çok küçükse $\to$ geçiş ek yükü).
+
+\begin{keyidea}[Bu dersin zamanlama uzlaşımları --- sınavda belirtin]
+Bağlam değişimi süresi $0$'dır; eşitlikler önce varış zamanına, sonra süreç adına göre bozulur; \emph{küçük} öncelik numarası \emph{yüksek} öncelik demektir; Round Robin'de, bir zaman diliminin dolduğu anda gelen süreç hazır kuyruğuna kesilen süreçten \emph{önce} girer.
+\end{keyidea}
+
+\term{Yarış durumu} (race condition), eşzamanlı iş parçacıkları ortak veriye eriştiğinde, en az biri yazdığında ve sonuç zamanlamaya bağlı olduğunda ortaya çıkar (\texttt{counter++} yükle--topla--sakla demektir). \term{Kritik bölge problemine} (critical-section problem) bir çözüm \emph{karşılıklı dışlamayı}, \emph{ilerlemeyi} ve \emph{sınırlı beklemeyi} güvence altına almalıdır. Muteks kilitleri (\texttt{acquire}/\texttt{release}) ve semaforlar (\texttt{wait(S)}: $S \le 0$ olduğu sürece bekle, sonra $S{-}{-}$; \texttt{signal(S)}: $S{+}{+}$; POSIX'te \cmd{sem\_wait}/\cmd{sem\_post}) atomik donanım komutları üzerine kuruludur. Sınırlı tampon \texttt{empty}, \texttt{full} ve \texttt{mutex} kullanır; tutarsız sıralarla alınan kilitler kilitlenmeye (deadlock) yol açabilir.
+\begin{example}[5. hafta formülü]
+\[
+\tau_{n+1} = \alpha\, t_n + (1-\alpha)\,\tau_n, \qquad 0 \le \alpha \le 1.
+\]
+\end{example}
+
+\subsection{6. hafta: Bellek yönetimi}
+Adres bağlama derleme, yükleme ya da yürütme anında olur; modern sistemler yürütme anında bağlar; bu yüzden \term{mantıksal} (logical) ve \term{fiziksel} (physical) adresler farklıdır ve çeviriyi \term{MMU} yapar. Taban ve sınır: $0 \le a < \text{sınır}$ ise $a_{\text{fiz}} = \text{taban} + a$, değilse tuzak. İlk uyan (yeten ilk delik), en iyi uyan (yeten en küçük), en kötü uyan (en büyük) ile bitişik yer ayırma \term{dış parçalanmadan} (external fragmentation) muzdariptir (\%50 kuralı: belleğin üçte birine kadarı kaybolur); sıkıştırma yardımcı olur ama pahalıdır. \term{Sayfalama} (paging) mantıksal belleği sayfalara, fiziksel belleği eşit çerçevelere böler: dış parçalanma olmaz, yalnızca \term{iç parçalanma} (internal fragmentation) kalır (süreç başına ortalama yarım sayfa). \term{TLB} sayfa tablosu girdilerini önbellekte tutar. \term{Bölütleme} (segmentation) $\langle s, d\rangle$ adresini her bölüt için bir taban ve bir sınırla çevirir.
+\begin{example}[6. hafta formülleri]
+$2^{n}$ baytlık sayfalarla:
+\[
+p = \left\lfloor \frac{a}{2^{n}} \right\rfloor,\qquad d = a \bmod 2^{n},\qquad a_{\text{fiz}} = f \cdot 2^{n} + d;
+\]
+\[
+\text{EAT} = \alpha\,(t_{\text{TLB}} + t_m) + (1-\alpha)\,(t_{\text{TLB}} + 2t_m) = t_{\text{TLB}} + (2-\alpha)\,t_m \quad\text{(bizim uzlaşımımız)}.
+\]
+Sayfa tablosu boyutu = sayfa sayısı $\times$ girdi boyutu; ör.\ $32$ bitlik adresler ve $4$~KB'lık sayfalar için $2^{20} \times 4$~B $= 4$~MB.
+\end{example}
+
+\subsection{7. hafta: Sanal bellek ve dosya sistemleri}
+\term{İsteğe bağlı sayfalama} (demand paging) bir sayfayı ilk kullanımda yükler; geçerli--geçersiz bit bellekte olmayan sayfaları işaretler; bunlardan birine dokunmak bir \term{sayfa hatasına} (page fault) yol açar: tuzak, sayfayı diskte bul, boş bir çerçeveye oku, tabloyu güncelle, komutu yeniden başlat. Yazınca kopyala (copy-on-write) \cmd{fork()}'u ucuzlatır. Boş çerçeve kalmadığında bir değiştirme algoritması kurban seçer: \textbf{FIFO} (en eski sayfa; Belady anomalisi olabilir), \textbf{OPT} (gelecekte en geç kullanılacak olan; en iyisidir ama geleceği bilmeyi gerektirir), \textbf{LRU} (en uzun süredir kullanılmayan; saat/ikinci şans algoritmasıyla yaklaşık olarak gerçekleştirilir). \term{Boşa çalışma} (thrashing): süreçlerin çerçeve sayısı çalışma kümelerinden azdır ve zamanlarını sayfalamayla geçirirler. Dosyalar öznitelikleri olan adlandırılmış verilerdir (Linux'ta düğüm, inode); erişim sıralı, doğrudan ya da indekslidir. Dizinler: tek düzeyli, iki düzeyli, ağaç, döngüsüz çizge (sabit ve sembolik bağlantılar), genel çizge.
+\begin{example}[7. hafta formülleri]
+\[
+\text{EAT} = (1-p)\,t_m + p\,t_{\text{fault}}; \qquad
+\text{bayt} = r \times \text{kayıt boyutu},\quad \text{blok} = \left\lfloor \frac{\text{bayt}}{B} \right\rfloor,\quad \text{konum} = \text{bayt} \bmod B.
+\]
+\end{example}
+
+% =====================================================================
+\section{Uygulama Tekrarı: 9--14. Haftalar}
+\label{sec:practical}
+
+{\sloppy \paragraph{Çıktılar hakkında.} Bu kısımdaki her terminal oturumu gerçek çıktıdır; sıradan bir kullanıcı olarak, yeni oluşturulmuş bir \texttt{\textasciitilde/lab} klasöründe kaydedildi (önce \cmd{bash mcmp117\_lab\_setup.sh} çalıştırın; betik \texttt{code/} klasöründedir). Komutlar \texttt{code/demo\_recap.sh}, \texttt{code/demo\_worked.sh} ve \texttt{code/answers\_*.sh} dosyalarında, çıktılar \texttt{code/out\_*.txt} dosyalarındadır. Sizin makinenizde tarihler, boyutlar, PID'ler ve kullanıcı adları farklı olacaktır; \cmd{ls} ve \cmd{sort} çıktısının sırası yerel ayara (locale) bağlı olabilir; biz \cmd{LC\_ALL=C.UTF-8} kullandık. Türkçe yerel ayarlı bir sistemde (\cmd{LANG=tr\_TR.UTF-8}) birçok ileti Türkçe görünür ve sıralama farklı olabilir; komutlar ve seçenekleri ise aynıdır.\par}
+
+\subsection{9. hafta: Kabuk temelleri ve gezinme}
+\emph{Terminal} penceredir; \emph{kabuk} (shell; bash) komutları okuyan bir sistem programıdır; işi sistem çağrıları aracılığıyla çekirdek yapar (2. hafta). Bir komutun biçimi \texttt{komut -seçenekler argümanlar} şeklindedir. \cmd{pwd} çalışma dizinini (working directory) yazdırır, \cmd{ls} listeler (\cmd{-l} uzun, \cmd{-a} gizli, \cmd{-h} okunabilir boyutlar, \cmd{-R} özyinelemeli), \cmd{cd} dizin değiştirir. \term{Mutlak yollar} (absolute path) \texttt{/} ile başlar; \term{göreli yollar} (relative path) çalışma dizininden başlar; \texttt{\textasciitilde} ev dizini, \texttt{.} burası, \texttt{..} üst dizin, \cmd{cd -} geri döner. Önemli dizinler (FHS): \texttt{/home}, \texttt{/etc}, \texttt{/bin}, \texttt{/usr}, \texttt{/var}, \texttt{/tmp}, \texttt{/dev}, \texttt{/proc}. Yardım: \cmd{man} (q çıkar, \texttt{/sözcük} arar), \cmd{--help}. Sekme tamamlama, \cmd{history}, \cmd{!!}, Ctrl+C, Ctrl+L.
+\Needspace{14\baselineskip}
+\lstinputlisting[style=term]{../code/out_w09.txt}
+
+\subsection{10. hafta: Dosya ve dizin işlemleri}
+\cmd{mkdir -p}, \cmd{touch}, \cmd{cp} (\cmd{-r -i -v}), \cmd{mv} (yeniden adlandır ya da taşı), \cmd{rm} (\cmd{-r -i}; \textbf{geri dönüşüm kutusu yoktur}: Enter'a basmadan önce yolu denetleyin), \cmd{rmdir}. Joker karakterler (wildcards) \texttt{*} (herhangi bir dizgi), \texttt{?} (tam olarak tek karakter), \texttt{[abc]}, \texttt{[0-9]} ve süslü ayraç genişletmesi (brace expansion) \texttt{\{a,b\}}, \texttt{\{1..5\}}, komut çalışmadan önce \emph{kabuk tarafından} genişletilir. Boşluklu adları tırnaklayın. Görüntüleme: \cmd{cat}, \cmd{less}, \cmd{head}, \cmd{tail -n}/\cmd{-f}, \cmd{wc}, \cmd{file}, \cmd{stat}; boyutlar \cmd{du -sh}, \cmd{df -h}; bağlantılar \cmd{ln} (sabit) ve \cmd{ln -s} (sembolik), düğüm numaraları \cmd{ls -i} ile (7. hafta).
+\Needspace{20\baselineskip}
+\lstinputlisting[style=term]{../code/out_w10.txt}
+
+\subsection{11. hafta: İzinler, sahiplik ve kullanıcılar}
+\texttt{-rwxr-x---} mod dizgisinde bir tür karakteri ve sahip (u), grup (g) ve diğerleri (o) için üç üçlü vardır. Dosyalar için r/w/x okuma/yazma/çalıştırma anlamına gelir; dizinler için r listeler, w girdi oluşturur ve siler, x içine girer (\cmd{cd}). Sekizli gösterim: $r = 4$, $w = 2$, $x = 1$; dolayısıyla \texttt{rwxr-x---} $= 750$ ($7 = 4+2+1$, $5 = 4+1$, $0$). \cmd{chmod} sembolik (\cmd{u+x}, \cmd{go-w}, \cmd{a=r}) ya da sekizli kullanılır. \term{umask} istenen moddan (dosyalar için $666$, dizinler için $777$) bit \emph{siler}: yeni mod $=$ istenen mod AND NOT umask (bit düzeyinde; çıkarma değil); umask $002$ $664$/$775$, umask $027$ $640$/$750$ verir. \cmd{chown}/\cmd{chgrp} root yetkisi ister; \cmd{sudo} tek bir komutu root olarak çalıştırır --- yazmadan önce düşünün. Bir izin sorununu asla \cmd{chmod 777} ile ``çözmeyin'': bu, her kullanıcının dosyayı değiştirmesine izin verir.
+\Needspace{16\baselineskip}
+\lstinputlisting[style=term]{../code/out_w11.txt}
+
+\subsection{12. hafta: Metin işleme, yönlendirme ve borular}
+Her süreç üç açık dosya tanımlayıcısıyla başlar: $0$ standart girdi (stdin), $1$ standart çıktı (stdout), $2$ standart hata (stderr) (2--3. haftalar: \cmd{write(1, \dots)}). \term{Yönlendirme} (redirection): \cmd{>} üzerine yaz, \cmd{>>} sona ekle, \cmd{<} girdi, \cmd{2>} hatalar, \cmd{2>\&1} hataları stdout'un gittiği yere, \cmd{\&>} ikisi birden, \cmd{/dev/null} atar. Bir \term{boru} (pipe) \cmd{a | b}, \texttt{a}'nın stdout'unu \texttt{b}'nin stdin'ine bağlar; iki süreci de kabuk oluşturur (3. hafta). Süzgeçler: \cmd{grep} (\cmd{-i -n -v -c -r -w}; düzenli ifadeler \texttt{\^{} \$ . [ ] *}), \cmd{sort} (\cmd{-n -r -t -k}), \cmd{uniq} (\cmd{-c}; sıralı girdi ister), \cmd{cut} (\cmd{-d -f}), \cmd{wc}, \cmd{tr}, \cmd{head}, \cmd{tail}, \cmd{tee}, \cmd{find} (\cmd{-name -type -size -mtime}), \cmd{xargs}.
+\Needspace{19\baselineskip}
+\lstinputlisting[style=term]{../code/out_w12.txt}
+\texttt{logs/access.log} dosyasında boşlukla ayrılmış alanlar şunlardır: $1$ IP adresi, $4$--$5$ tarih ve saat dilimi, $6$--$8$ istek (yöntem, sayfa, protokol), $9$ durum kodu, $10$ bayt sayısı. \texttt{data/students.csv} dosyasında (başlık \texttt{id,name,department,midterm,final}) virgülle ayrılmış alanlar $1$--$5$'tir.
+
+\subsection{13. hafta: Süreçler ve iş denetimi}
+\cmd{ps}, \cmd{ps -ef}, \cmd{ps aux} (PID, PPID, STAT, \%CPU, \%MEM sütunları), \cmd{pstree}, \cmd{top}/\cmd{htop}, \texttt{/proc/<pid>/status}. STAT 3. haftanın durumlarını gösterir: \texttt{R} çalışıyor ya da hazır, \texttt{S} uyuyor (bekliyor), \texttt{T} durdurulmuş, \texttt{Z} zombi. \term{İşler} (jobs): \cmd{cmd \&} arka planda (background) çalıştırır, \cmd{jobs} listeler, \cmd{fg}/\cmd{bg} ön plana (foreground) ya da arka plana taşır, Ctrl+Z durdurur (SIGTSTP), Ctrl+C keser (SIGINT). \term{Sinyaller} (signals): \cmd{kill PID} SIGTERM gönderir ($15$, ``lütfen dur''), \cmd{kill -9} SIGKILL gönderir (yakalanamaz, yok sayılamaz --- süreç temizlik yapma fırsatı bulamaz: yalnızca SIGTERM işe yaramazsa kullanın), SIGSTOP ($19$) ve SIGCONT ($18$); \cmd{pkill}, \cmd{killall}. \texttt{\$\$} kabuğun, \texttt{\$!} son arka plan işinin PID'idir. \cmd{nice}/\cmd{renice}: $-20$ (en yüksek öncelik) ile $19$ arası değerler; bunları yalnızca root düşürebilir (5. hafta).
+\Needspace{20\baselineskip}
+\lstinputlisting[style=term]{../code/out_w13.txt}
+İlk \cmd{ps} satırı komutlarımızı çalıştıran kabuktur (burada bir betik; sizin terminalinizde \texttt{bash} göreceksiniz). Etkileşimli bir terminalde kabuk bir sonraki istemde ayrıca \texttt{[1]+ Terminated sleep 600} bildirir.
+
+\subsection{14. hafta: Kabuk betikleri}
+Bir \term{betik} (script) \texttt{\#!/bin/bash} shebang satırıyla başlar; \cmd{chmod +x s.sh; ./s.sh} ya da \cmd{bash s.sh} ile çalıştırılır; \cmd{bash -x} ile hata ayıklanır. \term{Değişkenler} (variables): \texttt{x=5} (\texttt{=} çevresinde boşluk yok); \texttt{"\$x"} genişler, \texttt{'\$x'} genişlemez; komut yerine koyma \texttt{\$(cmd)}; tamsayı aritmetiği \texttt{\$((x + 1))}. Konumsal parametreler \texttt{\$0 \$1 \$\# \$@}; \texttt{\$?} son komutun çıkış durumudur, \cmd{exit n} betiğin kendi çıkış durumunu belirler. Sınamalar \texttt{[ \dots\ ]} (köşeli ayraçların içinde boşluk!): sayılar \texttt{-eq -ne -lt -le -gt -ge}, dizgiler \texttt{= != -z}, dosyalar \texttt{-f -d -e}. Denetim: \term{koşul} \texttt{if/elif/else/fi}, \term{döngüler} \texttt{for \dots\ in \dots; do \dots; done} ve \texttt{while}, fonksiyonlar. 14. haftada \texttt{backup.sh} ve \texttt{report.sh} betiklerini yazdık.
+\Needspace{17\baselineskip}
+\lstinputlisting[style=term]{../code/out_w14.txt}
+
+% =====================================================================
+\section{Formül ve Komut Kâğıdı}
+\label{sec:sheet}
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{3.1cm}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Hafta} & \textbf{Büyüklük} & \textbf{Formül} \\
+\midrule
+1 & Toplu iş kullanımı & $U = t_{\text{çalışma}}/(t_{\text{çalışma}} + t_{\text{hazırlık}})$ \\
+1 & Çoklu programlama & $U(n) = 1 - p^{n}$ \\
+3 & Geçiş ek yükü; fork & $s/(q+s)$; \ döngüde $n$ fork $\Rightarrow 2^{n}$ süreç \\
+4 & Amdahl yasası & $\text{hızlanma} \le 1/\bigl(S + (1-S)/N\bigr)$, sınır $1/S$ \\
+4 & Süreler & $T_{\text{dönüş}} = T_{\text{tamamlanma}} - T_{\text{geliş}}$; $T_{\text{bekleme}} = T_{\text{dönüş}} - T_{\text{patlama}}$; $T_{\text{yanıt}} = T_{\text{ilk çalışma}} - T_{\text{geliş}}$ \\
+4 & Kullanım, üretilen iş & $B/T$, \ $n/T$ \\
+5 & Patlama tahmini; RR & $\tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n$; \ iki sıra arası bekleme $\le (n-1)q$ \\
+6 & Taban/sınır & $0 \le a < \text{sınır} \Rightarrow a_{\text{fiz}} = \text{taban} + a$, değilse tuzak \\
+6 & Sayfalama & $p = \lfloor a/2^{n}\rfloor$, $d = a \bmod 2^{n}$, $a_{\text{fiz}} = f\cdot 2^{n} + d$ \\
+6 & TLB & $\text{EAT} = t_{\text{TLB}} + (2-\alpha)\,t_m$ \ (sadeleştirilmiş, $t_{\text{TLB}} = 0$: $\alpha t_m + (1-\alpha) 2t_m$) \\
+7 & Sayfa hataları & $\text{EAT} = (1-p)\,t_m + p\,t_{\text{fault}}$ \\
+7 & Doğrudan erişim & bayt $= r \times$ boyut; blok $= \lfloor \text{bayt}/B \rfloor$; konum $=$ bayt $\bmod B$ \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.6em}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.0cm}>{\ttfamily\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.0cm}>{\ttfamily\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Görev} & \textbf{\rmfamily Komut} & \textbf{Görev} & \textbf{\rmfamily Komut} \\
+\midrule
+Neredeyim? & pwd & Satır bul & grep -n -i -v -c -w \\
+Uzun, gizliler dahil & ls -la \ (-h) & $k$. alan & cut -d, -f3 \\
+Dizin değiştir & cd \textasciitilde\ \ cd - \ cd .. & Sırala & sort -n -r -t, -k5 \\
+Klasör oluştur & mkdir -p a/b & Tekrarları say & sort | uniq -c \\
+Kopyala / taşı & cp -r a b \ mv a b & Başlığı atla & tail -n +2 f \\
+Sil & rm -i f \ rm -r dir & Dosya bul & find . -name "*.c" \\
+Bağlantılar & ln f h \ ln -s f s & Yönlendir & > >> < 2> 2>\&1 \&> \\
+Dosyaya bak & cat less head tail & Süreçler & ps aux \ ps -ef \ top \\
+Say, boyutlar & wc -l \ du -sh \ df -h & İşler & cmd \& \ jobs \ fg \%1 \ bg \\
+İzinler & chmod 640 f \ chmod u+x f & Sinyaller & kill PID \ kill -9 PID \\
+Kullanıcılar & whoami \ id \ groups & Öncelik & nice -n 10 cmd \\
+Sahip (root) & sudo chown u:g f & Betik & \#!/bin/bash \ \$1 \$\# \$? \\
+Yardım & man ls \ ls -{}-help & Aritmetik & \$((x + 1)) \ \$(cmd) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% =====================================================================
+\section{Dersteki Çözümlü Problemler}
+\label{sec:lecture}
+
+Aşağıdaki tüm sayılar \texttt{code/theory\_check.py} ile hesaplandı (çıktısı \texttt{code/out\_theory\_check.txt} dosyasında).
+
+\Needspace{12\baselineskip}
+\subsection{Problem 1: SRTF ve Round Robin}
+P1 (varış $0$, patlama $5$), P2 ($1$, $3$), P3 ($2$, $1$), P4 ($3$, $4$); süreler ms.
+\begin{center}
+\makebox[1.6cm][r]{\textbf{SRTF}}\quad\gantt{0.85}{P1/0/1, P2/1/2, P3/2/3, P2/3/5, P1/5/9, P4/9/13}\\[0.6em]
+\makebox[1.6cm][r]{\textbf{RR, $q=2$}}\quad\gantt{0.85}{P1/0/2, P2/2/4, P3/4/5, P1/5/7, P4/7/9, P2/9/10, P1/10/11, P4/11/13}
+\end{center}
+SRTF: $t=1$'de P2 ($3$) P1'i ($4$ kaldı) keser; $t=2$'de P3 ($1$) P2'yi keser; P2 $5$'te biter; sonra P1 ile P4'ün ikisi de $4$~ms ister ve eşitlik P1'in lehine bozulur (daha erken varış). Bekleme süreleri $4, 1, 0, 6$: ortalama $11/4 = 2.75$~ms; dönüş süreleri $9, 4, 1, 10$: ortalama $6$~ms. RR: $t=2$'de kuyruk P2, P3, P1'dir (P3 tam $2$'de geldi ve kesilen P1'den önce girer). Bekleme $6, 6, 2, 6$: ortalama $5$~ms; dönüş $11, 9, 3, 10$: ortalama $8.25$~ms; yanıt $0, 1, 2, 4$: ortalama $1.75$~ms (SRTF: $1.5$~ms).
+
+\subsection{Problem 2: adres çevirisi ve TLB}
+$1$~KB $= 2^{10}$ baytlık sayfalar; sayfa tablosu $0\to5$, $1\to2$, $2\to7$, $3\to1$. Mantıksal adres $2500$: $p = \lfloor 2500/1024 \rfloor = 2$, $d = 2500 - 2048 = 452$, çerçeve $7$, $a_{\text{fiz}} = 7 \times 1024 + 452 = 7620$. $t_{\text{TLB}} = 10$~ns, $t_m = 100$~ns, $\alpha = 0.9$ ile: $\text{EAT} = 10 + 1.1 \times 100 = 120$~ns ($= 0.9 \times 110 + 0.1 \times 210$). $\text{EAT} = 115$~ns için: $10 + (2-\alpha)\,100 = 115 \Rightarrow \alpha = 0.95$.
+
+\subsection{Problem 3: sayfa değiştirme}
+$3$ çerçeveyle $3, 5, 1, 0, 3, 1, 0, 3, 1, 4, 1, 0$ başvuru dizisi: FIFO $8$, LRU $7$, OPT $5$ hata. LRU tablosu (kalın = yeni yüklenen sayfa):
+\begin{center}
+\small
+\begin{tabular}{@{}l*{12}{c}@{}}
+\toprule
+başv. & \textbf{3} & \textbf{5} & \textbf{1} & \textbf{0} & \textbf{3} & \textbf{1} & \textbf{0} & \textbf{3} & \textbf{1} & \textbf{4} & \textbf{1} & \textbf{0} \\ \midrule
+çr.\ 0 & \nw{3} & 3 & 3 & \nw{0} & 0 & 0 & 0 & 0 & 0 & \nw{4} & 4 & 4 \\
+çr.\ 1 &  & \nw{5} & 5 & 5 & \nw{3} & 3 & 3 & 3 & 3 & 3 & 3 & \nw{0} \\
+çr.\ 2 &  &  & \nw{1} & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+\midrule hata & \F & \F & \F & \F & \F &  &  &  &  & \F &  & \F \\ \bottomrule
+\end{tabular}
+\end{center}
+OPT dördüncü başvuruda ($0$) bir daha hiç kullanılmayan $5$'i, $4$ başvurusunda da bir daha gerekmeyen $3$'ü çıkarır: $5$ hata, bunların üçü zorunlu hatadır.
+
+\subsection{Problem 4: kısa hesaplar}
+\begin{itemize}
+  \item $t_m = 100$~ns, $t_{\text{fault}} = 10$~ms $= 10^{7}$~ns, $p = 0.0002$: $\text{EAT} = 0.9998 \times 100 + 0.0002 \times 10^{7} = 99.98 + 2000 = 2099.98$~ns, yani RAM'den $21$ kat yavaş. Yavaşlamanın \%10'un altında kalması için: $p < 10/9\,999\,900 \approx 1.0\times10^{-6}$.
+  \item Kayıt $75$, $128$~B'lık kayıtlar, $4096$~B'lık bloklar: bayt $9600$, blok $\lfloor 9600/4096 \rfloor = 2$, konum $9600 - 8192 = 1408$; son bayt $9727$ hâlâ blok $2$'dedir.
+  \item $U(3) = 1 - 0.6^{3} = 0.784$; toplu iş $2/(2+3) = 0.4$; ek yük $0.1/4.1 = 0.0244$ (\%2,44); Amdahl $1/(0.2 + 0.8/4) = 2.5$.
+\end{itemize}
+
+\subsection{Problem 5--7: komut, boru hattı, betik}
+\textbf{İzinler.} \texttt{rwx r-x ---} $= 750$, dolayısıyla \cmd{chmod 750 report.sh}. \cmd{umask 027}'den sonra $666$/$777$'den $0$, $2$, $7$ bitleri silinir: yeni dosyalar $640$, yeni dizinler $750$.
+\Needspace{14\baselineskip}
+\lstinputlisting[style=term]{../code/out_wp_perm.txt}
+\textbf{\texttt{access.log} üzerinde boru hatları.} İlk-N kalıbı: \cmd{cut | sort | uniq -c | sort -rn | head}. 404 sayısı için önce durum alanını kesin: \texttt{404} bir bayt sayısının içinde de geçebilir.
+\Needspace{11\baselineskip}
+\lstinputlisting[style=term]{../code/out_wp_pipe.txt}
+\textbf{\texttt{dept\_stats.sh} betiği.} \texttt{\$((sum / count))} içindeki tamsayı bölmesine dikkat: $1072/17 = 63.06$, $63$ olarak yazdırılır.
+\Needspace{22\baselineskip}
+\lstinputlisting[style=sh]{../code/dept_stats.sh}
+\Needspace{12\baselineskip}
+\lstinputlisting[style=term]{../code/out_wp_script_run.txt}
+
+% =====================================================================
+\section{Sık Yapılan Hatalar ve Sınav Stratejisi}
+\label{sec:mistakes}
+
+\begin{description}[leftmargin=0pt,itemsep=0.2em]
+  \item[Bekleme ve dönüş] Bekleme $=$ dönüş $-$ patlama; dönüş süresi $0$'dan değil, \emph{varıştan} başlar.
+  \item[Round Robin kuyruğu] Zaman diliminin dolduğu anda gelen süreç, kesilen süreçten önce kuyruğa girer.
+  \item[Birimler] $8$~ms $= 8\,000\,000$~ns. Önce çevirin, sonra yerine koyun.
+  \item[TLB ıskası] Bir ıska iki bellek erişimine (sayfa tablosu ve veri) ve TLB aramasına mal olur.
+  \item[LRU ve OPT] LRU geriye bakar, OPT ileriye bakar.
+  \item[Blok hesabı] Kayıtlar ve bloklar $0$'dan numaralanır; son baytın bir sonraki bloğa geçip geçmediğine bakın.
+  \item[\texttt{sort} olmadan \texttt{uniq}] \cmd{uniq -c} yalnızca \emph{ardışık} eşit satırları birleştirir.
+  \item[Boşluklar] \texttt{x=5}, \texttt{x = 5} değil (``command not found''); \texttt{[ \$a -gt 3 ]}, \texttt{[\$a -gt 3]} değil.
+  \item[Tırnaklar] \texttt{"\$x"} genişler, \texttt{'\$x'} genişlemez; boşluklu adları tırnaklayın: \texttt{"final report.txt"}.
+  \item[\texttt{>} ve \texttt{>>}] \texttt{>} üzerine yazar, \texttt{>>} sona ekler, \texttt{2>} yalnızca hataları yönlendirir.
+  \item[Fazla güçlü araçlar] \cmd{chmod 777}, \cmd{rm -r}, \cmd{kill -9}: fazla izin, geri alma yok, temizlik yok.
+\end{description}
+
+\begin{tryit}[Sınav stratejisi]
+\begin{itemize}
+  \item \textbf{Önce:} 1--7. haftaların tekrar sorularını ve 9--14. haftaların laboratuvar föylerini yeniden çözün; aşağıdaki Alıştırma Finalini süre tutarak kâğıt üzerinde, ardından örnek kâğıdı çözün; komut kâğıdındaki her komutu \texttt{\textasciitilde/lab} içinde yazın.
+  \item \textbf{Sırasında:} önce bütün kâğıdı okuyun ($5$~dk); en iyi bildiğinizle başlayın; puan başına yaklaşık bir dakika düşün, bu yüzden A ve D bölümlerini hızlı yapıp zamanı C bölümüne harcayın; formül $\to$ sayılar $\to$ birimiyle sonuç biçiminde yazın; kullandığınız uzlaşımları belirtin; hiçbir soruyu boş bırakmayın.
+\end{itemize}
+\end{tryit}
+
+% =====================================================================
+\Needspace{18\baselineskip}
+\section{Alıştırma Finali (100 puan)}
+\label{sec:pf}
+
+{\sloppy Çözümleri (Kısım~\ref{sec:pfsol}) okumadan önce bu kâğıdı kendi başınıza, [90] dakikada çözün. Komutlar \cmd{mcmp117\_lab\_setup.sh} ile oluşturulan \texttt{\textasciitilde/lab} klasörüne göredir; soruda aksi belirtilmedikçe çalışma dizininizin \texttt{\textasciitilde/lab} olduğunu varsayın.\par}
+
+\subsection*{Bölüm A --- Çoktan seçmeli (10 $\times$ 2 = 20 puan)}
+\begin{enumerate}[leftmargin=1.6em,label=A\arabic*.]
+  \item Hangisi 2. haftadaki üç işletim sistemi tasarım hedefinden biri \emph{değildir}? \ (a) kolaylık \ (b) verimlilik \ (c) gelişebilirlik \ (d) en yüksek donanım maliyeti
+  \item Çekirdek modunda mod biti \ (a) $0$ \ (b) $1$ \ (c) $2$ \ (d) tanımsız
+  \item G/Ç'si tamamlanan bekleyen bir süreç hangi duruma geçer? \ (a) çalışıyor \ (b) hazır \ (c) yeni \ (d) sonlandı
+  \item Bir sürecin iş parçacıkları hangisini \emph{paylaşır}? \ (a) yığıt \ (b) yazmaçlar \ (c) öbek \ (d) program sayacı
+  \item Hangi algoritmada Belady anomalisi görülebilir? \ (a) OPT \ (b) LRU \ (c) FIFO \ (d) hiçbiri
+  \item TLB neyi önbellekte tutar? \ (a) disk bloklarını \ (b) sayfa tablosu girdilerini \ (c) PCB'leri \ (d) dosya adlarını
+  \item Bir dizinin modu \texttt{drwxr-x---}. Grubunun bir üyesi \ (a) içinde dosya oluşturabilir \ (b) listeleyip içine girebilir \ (c) yalnızca içine girebilir \ (d) hiçbir şey yapamaz
+  \item Hangi yönlendirme standart çıktıyı bir dosyanın \emph{sonuna ekler}? \ (a) \texttt{>} \ (b) \texttt{>>} \ (c) \texttt{2>} \ (d) \texttt{<}
+  \item Hangi sinyal bir süreç tarafından ne yakalanabilir ne de yok sayılabilir? \ (a) SIGTERM \ (b) SIGINT \ (c) SIGKILL \ (d) SIGTSTP
+  \item Bir Bash betiğinde \texttt{\$\#} nedir? \ (a) betiğin adı \ (b) PID \ (c) argüman sayısı \ (d) son çıkış durumu
+\end{enumerate}
+
+\subsection*{Bölüm B --- Kısa yanıt (3 $\times$ 4 = 12 puan)}
+\begin{enumerate}[leftmargin=1.6em,label=B\arabic*.]
+  \item Program ile süreç arasındaki fark nedir? Beş süreç durumunu ve bir süreci çalışıyor durumundan bekliyor durumuna geçiren olayı yazın. \pts{4}
+  \item İç ve dış parçalanmayı açıklayın. Sayfalamada hangisi görülür, diğeri neden görülmez? \pts{4}
+  \item \texttt{notes.txt} dosyasının bir sabit bağlantısı \texttt{h.txt} ve bir sembolik bağlantısı \texttt{s.txt} var. \cmd{rm notes.txt} sonrasında her birine ne olur? Düğümlerle (inode) açıklayın. \pts{4}
+\end{enumerate}
+
+\subsection*{Bölüm C --- Sayısal problemler (36 puan)}
+\begin{enumerate}[leftmargin=1.6em,label=C\arabic*.]
+  \item P1 (varış $0$, patlama $8$), P2 ($1$, $4$), P3 ($2$, $9$), P4 ($3$, $5$) süreçleri; süreler ms. (a) SJF (kesintisiz), (b) SRTF, (c) $q = 3$ ile Round Robin için Gantt şemalarını çizin, ortalama bekleme ve dönüş sürelerini hesaplayın. Dersin uzlaşımlarını kullanın. \pts{12}
+  \item (a) Sayfalar $4$~KB. Sayfa $5$, çerçeve $9$'dadır. \texttt{0x5C21} mantıksal adresini çevirin (sonucu on altılık ve onluk tabanda verin). (b) $32$ bitlik adresler, $8$~KB'lık sayfalar ve $4$ baytlık girdiler için sayfa tablosu ne kadar büyüktür? (c) $t_{\text{TLB}} = 20$~ns, $t_m = 80$~ns, $\alpha = 0.95$: EAT'yi hesaplayın (bizim uzlaşımımız). (d) Hangi isabet oranı $110$~ns'lik bir EAT verir? \pts{8}
+  \item $3$ çerçeveyle $2, 3, 2, 1, 5, 2, 4, 5, 3, 2, 5, 2$ başvuru dizisi: FIFO, OPT ve LRU için çerçeve tablolarını çizin ve sayfa hatalarını sayın. \pts{8}
+  \item (a) $t_m = 150$~ns, $t_{\text{fault}} = 6$~ms, $p = 0.0001$: EAT'yi hesaplayın. Yavaşlamanın \%5'in altında kalması için en büyük $p$ nedir? (b) Kayıtlar $200$~B, bloklar $1024$~B. Kayıt $30$ hangi blokta ve hangi konumda başlar? Tek bloğa sığar mı? (c) Delikler (bu sırayla) $300$, $600$, $350$, $200$, $750$, $125$~KB; istekler bu sırayla $115$, $500$, $358$, $200$, $375$~KB geliyor. İlk uyan, en iyi uyan ve en kötü uyan ile her istek nereye yerleşir? \pts{8}
+\end{enumerate}
+
+\subsection*{Bölüm D --- Komutu yazın (7 $\times$ 2 = 14 puan)}
+\begin{enumerate}[leftmargin=1.6em,label=D\arabic*.]
+  \item \texttt{\textasciitilde/lab/projects/alpha/src} dizinindesiniz.\\ \emph{Tek} bir \cmd{cd} ve \emph{göreli} bir yolla \texttt{\textasciitilde/lab/projects/beta/docs} dizinine gidin.
+  \item \texttt{archive/2025} ve \texttt{archive/2026} dizinlerini tek komutla oluşturun.
+  \item \texttt{docs/} içindeki \texttt{.txt} ile biten bütün dosyaları \texttt{backup/} içine kopyalayın.
+  \item \texttt{logs/system.log} dosyasının son üç satırını gösterin.
+  \item \texttt{docs/syllabus.txt} dosyasını yalnızca sahibinin okuyup yazabileceği hâle getirin (sekizli).
+  \item \texttt{sleep 600} komutunu arka planda başlatın, işlerinizi listeleyin, sonra onu bir sinyalle kibarca durdurun.
+  \item \texttt{projects} altında herhangi bir yerde \texttt{.c} ile biten bütün dosyaları listeleyin.
+\end{enumerate}
+
+\subsection*{Bölüm E --- Boru hattını yazın (3 $\times$ 3 = 9 puan)}
+\begin{enumerate}[leftmargin=1.6em,label=E\arabic*.]
+  \item \texttt{logs/system.log} dosyasının kaç satırında \texttt{ERROR} geçer?
+  \item \texttt{logs/access.log} için her durum kodunun kaç istekte döndüğünü, en sık olandan başlayarak yazdırın.
+  \item \texttt{data/students.csv} için bölüm başına öğrenci sayısını, en büyükten başlayarak yazdırın (başlık satırını atlayın).
+\end{enumerate}
+
+\subsection*{Bölüm F --- Bir betik yazın (9 puan)}
+Tek argüman (bir dizin) alan \texttt{count\_lines.sh} betiğini yazın. Argüman eksikse ya da bir dizin değilse standart hataya \texttt{usage: \dots} yazsın ve $1$ durumuyla çıksın. Aksi hâlde dizindeki her normal dosya için adını ve satır sayısını, en sonda da toplamı yazdırsın.
+
+% =====================================================================
+\section{Alıştırma Finali: Çözümler}
+\label{sec:pfsol}
+
+\subsection*{Bölüm A}
+A1~(d), A2~(a), A3~(b), A4~(c), A5~(c), A6~(b), A7~(b): r grubun listelemesine, x içine girmesine izin verir; w olmadan dosya oluşturamaz; A8~(b), A9~(c), A10~(c).
+
+\subsection*{Bölüm B}
+\begin{enumerate}[leftmargin=1.6em,label=B\arabic*.]
+  \item Program diskte duran edilgen bir dosyadır; süreç ise kendi belleği (text, data, bss, öbek, yığıt), yazmaçları ve PCB'si olan, yürütülmekte olan bir programdır; tek bir program birden çok süreç olarak çalışabilir. Durumlar: yeni, hazır, çalışıyor, bekliyor, sonlandı. Çalışıyor $\to$ bekliyor geçişi, süreç beklemesi gereken bir sistem çağrısı yaptığında olur (G/Ç, bir çocuk için \cmd{wait()}, \cmd{sleep}).
+  \item Dış parçalanma: boş bellek, ayrılmış bloklar arasında deliklere bölünmüştür; toplamı yetse de hiçbiri tek başına yeterince büyük değildir. İç parçalanma: ayrılmış bir bloğun içinde kullanılmayan bellek. Sayfalamada yalnızca iç parçalanma vardır (süreç başına ortalama yarım sayfa, son sayfada), çünkü her boş çerçeve her sayfayı tutabilir; dolayısıyla hiçbir delik fazla küçük kalmaz.
+  \item \texttt{h.txt} aynı düğüm için ikinci bir dizin girdisidir; \cmd{rm} yalnızca \texttt{notes.txt} adını kaldırır ve bağlantı sayısını $2$'den $1$'e indirir; veri \texttt{h.txt} üzerinden okunmaya devam eder. \texttt{s.txt}'nin kendi düğümü vardır ve yalnızca \texttt{notes.txt} yolunu içerir; bu yol artık olmadığı için \texttt{s.txt} boşa düşer (``No such file or directory'').
+\end{enumerate}
+
+\subsection*{Bölüm C}
+\textbf{C1 (a) SJF.} $t=0$'da yalnızca P1 hazırdır ve $8$'e kadar çalışır; sonra P2 ($4$), P4 ($5$), P3 ($9$).
+\begin{center}\gantt{0.5}{P1/0/8, P2/8/12, P4/12/17, P3/17/26}\end{center}
+Bekleme: P1 $0$, P2 $8-1 = 7$, P3 $17-2 = 15$, P4 $12-3 = 9$; ortalama $31/4 = 7.75$~ms. Dönüş $8, 11, 24, 14$: ortalama $57/4 = 14.25$~ms.
+
+\textbf{(b) SRTF.} $t=1$'de P2 ($4$) P1'i ($7$ kaldı) keser; $t=5$'te P4 ($5$) P1'den ($7$) önce çalışır; P3 ($9$) en sonda.
+\begin{center}\gantt{0.5}{P1/0/1, P2/1/5, P4/5/10, P1/10/17, P3/17/26}\end{center}
+Bekleme: P1 $17-0-8 = 9$, P2 $0$, P3 $15$, P4 $2$; ortalama $26/4 = 6.5$~ms. Dönüş $17, 4, 24, 7$: ortalama $52/4 = 13$~ms.
+
+\textbf{(c) RR, $q=3$.} $t=3$'te kuyruk: P2, P3, P4 (hepsi $3$'e kadar geldi; P4 tam $3$'te geldi ve kesilen P1'den önce girer), P1.
+\begin{center}\gantt{0.5}{P1/0/3, P2/3/6, P3/6/9, P4/9/12, P1/12/15, P2/15/16, P3/16/19, P4/19/21, P1/21/23, P3/23/26}\end{center}
+Tamamlanma $23, 16, 26, 21$; dönüş $23, 15, 24, 18$: ortalama $80/4 = 20$~ms. Bekleme $15, 11, 15, 13$: ortalama $54/4 = 13.5$~ms (yanıt: ortalama $3$~ms --- RR burada bekleme açısından en kötü, yanıt açısından en iyisidir).
+
+\textbf{C2.} (a) $4$~KB $= 2^{12}$: son üç on altılık basamak konumdur. $p = \texttt{0x5}$, $d = \texttt{0xC21} = 3105$; çerçeve $9$: $a_{\text{fiz}} = \texttt{0x9C21} = 9 \times 4096 + 3105 = 39\,969$. (b) $2^{32}/2^{13} = 2^{19} = 524\,288$ girdi $\times\ 4$~B $= 2^{21}$~B $= 2$~MB. (c) $\text{EAT} = 20 + (2 - 0.95) \times 80 = 20 + 84 = 104$~ns. (d) $20 + (2-\alpha)\,80 = 110 \Rightarrow 2 - \alpha = 1.125 \Rightarrow \alpha = 0.875$.
+
+\textbf{C3.} FIFO $9$, OPT $6$, LRU $7$ hata (kalın = yeni yüklenen sayfa).
+\begin{center}
+\small
+\textbf{FIFO}\\[0.2em]
+\begin{tabular}{@{}l*{12}{c}@{}}
+\toprule
+başv. & \textbf{2} & \textbf{3} & \textbf{2} & \textbf{1} & \textbf{5} & \textbf{2} & \textbf{4} & \textbf{5} & \textbf{3} & \textbf{2} & \textbf{5} & \textbf{2} \\ \midrule
+çr.\ 0 & \nw{2} & 2 & 2 & 2 & \nw{5} & 5 & 5 & 5 & \nw{3} & 3 & 3 & 3 \\
+çr.\ 1 &  & \nw{3} & 3 & 3 & 3 & \nw{2} & 2 & 2 & 2 & 2 & \nw{5} & 5 \\
+çr.\ 2 &  &  &  & \nw{1} & 1 & 1 & \nw{4} & 4 & 4 & 4 & 4 & \nw{2} \\
+\midrule hata & \F & \F &  & \F & \F & \F & \F &  & \F &  & \F & \F \\ \bottomrule
+\end{tabular}
+\\[0.6em]\textbf{OPT}\\[0.2em]
+\begin{tabular}{@{}l*{12}{c}@{}}
+\toprule
+başv. & \textbf{2} & \textbf{3} & \textbf{2} & \textbf{1} & \textbf{5} & \textbf{2} & \textbf{4} & \textbf{5} & \textbf{3} & \textbf{2} & \textbf{5} & \textbf{2} \\ \midrule
+çr.\ 0 & \nw{2} & 2 & 2 & 2 & 2 & 2 & \nw{4} & 4 & 4 & \nw{2} & 2 & 2 \\
+çr.\ 1 &  & \nw{3} & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 \\
+çr.\ 2 &  &  &  & \nw{1} & \nw{5} & 5 & 5 & 5 & 5 & 5 & 5 & 5 \\
+\midrule hata & \F & \F &  & \F & \F &  & \F &  &  & \F &  &  \\ \bottomrule
+\end{tabular}
+\\[0.6em]\textbf{LRU}\\[0.2em]
+\begin{tabular}{@{}l*{12}{c}@{}}
+\toprule
+başv. & \textbf{2} & \textbf{3} & \textbf{2} & \textbf{1} & \textbf{5} & \textbf{2} & \textbf{4} & \textbf{5} & \textbf{3} & \textbf{2} & \textbf{5} & \textbf{2} \\ \midrule
+çr.\ 0 & \nw{2} & 2 & 2 & 2 & 2 & 2 & 2 & 2 & \nw{3} & 3 & 3 & 3 \\
+çr.\ 1 &  & \nw{3} & 3 & 3 & \nw{5} & 5 & 5 & 5 & 5 & 5 & 5 & 5 \\
+çr.\ 2 &  &  &  & \nw{1} & 1 & 1 & \nw{4} & 4 & 4 & \nw{2} & 2 & 2 \\
+\midrule hata & \F & \F &  & \F & \F &  & \F &  & \F & \F &  &  \\ \bottomrule
+\end{tabular}
+\end{center}
+Kilit kararlar: OPT, $5$ başvurusunda bir daha kullanılmayan $1$'i çıkarır; $4$'te $2$'yi çıkarır ($2, 3, 5$ içinde en geç yeniden kullanılacak olan: $2$ $10$., $3$ $9$., $5$ $8$. konumda gerekir, bu yüzden $2$ gider); ikinci $2$'de $4$'ü çıkarır ($4$ ve $3$ bir daha hiç kullanılmaz; iki seçim de aynı sayıyı verir). LRU, $5$'te $3$'ü (en uzun süredir kullanılmayan), $4$'te $1$'i çıkarır.
+
+\textbf{C4.} (a) $\text{EAT} = 0.9999 \times 150 + 0.0001 \times 6\,000\,000 = 149.985 + 600 = 749.985$~ns, RAM'den beş kat yavaş. Yavaşlamanın \%5'in altında kalması için: $150 + p\,(6\,000\,000 - 150) < 157.5 \Rightarrow p < 7.5/5\,999\,850 \approx 1.25 \times 10^{-6}$. (b) Bayt $30 \times 200 = 6000$; blok $\lfloor 6000/1024 \rfloor = 5$; konum $6000 - 5120 = 880$. Son bayt $6199$'dur ve $\lfloor 6199/1024 \rfloor = 6$. bloktadır: kayıt bir blok sınırını aşar ve iki blok okuması gerektirir. (c)
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+& \textbf{115} & \textbf{500} & \textbf{358} & \textbf{200} & \textbf{375} \\
+\midrule
+İlk uyan & 300 (delik 1) & 600 (delik 2) & 750 (delik 5) & 350 (delik 3) & delik 5'in kalan 392'si \\
+En iyi uyan & 125 (delik 6) & 600 (delik 2) & 750 (delik 5) & 200 (delik 4) & delik 5'in kalan 392'si \\
+En kötü uyan & 750 (delik 5) & delik 5'in kalan 635'i & 600 (delik 2) & 350 (delik 3) & \textbf{beklemeli} \\
+\bottomrule
+\end{tabular}
+\end{center}
+En kötü uyandan sonra delikler $300, 242, 150, 200, 135, 125$~KB'tır: toplam $1152$~KB boş olmasına rağmen hiçbiri $375$~KB'ı alamaz --- dış parçalanma.
+
+\subsection*{Bölüm D}
+Her yanıtın gerçek çıktısı (\texttt{code/answers\_practice.sh}):
+\Needspace{7\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_d1.txt}
+\Needspace{6\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_d2.txt}
+\Needspace{9\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_d3.txt}
+Joker karakter \texttt{final report.txt} ile de eşleşti: kabuk, boşluk içeren bu adı \emph{tek} bir argüman olarak aktarır; bu yüzden \cmd{cp} için sorun olmaz.
+\Needspace{7\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_d4.txt}
+\Needspace{6\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_d5.txt}
+\Needspace{8\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_d6.txt}
+\cmd{kill \%1} SIGTERM ($15$) gönderir; \cmd{kill -15 \%1} ya da \cmd{kill PID} de doğrudur, \cmd{kill -9} ise ``kibar'' değildir.
+\Needspace{6\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_d7.txt}
+Kalıbı tırnaklayın (\texttt{"*.c"}); böylece onu kabuk değil \cmd{find} genişletir.
+
+\subsection*{Bölüm E}
+\Needspace{5\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_e1.txt}
+(\cmd{grep ERROR logs/system.log | wc -l} de doğrudur.)
+\Needspace{10\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_e2.txt}
+\Needspace{8\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_e3.txt}
+
+\subsection*{Bölüm F}
+\Needspace{19\baselineskip}
+\lstinputlisting[style=sh]{../code/count_lines.sh}
+\Needspace{17\baselineskip}
+\lstinputlisting[style=term]{../code/out_pf_f_run.txt}
+\textit{Puanlama kılavuzu:} standart hataya kullanım iletisi ve \texttt{exit 1} ile argüman ve dizin denetimi ($3$~puan); \texttt{-f} sınamasıyla \texttt{"\$1"/*} üzerinde döngü ($2$); \cmd{wc -l <} ile satır sayımı ($2$); \texttt{\$(( ))} ile toplam ve çıktı ($2$).
+
+\subsection*{Ek alıştırma (100 puanın parçası değil)}
+\begin{enumerate}[leftmargin=1.6em]
+  \item Bir program döngü içinde dört kez \cmd{fork()} çağırıyor. Sonunda kaç süreç vardır? \emph{Yanıt:} $2^{4} = 16$; bunların $15$'ini \cmd{fork()} oluşturdu.
+  \item Amdahl, $S = 0.1$, $N = 8$. \emph{Yanıt:} $1/(0.1 + 0.9/8) = 1/0.2125 \approx 4.71$; sınır $1/S = 10$.
+  \item $U(n) = 1 - 0.75^{n}$: $U(2)$, $U(4)$ ve $U \ge \%90$ olan en küçük $n$. \emph{Yanıt:} $0.4375$, $0.684$; $n = 9$ ($U = 0.925$; $n = 8$ yalnızca $0.8999$ verir).
+  \item Bir sayan semafor $S = 2$ ile başlıyor; beş iş parçacığı \texttt{wait(S)} çağırıyor. \emph{Yanıt:} ikisi geçer ($S$ $0$ olur), üçü diğer iş parçacıkları \texttt{signal(S)} çağırana kadar bloklanır.
+  \item $\alpha = 0.5$, $\tau_0 = 12$~ms ve $8$, $4$, $10$~ms'lik patlamalarla üstel ortalama. \emph{Yanıt:} $\tau_1 = 10$, $\tau_2 = 7$, $\tau_3 = 8.5$~ms.
+\end{enumerate}
+
+% =====================================================================
+\section{Dersin Kapanışı ve Bundan Sonrası}
+
+\begin{keyidea}[Sekiz cümlede ders]
+\begin{enumerate}[leftmargin=1.4em]
+  \item İşletim sistemi bir kaynak yöneticisi ve genişletilmiş makinedir; ikili mod ve sistem çağrıları onu korur (1--2. haftalar).
+  \item Süreçler beş durum arasında gezinir; PCB ve bağlam değişimi çok görevliliği mümkün kılar (3. hafta).
+  \item İş parçacıkları ve zamanlayıcılar işlemciyi paylaşır: FCFS, SJF/SRTF, Öncelik ve RR; bekleme ve yanıt süresiyle değerlendirilir (4--5. haftalar).
+  \item Ortak veri karşılıklı dışlama ister: muteks kilitleri ve semaforlar (5. hafta).
+  \item Bellek MMU tarafından çevrilir: sayfalama, TLB, sanal bellek, sayfa değiştirme (6--7. haftalar).
+  \item Dosyalar, dizinlerde adı olan düğümlerdir (inode); bağlantılar bir dosyaya birden çok ad verir (7. ve 10. haftalar).
+  \item Kabuk komutları süreçlere ve sistem çağrılarına dönüştürür: gezinme, dosyalar, izinler, borular, işler (9--13. haftalar).
+  \item Betikler, yazabildiğiniz her şeyi otomatikleştirir (14. hafta).
+\end{enumerate}
+\end{keyidea}
+
+Kuram, komutların neden öyle davrandığını açıklar: \cmd{ps} 3. haftanın süreç durumlarını, \cmd{ls -i} 7. haftanın düğümlerini, \cmd{chmod} ise 2. haftanın ikili mod fikriyle gerekçelendirdiği korumayı gösterir; her boru da çekirdeğin birbirine bağladığı iki süreçtir. \texttt{\textasciitilde/lab} klasörünüzü ve bu notları saklayın: sınavdan çok sonra da kullanabileceğiniz bir başvuru kaynağıdır.
+
+\subsection*{Alıştırmaya devam}
+\begin{itemize}
+  \item Linux'u bir sanal makineye ya da Windows'ta WSL ile (\cmd{wsl --install}) kurun ve her gün kullanın; Raspberry Pi ucuz bir Linux laboratuvarıdır.
+  \item OverTheWire \emph{Bandit}, kabuğu seviye seviye öğreten ücretsiz bir oyun: \url{https://overthewire.org/wargames/bandit/}
+  \item MIT, \emph{The Missing Semester of Your CS Education} (kabuk, betikler, araçlar): \url{https://missing.csail.mit.edu/}
+  \item \url{https://explainshell.com/} herhangi bir komut satırını açıklar; \url{https://www.shellcheck.net/} betiklerdeki hataları bulur.
+\end{itemize}
+Bu kaynakların çoğu İngilizcedir; derste İngilizce terimleri parantez içinde vermemizin bir nedeni de budur.
+
+\subsection*{Sertifikalar (isteğe bağlı)}
+LPI \emph{Linux Essentials} iyi bir ilk hedeftir; CompTIA \emph{Linux+} ya da LPI \emph{LPIC-1} sonraki adımdır; daha sonra Red Hat \emph{RHCSA} ya da Linux Foundation'ın \emph{LFCS} sertifikası gelebilir. Sınav hedefleri ve ücretler değişir: kaydolmadan önce resmî siteleri denetleyin.
+
+\subsection*{İleri okuma}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10. baskı, Wiley: Bölüm~1--2 (giriş, işletim sistemi yapıları), 3 (süreçler), 4 (iş parçacıkları), 5 (işlemci zamanlaması), 6 (eşzamanlama araçları), 9 (ana bellek), 10 (sanal bellek), 13 (dosya sistemi arayüzü).
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces} (çevrim içi ücretsiz), örneğin:
+  \begin{itemize}
+    \item Bölüm~4, ``The Abstraction: The Process'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf}
+    \item Bölüm~7, ``Scheduling: Introduction'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched.pdf}
+    \item Bölüm~18, ``Paging: Introduction'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf}
+    \item Bölüm~19, ``Paging: Faster Translations (TLBs)'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-tlbs.pdf}
+    \item Bölüm~22, ``Beyond Physical Memory: Policies'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys-policy.pdf}
+    \item Bölüm~39, ``Interlude: Files and Directories'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf}
+  \end{itemize}
+  \item W.\,E.\ Shotts, \emph{The Linux Command Line}, No Starch Press (yazarından ücretsiz PDF: \url{https://linuxcommand.org/tlcl.php}).
+\end{itemize}
+
+\textbf{Final sınavında başarılar --- ve harika bir dönem için teşekkürler.} Sınavdan önceki sorularınızı dersin Telegram kanalında sorun [sınav öncesi ofis saatleri: duyurulacak].
+
+\end{document}

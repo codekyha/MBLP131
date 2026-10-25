@@ -1,0 +1,55 @@
+student@okan-lab:~/lab$ echo $$
+1913
+student@okan-lab:~/lab$ ps
+  PID TTY          TIME CMD
+ 1913 pts/0    00:00:00 bash
+ 1969 pts/0    00:00:00 ps
+student@okan-lab:~/lab$ sleep 300 &
+[1] 1970
+student@okan-lab:~/lab$ yes > /dev/null &
+[2] 1971
+student@okan-lab:~/lab$ ps
+  PID TTY          TIME CMD
+ 1913 pts/0    00:00:00 bash
+ 1970 pts/0    00:00:00 sleep
+ 1971 pts/0    00:00:00 yes
+ 1972 pts/0    00:00:00 ps
+student@okan-lab:~/lab$ ps -f
+UID        PID  PPID  C STIME TTY          TIME CMD
+student   1913  1912  0 16:58 pts/0    00:00:00 -bash
+student   1970  1913  0 16:58 pts/0    00:00:00 sleep 300
+student   1971  1913 96 16:58 pts/0    00:00:00 yes
+student   1973  1913  0 16:58 pts/0    00:00:00 ps -f
+student@okan-lab:~/lab$ ps -o pid,ppid,stat,ni,%cpu,%mem,cmd
+  PID  PPID STAT  NI %CPU %MEM CMD
+ 1913  1912 Ss     0  0.5  0.0 -bash
+ 1970  1913 S      0  0.0  0.0 sleep 300
+ 1971  1913 R      0 97.4  0.0 yes
+ 1974  1913 R+     0  0.0  0.0 ps -o pid,ppid,stat,ni,%cpu,%mem,cmd
+student@okan-lab:~/lab$ pstree -p $$
+bash(1913)─┬─pstree(1975)
+           ├─sleep(1970)
+           └─yes(1971)
+student@okan-lab:~/lab$ ps -ef | head -4
+UID        PID  PPID  C STIME TTY          TIME CMD
+root         1     0  0 16:17 ?        00:00:02 /process_api --firecracker-init --addr 0.0.0.0:2024 --max-ws-buffer-size 32768 --block-local-connections --listen-vsock-port 2024 --log-vsock-port 5002
+root         2     0  0 16:17 ?        00:00:00 [kthreadd]
+root         3     2  0 16:17 ?        00:00:00 [pool_workqueue_release]
+student@okan-lab:~/lab$ ps -f -u student
+UID        PID  PPID  C STIME TTY          TIME CMD
+student   1913  1912  0 16:58 pts/0    00:00:00 -bash
+student   1970  1913  0 16:58 pts/0    00:00:00 sleep 300
+student   1971  1913 99 16:58 pts/0    00:00:01 yes
+student   1978  1913  0 16:58 pts/0    00:00:00 ps -f -u student
+student@okan-lab:~/lab$ ps aux | head -1
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+student@okan-lab:~/lab$ ps aux | grep '^student'
+student   1913  0.6  0.0   8436  7532 pts/0    Ss   16:58   0:00 -bash
+student   1970  0.0  0.0   3132  1996 pts/0    S    16:58   0:00 sleep 300
+student   1971 99.0  0.0   3132  1884 pts/0    R    16:58   0:02 yes
+student   1981  0.0  0.0   8340  4328 pts/0    R+   16:58   0:00 ps aux
+student   1982  0.0  0.0   4100  2200 pts/0    S+   16:58   0:00 grep ^student
+student@okan-lab:~/lab$ kill %1 %2
+student@okan-lab:~/lab$ jobs
+[1]-  Terminated              sleep 300
+[2]+  Terminated              yes > /dev/null

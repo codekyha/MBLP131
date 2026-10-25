@@ -1,0 +1,14 @@
+student@okan-lab:~/lab$ gcc -Wall -O2 fileops.c -o fileops
+student@okan-lab:~/lab$ ./fileops
+after open(O_CREAT):
+  box/a.txt  inode 804677  links 1
+after link() and symlink():
+  box/a.txt  inode 804677  links 2
+  box/b.txt  inode 804677  links 2
+  box/s.txt  inode 804678  links 1
+after rename() a.txt -> c.txt:
+  box/c.txt  inode 804677  links 2
+after unlink() b.txt:
+  box/c.txt  inode 804677  links 1
+rmdir("box"): Directory not empty
+box removed

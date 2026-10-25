@@ -1,0 +1,1243 @@
+% =====================================================================
+%  MBLP131 -- İşletim Sistemleri Temelleri
+%  Hafta 10 Ders Notları: Dosya ve Dizin İşlemleri
+%  XeLaTeX ile iki kez derleyin:  xelatex MBLP131_Hafta10_Notlar.tex
+%  ./figures/ ve ../code/ klasörlerine ihtiyaç duyar.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\newcommand{\weeknum}{10}
+% ---------- Page & fonts ---------------------------------------------
+\usepackage[a4paper,margin=2.3cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{turkish}
+\IfFontExistsTF{Calibri}{\setmainfont{Calibri}}{\setmainfont{Carlito}}
+\IfFontExistsTF{Cambria}{\newfontfamily\headfont{Cambria}}{\newfontfamily\headfont{Caladea}}
+\IfFontExistsTF{Consolas}{\setmonofont[Scale=0.95]{Consolas}}{\setmonofont[Scale=0.88]{DejaVu Sans Mono}}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\linespread{1.12}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+% ---------- Colours (course design system) ----------------------------
+\usepackage{xcolor}
+\definecolor{dark}{HTML}{212121}
+\definecolor{charcoal}{HTML}{36454F}
+\definecolor{slate}{HTML}{50808E}
+\definecolor{mint}{HTML}{02C39A}
+\definecolor{mintdeep}{HTML}{028090}
+\definecolor{light}{HTML}{F2F2F2}
+\definecolor{muted}{HTML}{6B7679}
+
+% ---------- Packages ---------------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{needspace}
+\graphicspath{{figures/}}
+\usepackage[font=small,labelfont={bf,color=mintdeep},justification=centering]{caption}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\setlist{itemsep=0.25em,topsep=0.3em}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=mintdeep,urlcolor=mintdeep,citecolor=mintdeep]{hyperref}
+
+% ---------- Headings ----------------------------------------------------
+\titleformat{\section}{\headfont\Large\bfseries\color{charcoal}}{\color{mint}\thesection}{0.7em}{}
+\titleformat{\subsection}{\headfont\large\bfseries\color{charcoal}}{\color{mintdeep}\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\headfont\normalsize\bfseries\color{mintdeep}}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+
+% ---------- Header / footer -----------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}MBLP131 --- İşletim Sistemleri Temelleri}
+\fancyhead[R]{\small\color{muted}Hafta \weeknum{} Ders Notları}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% ---------- Boxes ---------------------------------------------------------
+\newtcolorbox{keyidea}[1][Key idea]{enhanced,breakable,colback=charcoal,colframe=charcoal,
+  coltext=white,fonttitle=\headfont\bfseries\color{mint},title={#1},
+  attach title to upper={\par\smallskip},boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{example}[1][Worked example]{enhanced,colback=light,colframe=light,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{tryit}[1][Try it yourself]{enhanced,breakable,colback=white,colframe=mint,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.8pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{histnote}[1][Historical note]{enhanced,breakable,colback=white,colframe=slate!40,
+  fonttitle=\headfont\bfseries\color{slate},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.5pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt,fontupper=\small}
+
+% Photo helper: fits image inside a box, never distorted (keepaspectratio)
+\newcommand{\photo}[3]{\includegraphics[width=#1,height=#2,keepaspectratio]{#3}}
+
+\newcommand{\term}[1]{\textbf{\color{mintdeep}#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+
+% ---------- Code listings ----------------------------------------------------
+\usepackage{listings}
+\lstdefinestyle{course}{
+  basicstyle=\ttfamily\small, columns=fullflexible, keepspaces=true,
+  backgroundcolor=\color{dark}, rulecolor=\color{dark}, frame=single, framesep=6pt,
+  xleftmargin=8pt, xrightmargin=8pt, aboveskip=0.8em, belowskip=0.6em,
+  basicstyle=\ttfamily\small\color{light},
+  keywordstyle=\color{mint}\bfseries, commentstyle=\color{white!60}\itshape,
+  stringstyle=\color{orange!70!yellow}, numberstyle=\tiny\color{muted},
+  numbers=left, numbersep=10pt, showstringspaces=false, breaklines=true,
+  tabsize=4, upquote=true}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}}
+\lstset{style=course,language=C}
+\usepackage{textcomp}
+
+% listings 1.9 + XeLaTeX: Turkish letters above U+00FF (ı İ ğ Ğ ş Ş) must be declared as letters
+\makeatletter
+\lst@CCPut \lst@ProcessLetter {"130}{"131}{"11E}{"11F}{"15E}{"15F}\z@
+\lst@AddToHook{SelectCharTable}{\catcode"130=13 \catcode"131=13 \catcode"11E=13
+  \catcode"11F=13 \catcode"15E=13 \catcode"15F=13 }
+\makeatother
+
+\begin{document}
+% ============================ Hafta 10 gövdesi ============================
+% Bu uygulamalı haftada terminal listeleri uzun: biraz daha küçük yazı tipi kullan.
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light},
+  basicstyle=\ttfamily\footnotesize\color{light}, aboveskip=0.5em, belowskip=0.4em,
+  escapeinside={<@}{@>}}
+\setlength{\parskip}{0.45em}
+\setlength{\emergencystretch}{3em}
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 10 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Dosya ve Dizin İşlemleri}\par\smallskip
+{\small\itshape\color{white!70} Dosya oluşturun, kopyalayın, taşıyın, silin, görüntüleyin, bağlayın --- ve her seferinde çekirdeğin ne yaptığını bilin.}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item \cmd{touch}, \cmd{cp}, \cmd{mv}, \cmd{ln}, \cmd{ln -s} ve \cmd{rm} komutlarının neyi değiştirdiğini dizin girdileri, düğümler (inode) ve veri blokları (7.~hafta) cinsinden açıklamak.
+  \item \cmd{mkdir} (\cmd{-p}) ve \cmd{touch} ile dizin ve dosya oluşturmak; atime, mtime ve ctime zaman damgalarını okumak.
+  \item \cmd{cp}, \cmd{mv}, \cmd{rm}, \cmd{rmdir} ile dosyaları ve dizin ağaçlarını kopyalamak, taşımak, yeniden adlandırmak ve silmek --- güvenli biçimde.
+  \item \texttt{*}, \texttt{?}, \texttt{[\,]} joker karakterlerini ve \texttt{\{a,b\}}, \texttt{\{1..5\}} süslü parantez genişletmesini kullanmak; bunları \emph{kabuğun} genişlettiğini açıklamak.
+  \item Adında boşluk bulunan dosyalarla çalışmak.
+  \item Dosyaları \cmd{cat}, \cmd{less}, \cmd{head}, \cmd{tail}, \cmd{wc}, \cmd{file}, \cmd{stat}, \cmd{du} ve \cmd{df} ile incelemek.
+  \item Sabit ve sembolik bağlantılar oluşturmak ve özgün dosya silinince ne olacağını önceden söylemek.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{9. Haftadan 10. Haftaya}
+
+9.~haftada terminal ve kabukla (shell) tanıştık, bir komutun yapısını öğrendik (\texttt{komut}\ \texttt{-seçenekler}\ \texttt{argümanlar}) ve Linux dizin ağacında \cmd{pwd}, \cmd{ls} ve \cmd{cd} ile dolaştık; bunu yaparken mutlak yollar (\texttt{/home/\allowbreak student/\allowbreak lab}) ve göreli yollar (\texttt{docs}, \texttt{../data}) kullandık. Yalnızca \emph{baktık}. Bu hafta dosya sistemini \emph{değiştiriyoruz}: dosya ve dizin oluşturacak, kopyalayacak, taşıyacak, yeniden adlandıracak, silecek ve bağlayacak; ayrıca dosyaların içine bakacağız.
+
+Buradaki her şey 7.~haftanın dosya sistemi kuramına dayanır; bu yüzden kısa bir tekrarla başlıyoruz. Ardından komutlar geliyor; her biri gerçek çıktısıyla gösteriliyor.
+
+\subsection*{Hazırlık}
+
+Bütün örnekler laboratuvar betiğinin oluşturduğu alıştırma klasöründe çalışır (betik her Linux haftasının \cmd{code/} klasöründe bulunur). Her dersten önce çalıştırın; betik \emph{yalnızca} \texttt{\textasciitilde/lab} klasörünü silip yeniden oluşturur:
+\begin{lstlisting}[style=term]
+$ bash ~/mcmp117_lab_setup.sh
+$ cd ~/lab
+\end{lstlisting}
+Slaytlardaki her gösterim \cmd{code/} içinde bir betiktir (örneğin \cmd{demo\_cp\_mv.sh}); yakalanan çıktısı da eşleşen \cmd{out\_*.txt} dosyasıdır. \texttt{student@okan-lab:\textasciitilde/lab\$} istemi (prompt) kullanıcıyı, makineyi ve geçerli dizini gösterir; siz yalnızca \texttt{\$} işaretinden sonrasını yazarsınız.
+
+\begin{keyidea}[Sizin çıktınız biraz farklı olacak]
+Çıktılar sıradan kullanıcı \texttt{student} ile ve \texttt{LC\_ALL=C.UTF-8} ayarıyla yakalandı. Başka yerel ayarlarda (locale) \cmd{ls} adları farklı \emph{sıralayabilir} (C yerel ayarında büyük harfler önce gelir, bu yüzden \texttt{IMG\_014.JPG}, \texttt{holiday.jpeg}'den önce listelenir). Türkçe yerel ayarlı bir sistemde (\texttt{LANG=tr\_TR.UTF-8}) pek çok ileti Türkçe görünür ve sıralama yine farklı olabilir; ders çıktıları bu nedenle \texttt{LC\_ALL=C.UTF-8} ile alınmıştır. Tarihler, saatler (bizimkiler UTC, \texttt{+0000}; Türkiye'de \texttt{+0300} göreceksiniz), düğüm numaraları, disk boyutları ve kullanıcı kimlikleri sizin makinenizde farklı olacaktır. Geri kalan her şey aynı olmalıdır.
+\end{keyidea}
+
+% =====================================================================
+\section{Adlar, Düğümler ve Sistem Çağrıları}
+\label{sec:inodes}
+
+\subsection{Tekrar: ne nerede saklanır}
+
+7.~haftadan hatırlayın: bir \term{dizin}, (ad, düğüm numarası) çiftlerinden oluşan bir tablodur. \term{Düğüm} (inode) bir dosyayla ilgili geri kalan her şeyi tutar --- tür, boyut, sahip, izinler, zaman damgaları, \term{bağlantı sayısı} (link count) ve \term{veri bloklarına} (data blocks) işaretçiler --- ama dosyanın adını \emph{tutmaz}. Bir düğümün birden çok adı olabilmesinin ve bazı işlemler anında biterken bazılarının veri kopyalamasının nedeni budur.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[e/.style={rectangle,fill=light,minimum height=0.45cm,font=\footnotesize\ttfamily},
+  ino/.style={rectangle,rounded corners=2pt,fill=charcoal,text=white,align=center,font=\footnotesize,minimum width=2.9cm,minimum height=0.9cm},
+  arr/.style={-{Stealth[length=2mm]},thick,mintdeep}]
+\node[font=\small\bfseries] at (1.3,0.6) {\texttt{docs/} dizini};
+\foreach \n/\i [count=\k from 0] in {syllabus.txt/804123,plan.txt/804123,copy.txt/804702,shortcut.txt/804703} {
+  \node[e,minimum width=2.1cm] at (0.6,-0.55*\k) {\n};
+  \node[e,minimum width=1.3cm,fill=mint!25] (d\k) at (2.45,-0.55*\k) {\i};
+}
+\node[ino] (A) at (6.0,-0.25) {\textbf{düğüm 804123}\\normal, 2 bağlantı, 578 B};
+\node[ino] (B) at (6.0,-1.45) {\textbf{düğüm 804702}\\normal, 1 bağlantı, 578 B};
+\node[ino] (Cn) at (6.0,-2.65) {\textbf{düğüm 804703}\\sembolik, 12 B};
+\draw[arr] (d0.east) -- (A.west); \draw[arr] (d1.east) -- (A.west);
+\draw[arr] (d2.east) -- (B.west); \draw[arr,orange!80!black] (d3.east) -- (Cn.west);
+\node[rectangle,fill=mint,font=\footnotesize\ttfamily,minimum width=2.2cm] (a) at (9.6,-0.25) {Week 1 \dots};
+\node[rectangle,fill=mint!25,font=\footnotesize\ttfamily,minimum width=2.2cm] (b) at (9.6,-1.45) {Week 1 \dots};
+\node[rectangle,fill=orange!20,font=\footnotesize\ttfamily,minimum width=2.2cm] (c) at (9.6,-2.65) {"syllabus.txt"};
+\draw[arr,slate] (A) -- (a); \draw[arr,slate] (B) -- (b); \draw[arr,slate] (Cn) -- (c);
+\node[font=\scriptsize\itshape,text=muted] at (9.6,-3.15) {veri blokları};
+\end{tikzpicture}
+\caption{Bağlantı gösterimindeki gerçek durum (Kısım~\ref{sec:links}): \texttt{plan.txt} bir sabit bağlantı, \texttt{copy.txt} bir kopya, \texttt{shortcut.txt} bir sembolik bağlantıdır.}
+\label{fig:inodes}
+\end{figure}
+
+Bu resimle haftanın her komutu \emph{neyi değiştirdiğiyle} tanımlanabilir:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{>{\ttfamily}l >{\raggedright\arraybackslash}X >{\ttfamily}l}
+\toprule
+\textrm{\textbf{Komut}} & \textbf{Ne değişir} & \textrm{\textbf{Sistem çağrısı}} \\
+\midrule
+touch new & yeni bir ad ve yeni (boş) bir düğüm & openat(O\_CREAT) \\
+mkdir d & yeni bir ad ve yeni bir dizin düğümü & mkdir() \\
+cp a b & yeni bir ad, yeni bir düğüm \emph{ve} bütün verinin kopyası & open/read/write \\
+mv a b & yalnızca dizin girdileri; düğüm aynı, veriye dokunulmaz & renameat2() \\
+ln a b & \emph{aynı} düğümü gösteren yeni bir ad; bağlantı sayısı $+1$ & linkat() \\
+ln -s a b & yeni bir ad ve verisi \texttt{a} yolu olan küçük bir düğüm & symlinkat() \\
+rm a & bir ad silinir; bağlantı sayısı $-1$; $0$ olunca veri serbest kalır & unlinkat() \\
+rmdir d & boş bir dizin silinir & rmdir() \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Komutlar programdır; işlerini sistem çağrıları yapar}
+
+Her komut \texttt{/usr/bin} içindeki küçük bir programdır. Kabuk onu \cmd{fork()} ve \cmd{exec()} ile başlatır (3.~hafta); program da asıl işi bir \term{sistem çağrısı} (system call) aracılığıyla çekirdekten ister (2.~hafta). Bunu \cmd{strace} ile izleyebiliriz; \cmd{-e trace=\dots} yalnızca adını verdiğimiz çağrıları gösterir (betik \cmd{demo\_strace.sh}; her komuttan sonraki \texttt{+++ exited with 0 +++} satırları çıkarıldı):
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ strace -e trace=mkdir,mkdirat mkdir newdir
+mkdir("newdir", 0777)                   = 0
+student@okan-lab:~/lab$ strace -e trace=rename,renameat,renameat2 mv newdir olddir
+renameat2(AT_FDCWD, "newdir", AT_FDCWD, "olddir", RENAME_NOREPLACE) = 0
+student@okan-lab:~/lab$ touch file1
+student@okan-lab:~/lab$ strace -e trace=link,linkat ln file1 file2
+linkat(AT_FDCWD, "file1", AT_FDCWD, "file2", 0) = 0
+student@okan-lab:~/lab$ strace -e trace=symlink,symlinkat ln -s olddir sym
+symlinkat("olddir", AT_FDCWD, "sym")    = 0
+student@okan-lab:~/lab$ strace -e trace=unlink,unlinkat rm file1 file2 sym
+unlinkat(AT_FDCWD, "file1", 0)          = 0
+unlinkat(AT_FDCWD, "file2", 0)          = 0
+unlinkat(AT_FDCWD, "sym", 0)            = 0
+student@okan-lab:~/lab$ strace -e trace=rmdir,unlinkat rmdir olddir
+rmdir("olddir")                         = 0
+\end{lstlisting}
+
+Dikkat edin:
+\begin{itemize}
+  \item \cmd{mv} tek bir bayt bile kopyalamadı: yalnızca bir \cmd{renameat2()} çağrısı yaptı. \texttt{RENAME\_NOREPLACE} bayrağı ``hedef varsa başarısız ol'' demektir; \cmd{mv} önce bunu kullanır ve bir hedefin yerine ancak bilerek yazar.
+  \item Üç adlı \cmd{rm}, üç \cmd{unlinkat()} çağrısı yapar. Çekirdek silme işlemine \emph{unlink} der: bir düğümün tek bir \emph{bağlantısını} (adını) kaldırır.
+  \item \texttt{\dots at} sürümleri ilk argüman olarak bir dizin alır; \texttt{AT\_FDCWD} ``geçerli çalışma dizinine göre'' demektir --- 9.~haftadaki göreli yolların ta kendisi.
+\end{itemize}
+
+% =====================================================================
+\section{Oluşturmak: \texttt{mkdir} ve \texttt{touch}}
+
+\subsection{\texttt{mkdir}: dizin oluşturmak}
+
+\cmd{mkdir ad} boş bir dizin oluşturur. İki hata sık görülür: ad zaten kullanılıyordur ya da yol üzerindeki bir \emph{üst} dizin yoktur. \cmd{-p} seçeneği (\emph{parents}, üst dizinler) yol üzerindeki eksik bütün dizinleri oluşturur ve dizin zaten varsa hiçbir şey söylemez (\cmd{demo\_mkdir\_touch.sh}):
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ mkdir test
+student@okan-lab:~/lab$ ls -ld test
+drwxrwxr-x 2 student student 4096 Oct 12 08:47 test
+student@okan-lab:~/lab$ mkdir test
+mkdir: cannot create directory <@‘@>test<@’@>: File exists
+student@okan-lab:~/lab$ mkdir trip/day1
+mkdir: cannot create directory <@‘@>trip/day1<@’@>: No such file or directory
+student@okan-lab:~/lab$ mkdir -p trip/day1
+student@okan-lab:~/lab$ mkdir -p work/2026/october
+student@okan-lab:~/lab$ tree work trip
+work
+<@└──@> 2026
+    <@└──@> october
+trip
+<@└──@> day1
+
+5 directories, 0 files
+\end{lstlisting}
+
+\cmd{ls -ld test}, içeriği değil dizinin \emph{kendisini} listeler (\cmd{-d}). Bağlantı sayısı $2$'dir: \texttt{\textasciitilde/lab} içindeki \texttt{test} adı ve dizinin içindeki \texttt{.} girdisi. \cmd{tree} bir dizin ağacı çizer; sondaki sayım başlangıç dizinlerini de içerir ($5$: \texttt{work}, \texttt{2026}, \texttt{october}, \texttt{trip}, \texttt{day1}).
+
+\subsection{\texttt{touch}: boş dosyalar ve zaman damgaları}
+
+\cmd{touch dosya} komutunun iki etkisi vardır. Dosya yoksa $0$ boyutlu olarak oluşturulur. Varsa içeriğine dokunulmaz, yalnızca zaman damgaları ``şimdi''ye ayarlanır. \cmd{-d} ile istediğiniz bir zamanı ayarlayabilirsiniz:
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ touch todo.txt
+student@okan-lab:~/lab$ ls -l todo.txt
+-rw-rw-r-- 1 student student 0 Oct 12 08:47 todo.txt
+student@okan-lab:~/lab$ touch -d "2026-01-15 09:30" todo.txt
+student@okan-lab:~/lab$ ls -l todo.txt
+-rw-rw-r-- 1 student student 0 Jan 15  2026 todo.txt
+student@okan-lab:~/lab$ stat todo.txt
+  File: todo.txt
+  Size: 0               Blocks: 0          IO Block: 4096   regular empty file
+Device: 254,0   Inode: 804708      Links: 1
+Access: (0664/-rw-rw-r--)  Uid: ( 1010/ student)   Gid: ( 1012/ student)
+Access: 2026-01-15 09:30:00.000000000 +0000
+Modify: 2026-01-15 09:30:00.000000000 +0000
+Change: 2026-10-12 08:47:56.442757013 +0000
+ Birth: 2026-10-12 08:47:56.430757013 +0000
+student@okan-lab:~/lab$ touch todo.txt
+student@okan-lab:~/lab$ ls -l todo.txt
+-rw-rw-r-- 1 student student 0 Oct 12 08:47 todo.txt
+\end{lstlisting}
+
+\cmd{ls -l} komutunun \texttt{Jan 15\ \ 2026} gösterdiğine dikkat edin --- günün saati yerine yıl --- çünkü tarih bugünden altı aydan daha uzaktır. \cmd{stat} (Kısım~\ref{sec:stat}) düğümde tutulan dört zamanın hepsini gösterir.
+
+\subsection{Üç (ya da dört) zaman damgası}
+
+Bir düğüm üç zaman tutar: \term{atime} (Access, verinin son okunması), \term{mtime} (Modify, verinin son değişmesi --- \cmd{ls -l} komutunun gösterdiği zaman) ve \term{ctime} (Change, \emph{düğümün} son değişmesi: veri, bağlantı sayısı, izinler, sahip, zamanlar). \textbf{ctime oluşturulma zamanı değildir}; ext4 gibi daha yeni dosya sistemleri ayrıca bir oluşturulma zamanı da kaydeder; \cmd{stat} bunu \emph{Birth} olarak gösterir.
+
+Hangi işlemin hangi zamanı değiştirdiğini test makinemizde (ext4) doğruladık:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{İşlem} & \textbf{atime} & \textbf{mtime} & \textbf{ctime} \\
+\midrule
+okuma: \cmd{cat f} & evet (gecikmeli) & --- & --- \\
+yazma: \cmd{echo x >> f} & --- & evet & evet \\
+\cmd{touch f} & evet & evet & evet \\
+yeniden adlandırma: \cmd{mv f g} & --- & --- & evet \\
+yeni sabit bağlantı: \cmd{ln f h} & --- & --- & evet \\
+izinler: \cmd{chmod} (11.~hafta) & --- & --- & evet \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+``Gecikmeli'': her okumada diske yazmamak için Linux dosya sistemlerini \texttt{relatime} seçeneğiyle bağlar ve atime'ı yalnızca mtime'dan eskiyse ya da $24$~saatten eskiyse günceller. Yedekleme programları ve \cmd{make} mtime'a güvenir; \cmd{cp -p}, kopyaya o anki zamanı vermek yerine dosyanın özgün mtime'ını korur.
+
+% =====================================================================
+\section{Kopyalamak, Taşımak ve Silmek}
+
+\subsection{\texttt{cp}: kopyalamak}
+
+\cmd{cp KAYNAK HEDEF} bir dosyayı kopyalar. \texttt{HEDEF} var olan bir dizinse kopya adını korur ve onun içine gider; değilse \texttt{HEDEF} yeni addır. Birden çok kaynak varsa son argüman bir dizin olmalıdır. Seçenekler: \cmd{-v} (verbose, ayrıntılı) her kopyalamayı bildirir, \cmd{-i} (interactive, etkileşimli) üzerine yazmadan önce sorar, \cmd{-r} (recursive, özyinelemeli) dizinleri kopyalar (\cmd{demo\_cp\_mv.sh}):
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ cp docs/syllabus.txt backup/
+student@okan-lab:~/lab$ cp docs/syllabus.txt backup/syllabus_copy.txt
+student@okan-lab:~/lab$ ls backup
+syllabus.txt  syllabus_copy.txt
+student@okan-lab:~/lab$ cp -v docs/notes_01.txt docs/notes_02.txt backup/
+'docs/notes_01.txt' -> 'backup/notes_01.txt'
+'docs/notes_02.txt' -> 'backup/notes_02.txt'
+student@okan-lab:~/lab$ cp -i docs/syllabus.txt backup/
+cp: overwrite 'backup/syllabus.txt'? n
+student@okan-lab:~/lab$ cp projects/alpha backup/
+cp: -r not specified; omitting directory 'projects/alpha'
+student@okan-lab:~/lab$ cp -r projects/alpha backup/
+student@okan-lab:~/lab$ tree backup
+backup
+<@├──@> alpha
+<@│  @> <@├──@> README.md
+<@│  @> <@├──@> docs
+<@│  @> <@│  @> <@└──@> design.txt
+<@│  @> <@└──@> src
+<@│  @>     <@└──@> main.c
+<@├──@> notes_01.txt
+<@├──@> notes_02.txt
+<@├──@> syllabus.txt
+<@└──@> syllabus_copy.txt
+
+4 directories, 7 files
+student@okan-lab:~/lab$ ls -i docs/syllabus.txt backup/syllabus.txt
+804330 backup/syllabus.txt  804123 docs/syllabus.txt
+\end{lstlisting}
+
+Gözlemler:
+\begin{itemize}
+  \item \cmd{cp -i} üzerine yazmadan önce sordu; \texttt{n} (hayır) yanıtını verdik. (Betikte yanıtı \cmd{echo n} sağlar; terminalde siz yazarsınız.) \cmd{-i} \textbf{olmadan} \cmd{cp} var olan bir dosyanın üzerine sessizce yazar.
+  \item Bir dizin \cmd{-r} olmadan kopyalanmaz. \emph{Özyinelemeli} şu demektir: dizini kopyala, sonra içindeki her girdi için aynısını yap ve ağaç boyunca böyle aşağı in.
+  \item \cmd{ls -i} \emph{farklı} düğüm numaraları gösterir ($804330$ ve $804123$): kopya yeni ve bağımsız bir dosyadır. Birini değiştirmek öbürünü değiştirmez.
+\end{itemize}
+Yararlı ekler: \cmd{cp -p} zamanları ve izinleri de korur; \cmd{cp -a} (archive, arşiv) \cmd{-r} artı \cmd{-p}'nin koruduğu her şeydir ve yedekleme için istediğiniz budur.
+
+\begin{tryit}[Sessiz bir tuzak]
+\texttt{backup/} \emph{yoksa} \cmd{cp notes.txt backup} komutu \texttt{backup} adında bir \emph{dosya} oluşturur. Sona eğik çizgi koyarak \texttt{backup/} yazarsanız \cmd{cp} bunun yerine hata vererek durur.
+\end{tryit}
+
+\subsection{\texttt{mv}: yeniden adlandırmak ve taşımak}
+
+Linux'ta tek dosyalar için ayrı bir yeniden adlandırma komutu yoktur: \cmd{mv} ikisini de yapar. Aynı dizin içinde \cmd{mv eski yeni} yeniden adlandırır; \cmd{mv dosya dizin/} adı başka bir dizine taşır. Dizinler de aynı biçimde, \cmd{-r} olmadan taşınır:
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ mv backup/syllabus.txt backup/syllabus_old.txt
+student@okan-lab:~/lab$ ls -i backup/syllabus_old.txt
+804330 backup/syllabus_old.txt
+student@okan-lab:~/lab$ mv -v docs/notes_03.txt backup/
+renamed 'docs/notes_03.txt' -> 'backup/notes_03.txt'
+student@okan-lab:~/lab$ mv backup/alpha backup/alpha_2026
+student@okan-lab:~/lab$ ls docs backup
+backup:
+alpha_2026    notes_02.txt  syllabus_copy.txt
+notes_01.txt  notes_03.txt  syllabus_old.txt
+
+docs:
+'final report.txt'   notes_01.txt   syllabus.txt
+ linux_quotes.txt    notes_02.txt
+\end{lstlisting}
+
+\texttt{backup/syllabus.txt} dosyasının düğüm numarası yeniden adlandırmadan önce $804330$ idi ve sonra da $804330$'dur: yalnızca dizin girdisi değişti (tek bir \cmd{renameat2()} çağrısı, Kısım~\ref{sec:inodes}). Bu yüzden aynı dosya sistemi içinde \cmd{mv}, dosya boyutu ne olursa olsun anında biter. İki dosya sistemi arasında (örneğin diskten bir USB belleğe) düğüm taşınamaz; bu durumda \cmd{mv} veriyi kopyalar, sonra özgün dosyayı siler. \cmd{cp} gibi \cmd{mv} de var olan bir hedefin üzerine sessizce yazar; \cmd{mv -i} kullanın.
+
+\subsection{\texttt{rm} ve \texttt{rmdir}: silmek}
+
+\cmd{rm} adları siler; \cmd{rmdir} \emph{boş} dizinleri siler (\cmd{demo\_rm.sh}):
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ touch junk1.txt junk2.txt junk3.txt
+student@okan-lab:~/lab$ rm junk1.txt
+student@okan-lab:~/lab$ rm -i junk2.txt
+rm: remove regular empty file 'junk2.txt'? y
+student@okan-lab:~/lab$ rm -v junk3.txt
+removed 'junk3.txt'
+student@okan-lab:~/lab$ ls junk*
+ls: cannot access 'junk*': No such file or directory
+student@okan-lab:~/lab$ mkdir empty_dir
+student@okan-lab:~/lab$ rmdir empty_dir
+student@okan-lab:~/lab$ rmdir projects/beta
+rmdir: failed to remove 'projects/beta': Directory not empty
+student@okan-lab:~/lab$ rm projects/beta
+rm: cannot remove 'projects/beta': Is a directory
+student@okan-lab:~/lab$ cp -r projects/beta beta_copy
+student@okan-lab:~/lab$ tree beta_copy
+...
+3 directories, 3 files
+student@okan-lab:~/lab$ rm -rv beta_copy
+removed 'beta_copy/src/main.c'
+removed directory 'beta_copy/src'
+removed 'beta_copy/README.md'
+removed 'beta_copy/docs/design.txt'
+removed directory 'beta_copy/docs'
+removed directory 'beta_copy'
+student@okan-lab:~/lab$ ls
+README.txt  backup  data  docs  logs  photos  projects  scripts  src
+\end{lstlisting}
+
+\begin{itemize}
+  \item \cmd{rm junk1.txt} hiçbir şey yazmaz, hiçbir şey sormaz.
+  \item \cmd{rm -i} sorar (``remove regular empty file?'', yani ``boş normal dosya silinsin mi?''); \cmd{rm -v} neyi sildiğini bildirir.
+  \item \cmd{ls junk*} başarısız olur, çünkü artık hiçbir ad kalıpla eşleşmez; bu durumda kabuk kalıbı değiştirmeden geçirir (Kısım~\ref{sec:glob}).
+  \item \cmd{rmdir} boş olmayan bir dizini reddeder; \cmd{-r} olmadan \cmd{rm} her dizini reddeder.
+  \item \cmd{rm -rv} işin sırasını gösterir: her dizin önce boşaltılır, çünkü çekirdeğin \cmd{rmdir()} çağrısı yalnızca boş dizinleri siler.
+\end{itemize}
+
+\begin{keyidea}[Uyarı: rm kalıcıdır]
+Komut satırında \textbf{geri dönüşüm kutusu yoktur}. \cmd{rm}, \cmd{unlinkat()} çağırır; bağlantı sayısı $0$'a indiğinde (ve dosyayı açık tutan bir program yoksa) bloklar boş olarak işaretlenir ve kısa sürede yeniden kullanılır. Masaüstündeki ``Çöp Kutusu'' çekirdeğin değil, dosya yöneticisinin bir özelliğidir.
+\begin{itemize}
+  \item Kalıplı bir \cmd{rm}'den önce \emph{aynı} kalıpla \cmd{ls} çalıştırın; nerede olduğunuzu \cmd{pwd} ile denetleyin.
+  \item \cmd{rm -r} bütün bir ağacı siler. Felaket için yanlış yerde bir boşluk yeter: \cmd{rm -r \textasciitilde/lab /old}, \texttt{\textasciitilde/lab}'ı siler \emph{ve} \texttt{/old}'u da dener.
+  \item \cmd{rm -f} (force, zorla) hiç sormaz ve hataları gizler. Her karakterini anlamadığınız sürece \cmd{rm -rf} komutunu asla \cmd{sudo} ile (11.~hafta) çalıştırmayın.
+\end{itemize}
+\texttt{\textasciitilde/lab} klasörünü bozarsanız kurulum betiğini yeniden çalıştırmanız yeter. Gerçek bir sistemde tek ``geri al'' yedeklerdir.
+\end{keyidea}
+
+% =====================================================================
+\section{Joker Karakterler ve Süslü Parantez Genişletmesi}
+\label{sec:glob}
+
+\subsection{\texttt{*} karakterini kim genişletir? Kabuk}
+
+\cmd{ls *.jpg} yazdığınızda \cmd{ls} programı yıldızı hiç görmez. Komutu başlatmadan \emph{önce} bash geçerli dizini okur, kalıpla eşleşen bütün adları bulur, onları sıralar ve komut satırına ayrı argümanlar olarak yerleştirir. Buna \term{glob genişletme} (globbing, pathname expansion) denir. Ardından \cmd{fork()} ve \cmd{exec()}, \cmd{ls}'yi hazır listeyle başlatır (3.~hafta).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[b/.style={rectangle,rounded corners=2pt,minimum width=3.0cm,minimum height=1.3cm,align=center,font=\footnotesize,text width=2.8cm},
+  arr/.style={-{Stealth[length=2mm]},thick,mintdeep}]
+\node[b,fill=light] (u) at (0,0) {\textbf{Siz yazarsınız}\\\texttt{ls *.jpg}};
+\node[b,fill=mint!25] (s) at (3.6,0) {\textbf{bash genişletir}\\dizini okur, \texttt{*.jpg} yerine adları koyar};
+\node[b,fill=light] (l) at (7.2,0) {\textbf{ls şunu alır}\\12 argüman:\\\texttt{img001.jpg \dots}};
+\node[b,fill=charcoal,text=white] (k) at (10.8,0) {\textbf{çekirdek}\\\texttt{execve(}\\\texttt{"/usr/bin/ls", \dots)}};
+\draw[arr] (u) -- (s); \draw[arr] (s) -- (l); \draw[arr] (l) -- (k);
+\end{tikzpicture}
+\caption{Joker karakterleri komut değil, kabuk genişletir.}
+\end{figure}
+
+Üç sonucu vardır:
+\begin{enumerate}[leftmargin=1.4em]
+  \item \cmd{echo} bir komutun tam olarak neyi alacağını gösterir; bu yüzden bir kalıbı denemek için en uygun araçtır.
+  \item Her komut joker karakterleri ``destekler'', çünkü hiçbir komut onları görmez.
+  \item Hiçbir şey eşleşmezse bash kalıbı değiştirmeden bırakır; komut da adı tam olarak \texttt{junk*} olan bir dosya arar ve böyle bir dosyanın olmadığını bildirir.
+\end{enumerate}
+
+\subsection{Kalıplar}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{>{\ttfamily}l >{\raggedright\arraybackslash}X >{\ttfamily}l >{\raggedright\arraybackslash}X}
+\toprule
+\textrm{\textbf{Kalıp}} & \textbf{Eşleşir} & \textrm{\textbf{Örnek}} & \textbf{\texttt{photos/} içindeki sonuç} \\
+\midrule
+* & herhangi bir dizgi, boş dizgi de & *.jpg & $12$ ad, img001--img012 \\
+? & tam olarak bir karakter & img00?.jpg & $9$ ad, img001--img009 \\
+{[0-2]} & bir aralıktan bir karakter & img01[0-2].jpg & img010, img011, img012 \\
+{[135]} & listelenen karakterlerden biri & img00[135].jpg & img001, img003, img005 \\
+{[!0]} & kümede \emph{olmayan} bir karakter & img0[!0]* & img010 \dots\ img013 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+İki kural: Linux adları büyük/küçük harfe \emph{duyarlıdır} (\texttt{*.jpg}, \texttt{IMG\_014.JPG} ile eşleşmez) ve \texttt{*} baştaki noktayla eşleşmez: gizli dosyalar, siz noktayı yazmadıkça dışarıda kalır. \cmd{demo\_wildcards.sh} betiği, $15$ boş ``fotoğraf'' içeren \texttt{\textasciitilde/lab/photos} klasöründe çalışır:
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ cd photos
+student@okan-lab:~/lab/photos$ ls
+IMG_014.JPG   img002.jpg  img005.jpg  img008.jpg  img011.jpg
+holiday.jpeg  img003.jpg  img006.jpg  img009.jpg  img012.jpg
+img001.jpg    img004.jpg  img007.jpg  img010.jpg  img013.png
+student@okan-lab:~/lab/photos$ echo *.png
+img013.png
+student@okan-lab:~/lab/photos$ ls img00?.jpg
+img001.jpg  img003.jpg  img005.jpg  img007.jpg  img009.jpg
+img002.jpg  img004.jpg  img006.jpg  img008.jpg
+student@okan-lab:~/lab/photos$ ls img01[0-2].jpg
+img010.jpg  img011.jpg  img012.jpg
+student@okan-lab:~/lab/photos$ ls *.[jJ][pP]*
+IMG_014.JPG   img002.jpg  img005.jpg  img008.jpg  img011.jpg
+holiday.jpeg  img003.jpg  img006.jpg  img009.jpg  img012.jpg
+img001.jpg    img004.jpg  img007.jpg  img010.jpg
+\end{lstlisting}
+
+Bir terminalde \cmd{ls} adları sütunlar hâlinde, her sütunda yukarıdan aşağıya sıralı olarak yazar. \texttt{*.[jJ][pP]*}, uzantısı j/J ve ardından p/P ile başlayan her adla eşleşir: on iki \texttt{.jpg}, \texttt{holiday.jpeg} ve \texttt{IMG\_014.JPG}.
+
+\subsection{Eşleşme olmaması, tırnaklar ve gizli dosyalar}
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab/photos$ echo *.gif
+*.gif
+student@okan-lab:~/lab/photos$ echo "*.jpg"
+*.jpg
+\end{lstlisting}
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab/photos$ cd ../docs
+student@okan-lab:~/lab/docs$ echo *
+final report.txt linux_quotes.txt notes_01.txt notes_02.txt notes_03.txt syllabus.txt
+student@okan-lab:~/lab/docs$ echo .*
+.settings
+\end{lstlisting}
+
+\texttt{.gif} dosyası olmadığı için \texttt{*.gif} olduğu gibi kalır. Tırnaklar genişletmeyi kapatır. \texttt{docs/} içinde \texttt{*}, \texttt{.settings} dışındaki bütün adları verir; \texttt{.*} onu bulur. (\texttt{final report.txt}'nin içinde boşluk bulunan \emph{tek} bir argüman olduğuna dikkat edin; \cmd{echo} argümanları yalnızca aralarına boşluk koyarak yazar.)
+
+\subsection{Süslü parantez genişletmesi}
+
+Süslü parantezler bash'in ikinci ve farklı bir genişletmesidir (brace expansion). Diske hiç bakmazlar: metin \emph{üretirler}. \texttt{\{a,b,c\}} listesi seçeneklerin her birini üretir; \texttt{\{1..5\}} aralığı bir dizi üretir; \texttt{\{01..03\}} baştaki sıfırları korur. Aynı sözcükteki birden çok süslü parantez çarpılır:
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab/photos$ echo {1..5}
+1 2 3 4 5
+student@okan-lab:~/lab/photos$ echo img{01..03}.jpg
+img01.jpg img02.jpg img03.jpg
+student@okan-lab:~/lab/photos$ echo report_{draft,final}.txt
+report_draft.txt report_final.txt
+student@okan-lab:~/lab/photos$ mkdir -p ../trip/{day1,day2,day3}/{photos,notes}
+student@okan-lab:~/lab/photos$ tree ../trip
+../trip
+<@├──@> day1
+<@│  @> <@├──@> notes
+<@│  @> <@└──@> photos
+<@├──@> day2
+<@│  @> <@├──@> notes
+<@│  @> <@└──@> photos
+<@└──@> day3
+    <@├──@> notes
+    <@└──@> photos
+
+10 directories, 0 files
+\end{lstlisting}
+
+\begin{example}[Çözümlü örnek: süslü parantezlerin oluşturduğu dizinleri saymak]
+\cmd{mkdir -p ../trip/\{day1,day2,day3\}/\{photos,notes\}} komutu $3 \times 2 = 6$ yol üretir. \texttt{trip} ve \cmd{-p}'nin oluşturduğu $3$ gün diziniyle birlikte ağaçta
+\[
+1 + 3 + 3 \times 2 = 10 \ \text{dizin}
+\]
+vardır; \cmd{tree}'nin bildirdiği tam olarak budur. Genel olarak $n_1, n_2, \dots$ seçenekli süslü parantezler $n_1 \cdot n_2 \cdots$ sözcük üretir.
+\end{example}
+
+Kısacası: joker karakterler var olan adları \emph{bulur} (sıralı; eşleşme yoksa değişmeden kalır), süslü parantezler yeni adlar \emph{üretir} (yazıldığı sırayla, dosyalar var olsun ya da olmasın).
+İkisini de bash komut başlamadan önce yapar ve ikisi de tırnaklarla kapatılır. Virgülden sonraki bir boşluk (\texttt{\{a, b\}}) süslü parantez genişletmesini bozar.
+
+% =====================================================================
+\section{Boşluklu Adlar: Tırnaklama}
+
+Kabuk, komut başlamadan \emph{önce} komut satırını boşluklardan böler. Bu yüzden içinde boşluk bulunan bir ad, onu korumazsanız (tırnaklama, quoting) iki argümana dönüşür (\cmd{demo\_quoting.sh}):
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ ls docs
+'final report.txt'   notes_01.txt   notes_03.txt
+ linux_quotes.txt    notes_02.txt   syllabus.txt
+student@okan-lab:~/lab$ cat docs/final report.txt
+cat: docs/final: No such file or directory
+cat: report.txt: No such file or directory
+student@okan-lab:~/lab$ cat "docs/final report.txt"
+Final report draft.
+This file name contains a space.
+student@okan-lab:~/lab$ cat 'docs/final report.txt'
+Final report draft.
+This file name contains a space.
+student@okan-lab:~/lab$ cat docs/final\ report.txt
+Final report draft.
+This file name contains a space.
+student@okan-lab:~/lab$ mkdir my photos
+mkdir: cannot create directory <@‘@>photos<@’@>: File exists
+student@okan-lab:~/lab$ mkdir "my photos"
+student@okan-lab:~/lab$ ls -d my*
+ my  'my photos'
+\end{lstlisting}
+
+\begin{itemize}
+  \item \cmd{cat}, \texttt{docs/final} ve \texttt{report.txt} adlarını aldı: iki hata.
+  \item Çift tırnak \texttt{"\dots"}, tek tırnak \texttt{'\dots'} ya da boşluktan önce bir ters eğik çizgi (\texttt{final\textbackslash\ report.txt}) tek argüman verir. \texttt{"} ile \texttt{'} arasındaki fark 14.~haftada önemli olacak (değişkenler yalnızca çift tırnak içinde genişletilir). Tab tamamlama ters eğik çizgiyi sizin için ekler.
+  \item \cmd{mkdir my photos}, \texttt{my}'ı oluşturdu ve zaten var olan \texttt{photos}'ta başarısız oldu.
+  \item \cmd{ls} boşluklu adları tırnak içinde yazar (\texttt{'my photos'}); böylece onları kopyalayıp bir komuta geri yapıştırabilirsiniz.
+\end{itemize}
+Öneri: kendi oluşturduğunuz adlarda boşluk yerine \texttt{\_} ya da \texttt{-} kullanın. (Temizlik: \cmd{rmdir my "my photos"}.)
+
+% =====================================================================
+\section{Dosyaların İçine Bakmak}
+
+\subsection{\texttt{cat}, \texttt{head}, \texttt{tail}}
+
+\cmd{cat} (\emph{concatenate}, art arda eklemek) dosyaların tamamını yazar; birden çok dosyayı birbiri ardına yazar ve \cmd{-n} satırları numaralar. \cmd{head -n N} ve \cmd{tail -n N} ilk ve son $N$ satırı yazar (varsayılan $10$) (\cmd{demo\_view.sh}):
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ cat docs/linux_quotes.txt
+Talk is cheap. Show me the code.
+Given enough eyeballs, all bugs are shallow.
+Most good programmers do programming not because they expect to get paid.
+Theory and practice sometimes clash. And when that happens, theory loses.
+Intelligence is the ability to avoid doing work, yet getting the work done.
+student@okan-lab:~/lab$ cat -n docs/notes_01.txt docs/notes_02.txt
+     1  Meeting notes 1
+     2  Meeting notes 2
+student@okan-lab:~/lab$ head -n 3 data/students.csv
+id,name,department,midterm,final
+2026001,Elif Yilmaz,ECT,96,99
+2026002,Zeynep Dogan,ME,95,36
+student@okan-lab:~/lab$ tail -n 3 logs/system.log
+2026-10-12 14:27:00 INFO  user login
+2026-10-12 14:38:00 INFO  backup finished
+2026-10-12 14:49:00 INFO  network link up
+\end{lstlisting}
+
+\subsection{\texttt{tail -f} ve \texttt{less}}
+
+\cmd{tail -f} (\emph{follow}, izle) dosyayı açık tutar ve başka programlar yeni satırlar ekledikçe onları yazar --- bir günlük (log) dosyasını izlemenin standart yolu budur. İki terminal açın: birincide \cmd{tail -n 2 -f logs/system.log} çalıştırın, ikincide bir satır ekleyin:
+\begin{lstlisting}[style=term]
+$ echo "2026-10-12 15:00:00 WARN  disk almost full" >> logs/system.log
+\end{lstlisting}
+Yeni satır hemen birinci terminalde belirir; \cmd{tail}'i Ctrl+C ile durdurun (\texttt{\^{}C} olarak görünür). Betiğimizde ikinci terminalin rolünü bir arka plan işi oynar:
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ tail -n 2 -f logs/system.log
+2026-10-12 14:38:00 INFO  backup finished
+2026-10-12 14:49:00 INFO  network link up
+2026-10-12 15:00:00 WARN  disk almost full
+^C
+\end{lstlisting}
+
+Uzun dosyalarda \cmd{cat} çok hızlı kayar. \cmd{less dosya} bir seferde bir ekran gösterir ve yalnızca görüntülediği kısmı okuduğu için çok büyük dosyaları bile anında açar. 9.~haftadaki \cmd{man} sayfaları da \cmd{less} ile gösterilir:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}>{\ttfamily}l l >{\ttfamily}l l@{}}
+\toprule
+\textrm{\textbf{Tuş}} & \textbf{İşlem} & \textrm{\textbf{Tuş}} & \textbf{İşlem} \\
+\midrule
+Space / b & sonraki / önceki sayfa & /sözcük & ileri doğru ara \\
+↓ ↑ & bir satır & n  N & sonraki / önceki eşleşme \\
+g  G & dosyanın başı / sonu & q & çık \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{\texttt{wc} ve \texttt{file}}
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ wc docs/linux_quotes.txt
+  5  50 302 docs/linux_quotes.txt
+student@okan-lab:~/lab$ wc -l data/*.csv data/*.txt
+  41 data/students.csv
+  30 data/cities.txt
+  20 data/numbers.txt
+  91 total
+student@okan-lab:~/lab$ file README.txt src/hello.c data/students.csv photos/img001.jpg projects /usr/bin/ls
+README.txt:        ASCII text
+src/hello.c:       C source, ASCII text
+data/students.csv: CSV ASCII text
+photos/img001.jpg: empty
+projects:          directory
+/usr/bin/ls:       ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=daa5130f2a41f7fbc8662048f3294f3d439ca7ff, for GNU/Linux 3.2.0, stripped
+\end{lstlisting}
+
+\cmd{wc} (\emph{word count}, sözcük sayımı) satır, sözcük ve bayt sayılarını yazar: \texttt{linux\_quotes.txt} $5$ satır, $50$ sözcük, $302$ bayttır. \cmd{-l}, \cmd{-w}, \cmd{-c} tek bir sayımı seçer. \texttt{students.csv} $41$ satırdır: $1$ başlık satırı $+ 40$ öğrenci.
+
+\cmd{file} adı yok sayar ve içeriği, özellikle ilk baytları (\emph{sihirli sayı}, magic number; 7.~hafta) inceler. Bizim ``fotoğraflarımız'' \texttt{.jpg} adlı boş dosyalardır; bu yüzden \cmd{file} \texttt{empty} (boş) der. Gerçek bir JPEG \texttt{FF D8 FF} baytlarıyla başlar. \texttt{/usr/bin/ls} bir ELF yürütülebilir dosyasıdır (uzun satır alt satıra kayar).
+
+\subsection{\texttt{stat}: düğümü okumak}
+\label{sec:stat}
+
+\cmd{stat}, 7.~haftanın düğümünü alan alan yazdırır (\cmd{demo\_stat\_du\_df.sh}):
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ stat docs/syllabus.txt
+  File: docs/syllabus.txt
+  Size: 578             Blocks: 8          IO Block: 4096   regular file
+Device: 254,0   Inode: 804123      Links: 1
+Access: (0664/-rw-rw-r--)  Uid: ( 1010/ student)   Gid: ( 1012/ student)
+Access: 2026-10-12 08:47:57.251900492 +0000
+Modify: 2026-10-12 08:47:57.254669759 +0000
+Change: 2026-10-12 08:47:57.254669759 +0000
+ Birth: 2026-10-12 08:47:57.251900492 +0000
+student@okan-lab:~/lab$ stat -c "%n: %s bytes, inode %i, %h link(s)" docs/*.txt
+docs/final report.txt: 53 bytes, inode 804125, 1 link(s)
+docs/linux_quotes.txt: 302 bytes, inode 804124, 1 link(s)
+docs/notes_01.txt: 16 bytes, inode 804127, 1 link(s)
+docs/notes_02.txt: 16 bytes, inode 804128, 1 link(s)
+docs/notes_03.txt: 16 bytes, inode 804129, 1 link(s)
+docs/syllabus.txt: 578 bytes, inode 804123, 1 link(s)
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{Size: 578} bayt veri; \texttt{Blocks: 8} ise $512$ baytlık birimleri sayar: $8 \times 512 = 4096$~B, yani bir adet $4$~KiB'lık dosya sistemi bloğu (\texttt{IO Block}). $578$ baytlık bir dosya bile bütün bir bloğu kaplar.
+  \item \texttt{Inode} ve \texttt{Links}: düğüm numarası ve bağlantı sayısı.
+  \item \texttt{Access: (0664/-rw-rw-r--)}: sekizli (octal) ve sembolik biçimde izinler --- gelecek haftanın konusu. \texttt{Uid}/\texttt{Gid}: sahip ve grup.
+  \item \cmd{stat -c} yalnızca seçilen alanları yazar: \texttt{\%n} ad, \texttt{\%s} boyut, \texttt{\%i} düğüm, \texttt{\%h} sabit bağlantı sayısı, \texttt{\%y} mtime.
+\end{itemize}
+
+\subsection{\texttt{du} ve \texttt{df}: ne kadar yer?}
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ du -sh docs data logs photos
+32K     docs
+16K     data
+36K     logs
+4.0K    photos
+student@okan-lab:~/lab$ du -h projects
+8.0K    projects/beta/src
+8.0K    projects/beta/docs
+24K     projects/beta
+8.0K    projects/alpha/src
+8.0K    projects/alpha/docs
+24K     projects/alpha
+52K     projects
+student@okan-lab:~/lab$ df -h ~
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda        252G   13G   30G  29% /
+\end{lstlisting}
+
+\cmd{du} (\emph{disk usage}, disk kullanımı) dosyaların ve dizinlerin kullandığı blokları toplar; \cmd{-s} her argüman için bir toplam yazar, \cmd{-h} K, M, G birimlerini kullanır. \cmd{df} (\emph{disk free}, boş disk) dizin başına değil, \emph{dosya sistemi} başına (bağlanmış her disk için) bildirir.
+
+\begin{example}[Çözümlü örnek: du'yu elle denetlemek]
+Her dizinin kendisi bir adet $4$~KiB'lık blok kullanır. \texttt{logs/}, \texttt{access.log} ($23\,604$~B) ve \texttt{system.log} ($5\,207$~B) dosyalarını tutar. Bloklar tam olarak ayrılır:
+\[
+\left\lceil \tfrac{23\,604}{4096} \right\rceil = 6 \ \text{blok} = 24\ \text{KiB}, \qquad
+\left\lceil \tfrac{5\,207}{4096} \right\rceil = 2 \ \text{blok} = 8\ \text{KiB},
+\]
+dolayısıyla \texttt{logs}, \cmd{du}'nun bildirdiği gibi $4 + 24 + 8 = 36$~KiB kullanır. \texttt{photos/} yalnızca $4{,}0$~K kullanır: $15$ dosyası boştur ve hiç veri bloğu gerektirmez. \texttt{projects/} ise $4 + 2 \times 24 = 52$~K'dir.
+\end{example}
+
+\cmd{df} çıktısında \texttt{Use\%}, yukarı yuvarlanmış $\text{Used}/(\text{Used} + \text{Avail})$ değeridir: $12/(12+30) \approx 0{,}286$, yani \%29 olarak gösterilir. \texttt{Size}, $\text{Used} + \text{Avail}$ toplamından büyüktür, çünkü diskin bir kısmı ayrılmıştır ve sıradan kullanıcılara açık değildir (normal bir ext4 diskte root için \%5; sanal test makinemizde çok daha fazla).
+
+% =====================================================================
+\section{Bağlantılara Yeniden Bakış}
+\label{sec:links}
+
+7.~haftada sabit (hard) ve sembolik (symbolic) bağlantılar oluşturmuştuk. Şimdi onları \texttt{\textasciitilde/lab/docs} içinde doğrudan bir kopyayla karşılaştırıyoruz (\cmd{demo\_links.sh}):
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ cd docs
+student@okan-lab:~/lab/docs$ ln syllabus.txt plan.txt
+student@okan-lab:~/lab/docs$ cp syllabus.txt copy.txt
+student@okan-lab:~/lab/docs$ ln -s syllabus.txt shortcut.txt
+student@okan-lab:~/lab/docs$ ls -li syllabus.txt plan.txt copy.txt shortcut.txt
+804702 -rw-rw-r-- 1 student student 578 Oct 12 08:47 copy.txt
+804123 -rw-rw-r-- 2 student student 578 Oct 12 08:47 plan.txt
+804703 lrwxrwxrwx 1 student student  12 Oct 12 08:47 shortcut.txt -> syllabus.txt
+804123 -rw-rw-r-- 2 student student 578 Oct 12 08:47 syllabus.txt
+student@okan-lab:~/lab/docs$ echo "Week 16  Party" >> plan.txt
+student@okan-lab:~/lab/docs$ tail -n 1 syllabus.txt copy.txt
+==> syllabus.txt <==
+Week 16  Party
+
+==> copy.txt <==
+Week 15 Final exam
+student@okan-lab:~/lab/docs$ rm syllabus.txt
+student@okan-lab:~/lab/docs$ ls -li plan.txt shortcut.txt
+804123 -rw-rw-r-- 1 student student 593 Oct 12 08:47 plan.txt
+804703 lrwxrwxrwx 1 student student  12 Oct 12 08:47 shortcut.txt -> syllabus.txt
+student@okan-lab:~/lab/docs$ cat shortcut.txt
+cat: shortcut.txt: No such file or directory
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{syllabus.txt} ve \texttt{plan.txt}: bağlantı sayısı $2$ olan \emph{aynı} düğüm ($804123$) --- tek dosya, iki ad (Şekil~\ref{fig:inodes}).
+  \item \texttt{copy.txt}'nin kendi düğümü vardır: aynı baytları taşıyan ayrı bir dosya.
+  \item \texttt{shortcut.txt}'nin türü \texttt{l}'dir, kendi düğümü vardır ve boyutu $12$'dir; bu, sakladığı \texttt{syllabus.txt} dizgisinin uzunluğudur.
+  \item \texttt{plan.txt} üzerinden eklenen satır \texttt{syllabus.txt}'nin sonunda görünür, \texttt{copy.txt}'de görünmez. Boyut $578$'den $593 = 578 + 15$ bayta çıkar (\texttt{Week 16\ \ Party} $14$ karakter, artı bir satır sonu).
+  \item \cmd{rm syllabus.txt}'den sonra veriye hâlâ \texttt{plan.txt} adıyla ulaşılabilir (bağlantı sayısı yeniden $1$); sembolik bağlantı ise \emph{askıda kalır} (dangling link): sakladığı yol artık yoktur.
+\end{itemize}
+
+Sembolik bağlantılar dizinleri gösterebilir; dizinlere sabit bağlantı ise yasaktır, çünkü dizin çizgesinde döngüler oluşturabilirler (7.~hafta, genel çizge dizinler):
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab/docs$ cd ..
+student@okan-lab:~/lab$ ln -s projects/alpha/docs alpha_docs
+student@okan-lab:~/lab$ ls -l alpha_docs
+lrwxrwxrwx 1 student student 19 Oct 12 08:47 alpha_docs -> projects/alpha/docs
+student@okan-lab:~/lab$ ls alpha_docs/
+design.txt
+student@okan-lab:~/lab$ ln projects alpha_hard
+ln: projects: hard link not allowed for directory
+student@okan-lab:~/lab$ ls -ld projects projects/alpha
+drwxrwxr-x 4 student student 4096 Oct 12 08:47 projects
+drwxrwxr-x 4 student student 4096 Oct 12 08:47 projects/alpha
+\end{lstlisting}
+
+Bir dizinin bağlantı sayısı $2 + (\text{alt dizin sayısı})$'dır: üst dizindeki adı, kendi \texttt{.} girdisi ve her çocuğun \texttt{..} girdisi. \texttt{projects}, \texttt{alpha} ve \texttt{beta}'yı içerir; dolayısıyla $2 + 2 = 4$.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+ & \textbf{Sabit bağlantı \cmd{ln}} & \textbf{Sembolik bağlantı \cmd{ln -s}} & \textbf{Kopya \cmd{cp}} \\
+\midrule
+Düğüm & hedefle aynı & kendine ait (bir yol saklar) & kendine ait \\
+Veri & paylaşılır & yol üzerinden ulaşılır & çoğaltılır \\
+Hedef silinirse & veri kalır (sayı $-1$) & bağlantı askıda kalır & kopya etkilenmez \\
+Dizinler & izin verilmez & izin verilir & \cmd{-r} ile \\
+Başka dosya sistemi & olanaksız & olanaklı & olanaklı \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Göreli bir sembolik bağlantı, sizin geçerli dizininize göre değil, \emph{bağlantıyı içeren dizine} göre yorumlanır. Bu yüzden \texttt{\textasciitilde/lab} içinde yazılan
+\begin{center}\cmd{ln -s syllabus.txt docs/shortcut.txt}\end{center}
+komutu \texttt{docs/syllabus.txt}'yi gösterir --- sık karşılaşılan bir kafa karışıklığı kaynağı.
+
+\subsection{Uygulama: aynı işlemler C'de}
+
+\cmd{code/fileops.c} programı sistem çağrılarını doğrudan yapar; bu haftanın her komutu için bir çağrı. \texttt{CHECK} makrosu, bir çağrı başarısız olduğunda nedenini \cmd{perror()} ile yazar; tıpkı komutların hata iletilerini yazması gibi. Programın özü:
+
+\lstinputlisting{../code/fileops_excerpt.c}
+
+\begin{lstlisting}[style=term]
+student@okan-lab:~/lab$ gcc -Wall -O2 fileops.c -o fileops
+student@okan-lab:~/lab$ ./fileops
+after open(O_CREAT):
+  box/a.txt  inode 804677  links 1
+after link() and symlink():
+  box/a.txt  inode 804677  links 2
+  box/b.txt  inode 804677  links 2
+  box/s.txt  inode 804678  links 1
+after rename() a.txt -> c.txt:
+  box/c.txt  inode 804677  links 2
+after unlink() b.txt:
+  box/c.txt  inode 804677  links 1
+rmdir("box"): Directory not empty
+box removed
+\end{lstlisting}
+
+\cmd{link()}'ten sonra iki ad da $2$ bağlantılı aynı düğümü gösterir; \cmd{rename()} düğümü korur; \cmd{unlink()}'ten sonra sayı yeniden $1$'dir. Boş olmayan \texttt{box} üzerinde \cmd{rmdir()} \texttt{Directory not empty} (dizin boş değil) ile başarısız olur --- kabukta \cmd{rmdir} komutunun yazdığı metnin aynısı, çünkü ikisi de çekirdeğin \texttt{ENOTEMPTY} hata kodundan gelir. Programı kendiniz \cmd{gcc -Wall -O2 fileops.c -o fileops} (ya da \cmd{make}) ile derleyin ve \texttt{\textasciitilde/lab} içinde çalıştırın (\cmd{demo\_fileops.sh}).
+
+% =====================================================================
+\section{Komut Başvuru Tablosu}
+
+{\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{@{}>{\ttfamily}p{3.3cm} p{5.2cm} >{\raggedright\arraybackslash}p{6.0cm}@{}}
+\toprule
+\textrm{\textbf{Komut}} & \textbf{Ne yapar} & \textbf{Yararlı seçenekler} \\
+\midrule
+\endhead
+mkdir dir & dizin oluşturur & \cmd{-p} bütün yol, varsa hata yok; \cmd{-v} ayrıntılı \\
+touch file & boş dosya oluşturur ya da zamanlarını günceller & \cmd{-d "2026-01-15 09:30"} zaman ayarla \\
+cp src dst & dosya kopyalar (yeni düğüm) & \cmd{-r} dizinler, \cmd{-i} sor, \cmd{-v} ayrıntılı, \cmd{-p} zamanları koru, \cmd{-a} arşiv \\
+mv src dst & yeniden adlandırır ya da taşır (düğüm aynı) & \cmd{-i} üzerine yazmadan sor, \cmd{-v} ayrıntılı \\
+rm file & adları siler --- geri alma yok & \cmd{-i} sor, \cmd{-r} özyinelemeli, \cmd{-v} ayrıntılı, \cmd{-f} zorla (tehlikeli) \\
+rmdir dir & boş bir dizini siler & \cmd{-p} boş üst dizinleri de \\
+ln target name & sabit bağlantı & \cmd{ls -li} ile denetleyin \\
+ln -s target name & sembolik bağlantı & \cmd{ls -l}, \texttt{name -> target} gösterir \\
+cat file\dots & dosyaları yazar / art arda ekler & \cmd{-n} satırları numarala \\
+less file & dosyada sayfa sayfa gezinir & Space, b, /sözcük, n, g, G, q \\
+head file & ilk satırlar & \cmd{-n N} \\
+tail file & son satırlar & \cmd{-n N}; \cmd{-f} izle \\
+wc file & satır, sözcük, bayt & \cmd{-l} \cmd{-w} \cmd{-c} \\
+file name & içerik türünü tanır & --- \\
+stat file & düğümü gösterir & \cmd{-c "\%n \%s \%i \%h \%y"} seçilen alanlar \\
+du dir & kullanılan disk alanı & \cmd{-s} özet, \cmd{-h} okunabilir birimler \\
+df & dosya sistemi başına boş alan & \cmd{-h}; ev dizininiz için \cmd{df -h \textasciitilde} \\
+tree dir & dizin ağacı çizer & \cmd{-d} yalnızca dizinler \\
+echo pattern & kabuğun neyi genişlettiğini gösterir & --- \\
+\bottomrule
+\end{longtable}
+}
+
+% =====================================================================
+\section{Sık Görülen Hatalar ve Anlamları}
+
+Aşağıdaki iletilerin hepsi bu haftanın gösterimlerinden alınmış gerçek çıktılardır. Türkçe yerel ayarlı bir sistemde aynı iletiler Türkçe görünebilir; anlamları değişmez.
+
+{\small
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{6.9cm} >{\raggedright\arraybackslash}p{7.6cm}@{}}
+\toprule
+\textbf{İleti} & \textbf{Anlamı ve çözümü} \\
+\midrule
+\endhead
+\texttt{cp: -r not specified; omitting directory 'projects/alpha'} & Bir dizini kopyalamaya çalıştınız. \cmd{cp -r} kullanın. \\
+\texttt{rm: cannot remove 'projects/beta': Is a directory} & \cmd{-r} olmadan \cmd{rm} dizinleri reddeder. \cmd{rmdir} (boşsa) ya da dikkatle \cmd{rm -r} kullanın. \\
+\texttt{rmdir: failed to remove 'projects/beta': Directory not empty} & \cmd{rmdir} yalnızca boş dizinleri siler. Önce boşaltın ya da \cmd{ls} ile denetledikten sonra \cmd{rm -r} kullanın. \\
+\texttt{mkdir: cannot create directory ‘trip/day1’: No such file or directory} & Bir üst dizin (\texttt{trip}) yok. \cmd{mkdir -p} kullanın. \\
+\texttt{mkdir: cannot create directory ‘test’: File exists} & Ad (bir dosya ya da dizin tarafından) kullanılıyor. Ad bir dizinse \cmd{mkdir -p} hata vermez. \\
+\texttt{cat: docs/final: No such file or directory} + \texttt{cat: report.txt: \dots} & Tek bir dosya adı için iki hata: adda boşluk var. Tırnak içine alın. \\
+\texttt{ls: cannot access 'junk*': No such file or directory} & Kalıp hiçbir şeyle eşleşmedi, kabuk da onu değiştirmeden geçirdi. Kalıbı \cmd{echo} ile denetleyin. \\
+\texttt{ln: projects: hard link not allowed for directory} & Sembolik bağlantı kullanın: \cmd{ln -s}. \\
+\texttt{cat: shortcut.txt: No such file or directory} (ama \cmd{ls} onu gösteriyor) & Sembolik bağlantı var, hedefi yok: bağlantı askıda. \cmd{ls -l} ile denetleyin. \\
+Hiç ileti yok & En tehlikeli durum: \cmd{cp} ve \cmd{mv} var olan bir hedefin üzerine yazar, \cmd{rm} de siler --- tek söz etmeden. Emin değilseniz \cmd{-i} kullanın. \\
+\bottomrule
+\end{longtable}
+}
+
+% =====================================================================
+\Needspace{14\baselineskip}
+\section{Özet}
+
+\begin{keyidea}[Yedi cümlede 10. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Dizin adları düğümlere eşler; \cmd{cp} kopyalanmış veriyle yeni bir düğüm oluşturur, \cmd{mv} yalnızca adları değiştirir, \cmd{ln} bir ad ekler, \cmd{ln -s} bir yol saklar, \cmd{rm} bir adı siler ve bağlantı sayısı $0$'a inince veri serbest kalır.
+  \item Her komut bir ya da birkaç sistem çağrısı yapan bir programdır: \cmd{mkdir()}, \cmd{renameat2()}, \cmd{linkat()}, \cmd{symlinkat()}, \cmd{unlinkat()}, \cmd{rmdir()}.
+  \item \cmd{mkdir -p} bütün yolları oluşturur; \cmd{touch} boş dosyalar oluşturur ve zamanları ayarlar; atime, mtime ve ctime sırasıyla erişimi, veri değişikliğini ve düğüm değişikliğini kaydeder.
+  \item \cmd{cp -r} ağaçları kopyalar; \cmd{-i} verilmedikçe \cmd{cp} ve \cmd{mv} sessizce üzerine yazar; \cmd{rm}'nin geri alması yoktur.
+  \item Kabuk, komut çalışmadan önce joker karakterleri (var olan adlarla eşleşir) ve süslü parantezleri (metin üretir) genişletir; \cmd{echo} sonucu gösterir, tırnaklar genişletmeyi kapatır.
+  \item Boşluklu adlar tırnak içine alınmalı ya da kaçışlanmalıdır.
+  \item \cmd{cat}, \cmd{less}, \cmd{head}, \cmd{tail -f}, \cmd{wc}, \cmd{file}, \cmd{stat}, \cmd{du} ve \cmd{df} dosyaları değiştirmeden inceler.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Sözlük}
+
+\begin{description}[leftmargin=0pt,itemsep=0.15em]
+  \item[Askıda kalan bağlantı (dangling link)] Hedefi artık var olmayan sembolik bağlantı.
+  \item[Bağlantı sayısı (link count)] Bir düğümü gösteren dizin girdilerinin (adların) sayısı; $0$'a inince veri serbest kalır.
+  \item[Düğüm (inode)] Bir dosyanın adı dışındaki her şeyini (tür, boyut, sahip, izinler, zamanlar, blok işaretçileri) tutan yapı.
+  \item[Glob genişletme (globbing)] Kabuğun \texttt{*}, \texttt{?}, \texttt{[\,]} kalıplarını eşleşen dosya adlarıyla değiştirmesi.
+  \item[Joker karakter (wildcard)] Bir ad kalıbında birden çok adla eşleşen özel karakter: \texttt{*}, \texttt{?}, \texttt{[\,]}.
+  \item[Özyinelemeli (recursive)] Bir dizine ve altındaki her şeye aynı işlemi uygulayan (\cmd{-r}).
+  \item[Sabit bağlantı (hard link)] Var olan bir düğüm için ek bir dizin girdisi.
+  \item[Sembolik bağlantı (symbolic link)] İçeriği başka bir dosyanın yolu olan dosya.
+  \item[Süslü parantez genişletmesi (brace expansion)] Kabuğun \texttt{\{a,b\}} ve \texttt{\{1..5\}} biçimlerinden metin üretmesi.
+  \item[Tırnaklama (quoting)] Boşluk ve özel karakterleri kabuktan korumak için \texttt{"\dots"}, \texttt{'\dots'} ya da \texttt{\textbackslash} kullanmak.
+  \item[Zaman damgaları (timestamps)] Düğümde tutulan atime (erişim), mtime (veri değişikliği), ctime (düğüm değişikliği) ve varsa Birth (oluşturulma).
+\end{description}
+
+% =====================================================================
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Kısa deneyler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Bir dosya üzerinde \cmd{stat} çalıştırın, dosyayı \cmd{cat} ile okuyun ve \cmd{stat}'ı yeniden çalıştırın. atime değişti mi? İkinci kez neden değişmeyebilir?
+  \item \cmd{head -c 1000000 /dev/zero > big} ile 1~MB'lık bir dosya yapın, sonra \cmd{ls -l big} ile \cmd{du -h big} çıktılarını karşılaştırın.
+  \item \cmd{strace -e trace=openat,read,write cp docs/syllabus.txt /tmp/x.txt} çalıştırın ve kopyalamayı yapan \cmd{read()} ve \cmd{write()} çağrılarını bulun.
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item $4$~GB'lık bir dosyanın \cmd{mv} ile taşınması aynı disk içinde neden anında biter de bir USB belleğe yavaş olur?
+  \item \cmd{rm} ile \cmd{rmdir} arasındaki fark nedir? \cmd{rm -r} bir dizini silmeden önce neden onu boşaltmak zorundadır?
+  \item \texttt{*.txt} kalıbını kim genişletir: kabuk mu, komut mu? Bunu kanıtlayan bir deney verin.
+  \item Joker karakterlerle süslü parantez genişletmesi arasındaki farkı birer örnekle açıklayın.
+  \item ctime nedir ve neden oluşturulma zamanı \emph{değildir}?
+  \item Özgün ad silindikten sonra sabit bağlantıyı, sembolik bağlantıyı ve kopyayı karşılaştırın.
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item \cmd{mkdir -p site/\{css,js,img\}/\{v1,v2\}}, \texttt{site} dahil kaç dizin oluşturur?
+  \item Bir dosya $10\,000$ bayttır; blok boyutu $4096$~B'dir. Dosya kaç blok kullanır ve \cmd{stat} \texttt{Blocks} olarak ne gösterir?
+  \item Bir dizinde $5$ alt dizin ve $20$ dosya var. Bağlantı sayısı kaçtır?
+  \item \texttt{\textasciitilde/lab/photos} içinde (taze laboratuvar) \texttt{img0?[02468].*} kaç adla eşleşir?
+  \item \cmd{df} Used $= 45$~G ve Avail $= 55$~G gösteriyor. \texttt{Use\%} kaçtır?
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=7]
+  \item $1 + 3 + 3 \times 2 = 10$ dizin.
+  \item $\lceil 10\,000 / 4096 \rceil = 3$ adet $4$~KiB'lık blok $= 12\,288$~B; \cmd{stat} $512$ baytlık birimleri sayar: $3 \times 8 = 24$.
+  \item $2 + 5 = 7$; dosyalar bir dizinin bağlantı sayısını artırmaz.
+  \item Dördüncü karakter $0$ ya da $1$, beşinci karakter çift olmalıdır: img002, 004, 006, 008 (dördüncü karakter $0$) ve img010, 012 (dördüncü karakter $1$): $6$ ad.
+  \item $45/(45+55) = 0{,}45$, yani \%45.
+\end{enumerate}
+
+% =====================================================================
+\section{Laboratuvar Föyü (notlu, 100 puan)}
+\label{sec:lab}
+
+\textbf{Yönerge.} Taze bir laboratuvarla başlayın: \cmd{bash \textasciitilde/mcmp117\_lab\_setup.sh \&\& cd \textasciitilde/lab}. Alıştırmaları \emph{sırayla} yapın (sonrakiler öncekilerin sonuçlarını kullanır). Her alıştırma için kullandığınız komut(lar)ı ve çıktının önemli satırlarını yazın; bir soru ``neden'' diye soruyorsa tek cümleyle yanıtlayın. Kalıplı her \cmd{mv} ya da \cmd{rm}'den önce aynı kalıpla \cmd{ls} çalıştırın.
+
+\subsection*{A bölümü --- Temel (33 puan)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{\arabic*.}]
+  \item \textbf{(4)} \emph{Tek} komutla iç içe \texttt{practice/a/b/c} dizinlerini oluşturun. Sonucu \cmd{tree} ile gösterin.
+  \item \textbf{(4)} \emph{Tek} komutla \texttt{practice} içinde üç boş dosya oluşturun: \texttt{one.txt}, \texttt{two.txt}, \texttt{three.txt}. \texttt{practice}'i listeleyin.
+  \item \textbf{(5)} \texttt{docs/syllabus.txt}'yi \texttt{backup/} içine \texttt{syllabus\_backup.txt} adıyla kopyalayın; \cmd{ls -l backup} ile doğrulayın.
+  \item \textbf{(5)} Onu \texttt{syllabus\_v1.txt} olarak yeniden adlandırın. Öncesinde ve sonrasında \cmd{ls -i} ile düğüm numarasının değişmediğini gösterin ve nedenini açıklayın.
+  \item \textbf{(5)} \texttt{docs/syllabus.txt}'nin ilk $4$ ve son $2$ satırını görüntüleyin.
+  \item \textbf{(5)} \texttt{docs/linux\_quotes.txt} kaç satır, sözcük ve bayttır? \texttt{data/students.csv} içinde kaç \emph{öğrenci} vardır?
+  \item \textbf{(5)} \texttt{docs/final report.txt}'yi iki farklı tırnaklama yoluyla görüntüleyin.
+\end{enumerate}
+
+\subsection*{B bölümü --- Orta (39 puan)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{\arabic*.},start=8]
+  \item \textbf{(6)} Dizin değiştirmeden \texttt{img001.jpg}--\texttt{img009.jpg} fotoğraflarını \texttt{?} ile, sonra \texttt{img010.jpg}--\texttt{img012.jpg} fotoğraflarını \texttt{[\,]} ile listeleyin; ardından hangi PNG dosyalarının bulunduğunu \cmd{echo} ile gösterin.
+  \item \textbf{(8)} \texttt{photos/} klasörünü düzenleyin: \texttt{jpg}, \texttt{png} ve \texttt{other} alt dizinlerini oluşturun, bütün \texttt{.jpg} dosyalarını \texttt{jpg/}'ye, bütün \texttt{.png} dosyalarını \texttt{png/}'ye, geri kalanları \texttt{other/}'a taşıyın. Sonucu \cmd{tree} ile gösterin. \texttt{IMG\_014.JPG} ve \texttt{holiday.jpeg} neden \texttt{jpg/}'ye gitmez?
+  \item \textbf{(6)} \cmd{ls docs/*} komutunun hangi argümanları alacağını \cmd{echo} ile gösterin. \texttt{.settings} neden yok? Onu \cmd{ls} ile gösterin.
+  \item \textbf{(6)} Bütün \texttt{docs/} dizinini \texttt{backup/docs\_copy} olarak yedekleyin. Gizli dosyanın da kopyalandığını gösterin ve iki dizinin disk kullanımını karşılaştırın.
+  \item \textbf{(6)} \texttt{README.txt}, \texttt{src/hello.c}, \texttt{photos/jpg/img001.jpg} ve \texttt{logs} üzerinde \cmd{file}; \texttt{data}, \texttt{logs}, \texttt{photos}, \texttt{src} üzerinde \cmd{du -sh} kullanın. Bütün fotoğraflar boş olduğu hâlde \texttt{photos} neden şimdi $16$K'dir?
+  \item \textbf{(7)} \texttt{docs/notes\_01.txt}'nin erişim ve değişiklik zamanını 1~Eylül~2026, 12:00 olarak ayarlayın. İki zamanı \cmd{stat -c} ile gösterin ve \cmd{ls -l}'nin şimdi neden yıl değil de günün saatini gösterdiğini açıklayın.
+\end{enumerate}
+
+\subsection*{C bölümü --- Zor (28 puan)}
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{\arabic*.},start=14]
+  \item \textbf{(7)} \texttt{docs/syllabus.txt}'ye \texttt{docs/syllabus\_hard.txt} adında bir sabit bağlantı oluşturun. Düğüm numaralarını ve bağlantı sayılarını gösterin. \texttt{docs/syllabus.txt}'yi silin ve verinin hâlâ var olduğunu gösterin. Bağlantı sayısı şimdi kaçtır?
+  \item \textbf{(8)} \texttt{\textasciitilde/lab} içinde \texttt{projects/alpha/docs}'u gösteren \texttt{alpha\_docs} adlı bir sembolik bağlantı oluşturun ve içeriğini bağlantı üzerinden listeleyin. \texttt{projects/alpha}'yı \texttt{projects/alpha\_old} olarak yeniden adlandırın: bağlantıya ne olur? Onarın.
+  \item \textbf{(6)} \emph{Tek} komutla, her biri \texttt{slides} ve \texttt{notes} içeren \texttt{course/week01} \dots\ \texttt{course/week14} dizinlerini oluşturun. Toplam kaç dizin oluşturuldu (\texttt{course} dahil)? Hesabınızı gösterin.
+  \item \textbf{(7)} Temizlik: \cmd{rmdir practice} komutunu deneyin ve sonucu açıklayın; sonra \texttt{practice} ve \texttt{course}'u tamamen silin ve \texttt{\textasciitilde/lab}'ı listeleyin.
+\end{enumerate}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lccc|c@{}}
+\toprule
+ & \textbf{A bölümü} & \textbf{B bölümü} & \textbf{C bölümü} & \textbf{Toplam} \\
+\midrule
+Puan & $33$ & $39$ & $28$ & $100$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =====================================================================
+\section{Laboratuvar Föyü Çözümleri}
+
+Taze bir laboratuvarda çalıştırılan \cmd{code/demo\_lab\_solutions.sh} betiğinin gerçek çıktısı (düğüm numaraları ve zamanlar sizin makinenizde farklı olacaktır).
+
+\subsection*{A bölümü}
+
+\textbf{1--2.} \cmd{-p} bütün yolu oluşturur; süslü parantez genişletmesi tek bir \cmd{touch}'a üç ad verir:
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ mkdir -p practice/a/b/c
+student@okan-lab:~/lab$ tree practice
+practice
+<@└──@> a
+    <@└──@> b
+        <@└──@> c
+
+4 directories, 0 files
+student@okan-lab:~/lab$ touch practice/{one,two,three}.txt
+student@okan-lab:~/lab$ ls practice
+a  one.txt  three.txt  two.txt
+\end{lstlisting}
+
+\textbf{3--4.} Düğüm numarası \cmd{mv}'den önce ve sonra aynıdır, çünkü yeniden adlandırma yalnızca dizin girdisini değiştirir; düğüme ve veriye dokunulmaz:
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ cp docs/syllabus.txt backup/syllabus_backup.txt
+student@okan-lab:~/lab$ ls -l backup
+total 4
+-rw-rw-r-- 1 student student 578 Oct 12 08:48 syllabus_backup.txt
+student@okan-lab:~/lab$ ls -i backup/syllabus_backup.txt
+804718 backup/syllabus_backup.txt
+student@okan-lab:~/lab$ mv backup/syllabus_backup.txt backup/syllabus_v1.txt
+student@okan-lab:~/lab$ ls -i backup/syllabus_v1.txt
+804718 backup/syllabus_v1.txt
+\end{lstlisting}
+
+\textbf{5--7.} \texttt{students.csv} $41$ satırdır ve bunlardan biri başlıktır; yani $41 - 1 = 40$ öğrenci:
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ head -n 4 docs/syllabus.txt
+Week 1  Introduction and history
+Week 2  Definitions, goals, components, structures
+Week 3  OS services, system calls, processes
+Week 4  Threads and CPU scheduling basics
+student@okan-lab:~/lab$ tail -n 2 docs/syllabus.txt
+Week 14 Introduction to shell scripting
+Week 15 Final exam
+student@okan-lab:~/lab$ wc docs/linux_quotes.txt
+  5  50 302 docs/linux_quotes.txt
+student@okan-lab:~/lab$ wc -l data/students.csv
+41 data/students.csv
+student@okan-lab:~/lab$ cat "docs/final report.txt"
+Final report draft.
+This file name contains a space.
+student@okan-lab:~/lab$ cat docs/final\ report.txt
+Final report draft.
+This file name contains a space.
+\end{lstlisting}
+
+\subsection*{B bölümü}
+
+\textbf{8.}
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ ls photos/img00?.jpg
+photos/img001.jpg  photos/img004.jpg  photos/img007.jpg
+photos/img002.jpg  photos/img005.jpg  photos/img008.jpg
+photos/img003.jpg  photos/img006.jpg  photos/img009.jpg
+student@okan-lab:~/lab$ ls photos/img01[0-2].jpg
+photos/img010.jpg  photos/img011.jpg  photos/img012.jpg
+student@okan-lab:~/lab$ echo photos/*.png
+photos/img013.png
+\end{lstlisting}
+
+\textbf{9.} \texttt{IMG\_014.JPG}, adlar büyük/küçük harfe duyarlı olduğu için \texttt{*.jpg} ile eşleşmez; \texttt{holiday.jpeg}'in ise uzantısı farklıdır. İkisini de üçüncü \cmd{mv} taşır. (Son adım için daha kısa bir seçenek: \cmd{mv *.* other/}, çünkü üç yeni dizinin adında nokta yoktur.)
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ cd photos
+student@okan-lab:~/lab/photos$ mkdir jpg png other
+student@okan-lab:~/lab/photos$ mv *.jpg jpg/
+student@okan-lab:~/lab/photos$ mv *.png png/
+student@okan-lab:~/lab/photos$ mv *.JPG *.jpeg other/
+student@okan-lab:~/lab/photos$ tree
+.
+<@├──@> jpg
+<@│  @> <@├──@> img001.jpg
+<@│@>   <@├──@> ...
+<@│  @> <@└──@> img012.jpg
+<@├──@> other
+<@│  @> <@├──@> IMG_014.JPG
+<@│  @> <@└──@> holiday.jpeg
+<@└──@> png
+    <@└──@> img013.png
+
+4 directories, 15 files
+student@okan-lab:~/lab/photos$ cd ..
+\end{lstlisting}
+
+\textbf{10--11.} \texttt{*} nokta ile başlayan adlarla eşleşmez; bu yüzden \texttt{.settings} argümanlar arasında yoktur; \cmd{ls -a} onu gösterir. \cmd{cp -r} gizli dosyalar dahil her şeyi kopyalar (\cmd{ls -A} onları \texttt{.} ve \texttt{..} olmadan listeler); iki ağaç da $32$~K kullanır:
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ echo docs/*
+docs/final report.txt docs/linux_quotes.txt docs/notes_01.txt docs/notes_02.txt docs/notes_03.txt docs/syllabus.txt
+student@okan-lab:~/lab$ ls -a docs
+ .    .settings           linux_quotes.txt   notes_02.txt   syllabus.txt
+ ..  'final report.txt'   notes_01.txt       notes_03.txt
+student@okan-lab:~/lab$ cp -r docs backup/docs_copy
+student@okan-lab:~/lab$ ls -A backup/docs_copy
+ .settings           linux_quotes.txt   notes_02.txt   syllabus.txt
+'final report.txt'   notes_01.txt       notes_03.txt
+student@okan-lab:~/lab$ du -sh docs backup/docs_copy
+32K     docs
+32K     backup/docs_copy
+\end{lstlisting}
+
+\textbf{12.} \texttt{photos/} artık üç alt dizin içerir; her dizin bir adet $4$~KiB'lık blok kullanır: $4 \times 4 = 16$~K; boş fotoğraf dosyaları ise hâlâ $0$ blok kullanır:
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ file README.txt src/hello.c photos/jpg/img001.jpg logs
+README.txt:            ASCII text
+src/hello.c:           C source, ASCII text
+photos/jpg/img001.jpg: empty
+logs:                  directory
+student@okan-lab:~/lab$ du -sh data logs photos src
+16K     data
+36K     logs
+16K     photos
+8.0K    src
+\end{lstlisting}
+
+\textbf{13.} 1~Eylül bugünden altı aydan daha az önce olduğu için \cmd{ls -l} günün saatini yazar:
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ touch -d "2026-09-01 12:00" docs/notes_01.txt
+student@okan-lab:~/lab$ stat -c "%n | access %x | modify %y" docs/notes_01.txt
+docs/notes_01.txt | access 2026-09-01 12:00:00.000000000 +0000 | modify 2026-09-01 12:00:00.000000000 +0000
+student@okan-lab:~/lab$ ls -l docs/notes_01.txt
+-rw-rw-r-- 1 student student 16 Sep  1 12:00 docs/notes_01.txt
+\end{lstlisting}
+
+\subsection*{C bölümü}
+
+\textbf{14.} Aynı düğüm, bağlantı sayısı $2$; \cmd{rm}'den sonra sayı $1$'dir ve veri sağlamdır:
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ ln docs/syllabus.txt docs/syllabus_hard.txt
+student@okan-lab:~/lab$ ls -li docs/syllabus.txt docs/syllabus_hard.txt
+804121 -rw-rw-r-- 2 student student 578 Oct 12 08:48 docs/syllabus.txt
+804121 -rw-rw-r-- 2 student student 578 Oct 12 08:48 docs/syllabus_hard.txt
+student@okan-lab:~/lab$ rm docs/syllabus.txt
+student@okan-lab:~/lab$ ls -li docs/syllabus_hard.txt
+804121 -rw-rw-r-- 1 student student 578 Oct 12 08:48 docs/syllabus_hard.txt
+student@okan-lab:~/lab$ head -n 2 docs/syllabus_hard.txt
+Week 1  Introduction and history
+Week 2  Definitions, goals, components, structures
+\end{lstlisting}
+
+\textbf{15.} Yeniden adlandırmadan sonra bağlantı askıda kalır (saklanan \texttt{projects/alpha/docs} yolu artık yoktur); bağlantıyı silip yeni yolla yeniden oluşturun. Tek adımlık seçenek:\\ \cmd{ln -sfn projects/alpha\_old/docs alpha\_docs}.
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ ln -s projects/alpha/docs alpha_docs
+student@okan-lab:~/lab$ ls alpha_docs/
+design.txt
+student@okan-lab:~/lab$ mv projects/alpha projects/alpha_old
+student@okan-lab:~/lab$ ls alpha_docs/
+ls: cannot access 'alpha_docs/': No such file or directory
+student@okan-lab:~/lab$ rm alpha_docs
+student@okan-lab:~/lab$ ln -s projects/alpha_old/docs alpha_docs
+student@okan-lab:~/lab$ ls -l alpha_docs
+lrwxrwxrwx 1 student student 23 Oct 12 08:48 alpha_docs -> projects/alpha_old/docs
+\end{lstlisting}
+
+\textbf{16.} $1$ (\texttt{course}) $+ 14$ (haftalar) $+ 14 \times 2$ (\texttt{slides}, \texttt{notes}) $= 43$ dizin:
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ mkdir -p course/week{01..14}/{slides,notes}
+student@okan-lab:~/lab$ ls course
+week01  week03  week05  week07  week09  week11  week13
+week02  week04  week06  week08  week10  week12  week14
+student@okan-lab:~/lab$ ls course/week10
+notes  slides
+\end{lstlisting}
+
+\textbf{17.} \texttt{practice} boş olmadığı için \cmd{rmdir} reddeder; \cmd{rm -r} iki ağacı da siler (adları önce \cmd{ls} ile denetleyin):
+\begin{lstlisting}[style=term,basicstyle=\ttfamily\scriptsize\color{light}]
+student@okan-lab:~/lab$ rmdir practice
+rmdir: failed to remove 'practice': Directory not empty
+student@okan-lab:~/lab$ rm -r practice course
+student@okan-lab:~/lab$ ls
+README.txt  backup  docs  photos    scripts
+alpha_docs  data    logs  projects  src
+\end{lstlisting}
+
+% =====================================================================
+\section{İleriye Bakış: 11. Hafta}
+
+Bugün \cmd{ls -l}'nin ilk sütununu, \texttt{-rw-rw-r--}'yi, ve \cmd{stat}'ın \texttt{Access: (0664/-rw-rw-r--)} satırını görmezden geldik. Gelecek hafta, \textbf{İzinler, Sahiplik ve Kullanıcılar}, bunları açıklıyor: kullanıcılar ve gruplar (\cmd{id}, \texttt{/etc/passwd}), dosyalar ve dizinler için okuma/yazma/çalıştırma bitleri, sembolik ve sekizli biçimde \cmd{chmod} (örneğin $r = 4$, $w = 2$, $x = 1$ ile $754 = 7|5|4$), \cmd{umask}, \cmd{chown} ve \cmd{sudo}. Bunların hepsi bugün kullandığımız aynı düğümde saklanır.
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley: Bölüm~13 (File-System Interface) ve Bölüm~14 (File-System Implementation).
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}, Bölüm~39, ``Interlude: Files and Directories'' (sabit ve sembolik bağlantılar, \cmd{rename}, \cmd{unlink}, \cmd{stat}): \url{https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf}
+  \item W.\ Shotts, \emph{The Linux Command Line}, Bölüm~4 (Manipulating Files and Directories) ve Bölüm~7 (Seeing the World as the Shell Sees It); ücretsiz: \url{https://linuxcommand.org/tlcl.php}.
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,14 @@
+SIGINT   2: 128 + 2 = 130   (measured 130)
+SIGKILL  9: 128 + 9 = 137   (measured 137)
+SIGTERM 15: 128 + 15 = 143   (measured 143)
+SIGHUP   1: 128 + 1 = 129
+CPU share nice 0 : 90.3 %,  nice 10: 9.7 %,  ratio 9.31
+measured (out_nice.txt): 89.3 % and 9.6 %, ratio 9.30
+1.25**10 = 9.31  (close to 1024/110 = 9.31)
+nice values: 40  PR for NI=-20, 0, 19: [0, 20, 39]
+load 0.59 on 2 cores: 29.5 % of capacity
+load 2.0 on 2 cores: 100.0 % of capacity
+load 3.0 on 2 cores: 150.0 % of capacity, about 1.0 process(es) waiting for a CPU on average
+load 1.0 on 4 cores: 25.0 % of capacity
+one busy core out of 2 = 50.0 % of the whole machine (top's %Cpu(s) line)
+pid_max = 32768 -> largest PID 32767

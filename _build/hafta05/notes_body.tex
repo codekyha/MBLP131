@@ -1,0 +1,900 @@
+% ============================ Hafta 5 gövdesi ============================
+\lstset{basicstyle=\ttfamily\footnotesize\color{light}}
+% Gantt şeması yardımcıları (renkler slaytlarla aynı)
+\definecolor{amber}{HTML}{C98A1B}
+\colorlet{colP1}{mint}\colorlet{txtP1}{dark}
+\colorlet{colP2}{slate}\colorlet{txtP2}{white}
+\colorlet{colP3}{amber}\colorlet{txtP3}{white}
+\colorlet{colP4}{charcoal}\colorlet{txtP4}{white}
+\colorlet{colA}{mint}\colorlet{txtA}{dark}
+\colorlet{colB}{slate}\colorlet{txtB}{white}
+\colorlet{colC}{amber}\colorlet{txtC}{white}
+\colorlet{colD}{charcoal}\colorlet{txtD}{white}
+\colorlet{colL}{charcoal}\colorlet{txtL}{white}
+\colorlet{colS}{amber}\colorlet{txtS}{white}
+% \gantt{ms başına cm}{P/başlangıç/bitiş, ...}
+\newcommand{\gantt}[2]{%
+\begin{tikzpicture}[x=#1cm,y=1cm]
+\foreach \p/\a/\b in {#2} {
+  \fill[col\p] (\a,0) rectangle (\b,0.62);
+  \draw[white,line width=1.2pt] (\a,0) -- (\a,0.62);
+  \node[font=\small\bfseries,text=txt\p] at ({(\a+\b)/2},0.31) {\p};
+  \draw[muted] (\a,0) -- (\a,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1.5pt] {\a};
+  \draw[muted] (\b,0) -- (\b,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1.5pt] {\b};
+}
+\end{tikzpicture}}
+
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 5 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large İşlemci Zamanlama Algoritmaları ve Süreç Eşzamanlaması}\par\smallskip
+{\small\itshape\color{white!70} Sırada kim çalışacak ve iş parçacıkları veriyi bozmadan nasıl paylaşır?}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Bir iş kümesinin FCFS, SJF, SRTF, öncelikli ve döngüsel (Round Robin) zamanlama altındaki Gantt şemasını çizmek; her sürecin bekleme, dönüş ve yanıt süresini hesaplamak.
+  \item Konvoy etkisini, SJF'nin ortalama bekleme süresini neden en aza indirdiğini ve bir sonraki CPU patlamasının üstel ortalamayla nasıl tahmin edildiğini açıklamak.
+  \item Açlığı (starvation) ve yaşlandırmayı (aging), döngüsel zamanlamada zaman dilimi seçimindeki ödünleşimi açıklamak.
+  \item Çok düzeyli geri beslemeli kuyrukları ve Linux'un kullandığı adil zamanlayıcıyı genel hatlarıyla anlatmak.
+  \item Bir yarış durumunu \cmd{counter++} işleminin oku--ekle--yaz dizisiyle açıklamak; kritik bölge problemini ve üç gereksinimini ifade etmek; Peterson çözümünü, atomik komutları, muteks kilitlerini ve semaforları anlatmak.
+  \item Sınırlı tampon problemini semaforlarla çözmek ve basit bir kilitlenmeyi tanımak.
+  \item Bir yarışı ve çözümünü gösteren küçük \texttt{pthreads} programlarını okumak, derlemek ve çalıştırmak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{Tekrar ve Sürekli Örneğimiz}
+
+Geçen hafta hazır kuyruğundan bir süreç seçen \term{işlemci zamanlayıcısı} (CPU scheduler) ile işlemciyi ona gerçekten veren \term{dağıtıcıyı} (dispatcher) tanıdık (bağlam değişimi, kullanıcı moduna geçiş, doğru komuta atlama). Zamanlama \term{kesintisiz} (non-preemptive; süreç sonlanana ya da G/Ç için bloklanana kadar işlemciyi tutar) ya da \term{kesintili} (preemptive; işletim sistemi işlemciyi, tipik olarak bir zamanlayıcı kesmesinde ya da daha önemli bir süreç hazır olduğunda, geri alabilir) olabilir. Bir planı aşağıdaki ölçütlerle değerlendiririz; her süre tek bir süreç için ölçülür:
+\begin{align*}
+T_{\text{dönüş}} &= T_{\text{bitiş}} - T_{\text{varış}},\\
+T_{\text{bekleme}} &= T_{\text{dönüş}} - T_{\text{patlama}},\\
+T_{\text{yanıt}} &= T_{\text{ilk çalışma}} - T_{\text{varış}}.
+\end{align*}
+Bekleme süresi, bir sürecin \emph{hazır kuyruğunda} geçirdiği toplam süredir. Kesintisiz bir algoritmada süreç tek parça hâlinde çalıştığından bekleme süresi yanıt süresine eşittir. İşlemci kullanımı ve iş çıkarma hızı (throughput) olabildiğince yüksek; dönüş (turnaround), bekleme (waiting) ve yanıt (response) süreleri olabildiğince düşük olmalıdır.
+
+\subsection{Her algoritma için tek bir iş kümesi}
+\label{sec:jobs}
+
+Algoritmaları adil biçimde karşılaştırmak için 1.~bölüm boyunca \emph{aynı} dört süreci kullanıyoruz. Tüm süreler milisaniye (ms) cinsindendir.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+\textbf{Süreç} & \textbf{Varış zamanı} & \textbf{CPU patlaması} & \textbf{Öncelik} \\
+\midrule
+P1 & 0 & 7 & 3 \\
+P2 & 2 & 4 & 1 \\
+P3 & 4 & 1 & 4 \\
+P4 & 5 & 4 & 2 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Kurallar (ders kitapları farklı olduğundan bunları her sınav yanıtında belirtin):
+\begin{itemize}
+  \item Bağlam değişimi süresi $0$ alınır; geçiş sayısını ayrıca sayarız.
+  \item Eşitlikler önce varış zamanına, sonra süreç adına göre bozulur.
+  \item \emph{Küçük} öncelik numarası \emph{yüksek} öncelik demektir.
+  \item Döngüsel zamanlamada, bir zaman dilimi bittiği anda gelen süreç, hazır kuyruğuna kesilen süreçten \emph{önce} girer.
+\end{itemize}
+
+Toplam CPU işi $7+4+1+4=16$ ms'dir ve işlemci hiç boş kalmaz; bu yüzden aşağıdaki her plan $t=16$'da biter. \term{Gantt şeması}, kutulara bölünmüş bir zaman çizgisidir; her kutu, o aralıkta işlemciyi hangi sürecin kullandığını gösterir.
+
+Bu notlardaki ve slaytlardaki her sayı, \texttt{code/} klasöründeki kısa bir Python programı, \texttt{sched\_check.py} ile hesaplandı. Tüm Gantt şemalarını ve tabloları yazdırmak için \cmd{python3 sched\_check.py} komutunu çalıştırın ya da kendi iş kümenizi denemek için programdaki \texttt{JOBS} listesini değiştirin.
+
+% =====================================================================
+\section{İlk Gelen İlk Hizmet Alır (FCFS)}
+
+En basit politika: hazır kuyruğu bir FIFO (first-in, first-out; ilk giren ilk çıkar) kuyruğudur ve önce gelen süreç işlemciyi alır, bitene ya da bloklanana kadar tutar. FCFS (First-Come, First-Served) kesintisizdir.
+
+\begin{center}
+\gantt{0.95}{P1/0/7, P2/7/11, P3/11/12, P4/12/16}
+\end{center}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Süreç} & \textbf{Varış} & \textbf{Patlama} & \textbf{Bitiş} & \textbf{Dönüş} & \textbf{Bekleme} & \textbf{Yanıt}\\
+\midrule
+P1 & 0 & 7 & 7 & 7 & 0 & 0\\
+P2 & 2 & 4 & 11 & 9 & 5 & 5\\
+P3 & 4 & 1 & 12 & 8 & 7 & 7\\
+P4 & 5 & 4 & 16 & 11 & 7 & 7\\
+\midrule
+\textbf{Ortalama} & & & & $8.75$ & $4.75$ & $4.75$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Örneğin P3, $t=4$'te gelir, $t=11$'de başlar ve $t=12$'de biter: $T_{\text{dönüş}} = 12-4 = 8$ ms ve $T_{\text{bekleme}} = 8-1 = 7$ ms. Ortalama bekleme süresi $(0+5+7+7)/4 = 4.75$ ms'dir.
+
+\subsection{Konvoy etkisi}
+
+FCFS ``banka kuyruğu'' anlamında adildir, ama ortalama bekleme süresi süreçlerin tesadüfen hangi sırayla geldiğine büyük ölçüde bağlıdır. Hepsi $t=0$'da gelen, patlamaları $24$, $3$ ve $3$ ms olan üç iş düşünün.
+
+\begin{center}
+\begin{tabular}{@{}r@{\quad}l@{}}
+\small A sırası: & \gantt{0.42}{P1/0/24, P2/24/27, P3/27/30}\\[0.6em]
+\small B sırası: & \gantt{0.42}{P2/0/3, P3/3/6, P1/6/30}
+\end{tabular}
+\end{center}
+
+\begin{align*}
+\text{A sırası:}\quad \overline{T}_{\text{bekleme}} &= \frac{0 + 24 + 27}{3} = \frac{51}{3} = 17\ \text{ms},\\
+\text{B sırası:}\quad \overline{T}_{\text{bekleme}} &= \frac{0 + 3 + 6}{3} = \frac{9}{3} = 3\ \text{ms}.
+\end{align*}
+
+Aynı işler, aynı algoritma, neredeyse altı kat daha az bekleme. Çok sayıda kısa, G/Ç ağırlıklı süreç tek bir uzun, CPU ağırlıklı sürecin arkasında sıkıştığında, dağ yolunda yavaş bir kamyonun arkasındaki arabalar gibi bütün sistem yavaşlar. Buna \term{konvoy etkisi} (convoy effect) denir: kısa işler beklerken G/Ç aygıtları boş durur, sonra hepsi G/Ç yaparken işlemci boş durur.
+
+% =====================================================================
+\section{En Kısa İş Önce Zamanlaması}
+
+Yukarıdaki B sırası daha iyi bir kural önerir: \emph{en kısa işi önce çalıştır} (SJF, Shortest-Job-First). Aslında kural bütün işin değil, \emph{bir sonraki CPU patlamasının} uzunluğuna bakar; bu yüzden daha doğru bir ad ``en kısa sonraki CPU patlaması önce'' olurdu.
+
+\subsection{Kesintisiz SJF}
+
+İşlemci her boşaldığında, sonraki patlaması en kısa olan hazır süreci seç; başlayan süreç sonuna kadar çalışır.
+
+\begin{center}
+\gantt{0.95}{P1/0/7, P3/7/8, P2/8/12, P4/12/16}
+\end{center}
+
+$t=0$'da yalnızca P1 hazırdır, bu yüzden $t=7$'ye kadar çalışır. $t=7$'de hazır kuyruğunda P2 (4 ms), P3 (1 ms) ve P4 (4 ms) vardır; en kısası P3'tür. $t=8$'de P2 ile P4 $4$ ms'de eşittir ve P2 önce gelmiştir.
+
+Bekleme süreleri P1 $0$, P2 $12-2-4=6$, P3 $8-4-1=3$ ve P4 $16-5-4=7$ ms; dönüş süreleri $7$, $10$, $4$ ve $11$ ms'dir.
+
+Ortalama bekleme süresi $4.75$ ms'den (FCFS) $4$ ms'ye düşer. Kalan zayıflığa dikkat edin: P1, $t=0$'da yalnızca başka kimse olmadığı için başladı ve çok kısa P3 onu beklemek zorunda kaldı.
+
+\subsection{Kesintili SJF: en kısa kalan süre önce (SRTF)}
+
+Kesintili sürümde (SRTF, Shortest-Remaining-Time-First), her yeni süreç geldiğinde zamanlayıcı onun patlamasını çalışan sürecin \emph{kalan} süresiyle karşılaştırır; yeni gelen daha kısaysa işlemciyi o alır.
+
+\begin{center}
+\gantt{0.95}{P1/0/2, P2/2/4, P3/4/5, P2/5/7, P4/7/11, P1/11/16}
+\end{center}
+
+\begin{itemize}
+  \item $t=2$: P2 gelir ve $4$ ms ister; P1'in hâlâ $7-2=5$ ms'si vardır. $4<5$ olduğundan P1 kesilir.
+  \item $t=4$: P3 gelir ve $1$ ms ister; P2'nin hâlâ $2$ ms'si vardır. P2 kesilir.
+  \item $t=5$: P3 biter. Kalan süreler: P2 $2$, P4 $4$, P1 $5$. Böylece P2 $5$--$7$, sonra P4 $7$--$11$, sonra P1 $11$--$16$ arasında çalışır.
+\end{itemize}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Süreç} & \textbf{Varış} & \textbf{Patlama} & \textbf{Bitiş} & \textbf{Dönüş} & \textbf{Bekleme} & \textbf{Yanıt}\\
+\midrule
+P1 & 0 & 7 & 16 & 16 & 9 & 0\\
+P2 & 2 & 4 & 7 & 5 & 1 & 0\\
+P3 & 4 & 1 & 5 & 1 & 0 & 0\\
+P4 & 5 & 4 & 11 & 6 & 2 & 2\\
+\midrule
+\textbf{Ortalama} & & & & $7$ & $3$ & $0.5$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Kesintili zamanlamada bir süreç birkaç parça hâlinde çalışabilir; bu yüzden bekleme süresini boşlukları toplayarak değil formülle hesaplarız: P1 $16$'da biter, dolayısıyla $T_{\text{bekleme}}(\text{P1}) = (16-0) - 7 = 9$ ms (sağlama: P1 $2$'den $11$'e kadar, yani $9$ ms bekledi). Ortalama bekleme süresi $(9+1+0+2)/4 = 3$ ms ile günün en iyi değeridir; kısa işlerin hızının bedelini uzun iş P1 öder.
+
+\subsection{En kısa önce neden en iyisidir?}
+
+\begin{keyidea}[SJF'nin en iyiliği (optimality)]
+Tüm işler aynı anda hazırsa, onları patlama uzunluğuna göre artan sırayla çalıştırmak olası en küçük ortalama bekleme süresini verir. İşler farklı zamanlarda geliyorsa en küçük değeri SRTF verir (bağlam değişimleri bedavaysa).
+\end{keyidea}
+
+İspat bir \emph{yer değiştirme argümanıdır} (exchange argument). Daha uzun bir $L$ işinin, daha kısa bir $S$ işinden ($L > S$) hemen önce, bir $t_0$ anından başlayarak çalıştığı herhangi bir planı düşünün. İkisinin yerini değiştirin:
+\begin{itemize}
+  \item Çiftten önceki her iş eskisi gibi aynı anda başlar; çiftten sonraki her iş de aynı anda başlar, çünkü $L+S$ değişmez.
+  \item Çiftin içinde bekleme süreleri $t_0$ ($L$ için) ve $t_0+L$ ($S$ için) idi; yer değiştirmeden sonra $t_0$ ve $t_0+S$ olur.
+\end{itemize}
+Toplam bekleme süresi dolayısıyla $L-S>0$ kadar azalır. Uzun bir işin kısa bir işten önce geldiği her plan iyileştirilebilir; bu yüzden en kısa önce sırası en iyisidir. Konvoy örneğinde B sırası tam olarak en kısa önce sırasıdır.
+
+\subsection{Püf noktası: bir sonraki CPU patlamasını tahmin etmek}
+
+SJF, süreç çalışmadan \emph{önce} bir sonraki CPU patlamasının uzunluğunu bilmeyi gerektirir. Uzun vadeli toplu iş zamanlamasında kullanıcılardan işlerinin çalışma süresini tahmin etmeleri istenebilirdi; işlemci zamanlamasında ise bunu bilmenin hiçbir yolu yoktur. İşletim sistemi, bir sonraki patlamanın son patlamalara benzeyeceğini varsayarak yalnızca \emph{tahmin} edebilir. Standart tahmin yöntemi \term{üstel ortalamadır} (exponential average):
+\[
+\tau_{n+1} = \alpha\, t_n + (1-\alpha)\, \tau_n, \qquad 0 \le \alpha \le 1,
+\]
+burada $t_n$, $n$'inci patlamanın ölçülen uzunluğu, $\tau_n$ ise onun için yapılmış tahmindir. Özyinelemeyi açmak, adın nereden geldiğini gösterir:
+\[
+\tau_{n+1} = \alpha t_n + (1-\alpha)\alpha t_{n-1} + (1-\alpha)^2 \alpha t_{n-2} + \dots + (1-\alpha)^{n+1}\tau_0 .
+\]
+$1-\alpha<1$ olduğundan eski patlamalar üstel olarak küçülen ağırlıklar alır. $\alpha=0$ iken tahmin hiç değişmez (yakın geçmiş yok sayılır); $\alpha=1$ iken yalnızca son patlama sayılır. Yaygın bir seçim $\alpha = 1/2$'dir.
+
+\begin{example}[Üstel ortalama, $\alpha = 1/2$, $\tau_0 = 10$ ms]
+Sürecin gerçek patlamaları $t_0, t_1, \dots = 6, 4, 6, 4, 13, 13, 13$ ms'dir. İlk iki adım:
+\begin{align*}
+\tau_1 &= \tfrac12 \cdot 6 + \tfrac12 \cdot 10 = 8\ \text{ms},\\
+\tau_2 &= \tfrac12 \cdot 4 + \tfrac12 \cdot 8 = 6\ \text{ms}.
+\end{align*}
+Aynı biçimde devam edersek:
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lcccccccc@{}}
+\toprule
+$n$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7\\
+\midrule
+gerçek patlama $t_n$ (ms) & 6 & 4 & 6 & 4 & 13 & 13 & 13 & ?\\
+tahmin $\tau_n$ (ms) & 10 & 8 & 6 & 6 & 5 & 9 & 11 & 12\\
+\bottomrule
+\end{tabular}
+\end{center}
+Sürecin davranışı değiştiğinde (patlamalar $13$ ms'ye sıçradığında) tahmin onu gecikmeyle izler: $5 \to 9 \to 11 \to 12$. Bu gecikme, rastgele dalgalanmaları yumuşatmanın bedelidir.
+\end{example}
+
+
+% =====================================================================
+\section{Öncelikli Zamanlama}
+
+Her sürece bir \term{öncelik} (priority) verilir ve işlemci en yüksek öncelikli hazır sürece gider. Bu derste (Linux'ta ve Silberschatz'da olduğu gibi) küçük numara yüksek öncelik demektir. SJF, önceliğin tahmin edilen patlama uzunluğu olduğu özel durumdur. Öncelikli zamanlama kesintisiz ya da kesintili olabilir.
+
+\begin{center}
+\begin{tabular}{@{}r@{\quad}l@{}}
+\small Kesintisiz: & \gantt{0.8}{P1/0/7, P2/7/11, P4/11/15, P3/15/16}\\[0.6em]
+\small Kesintili: & \gantt{0.8}{P1/0/2, P2/2/6, P4/6/10, P1/10/15, P3/15/16}
+\end{tabular}
+\end{center}
+
+Kesintili sürümde P2 (öncelik $1$), $t=2$'de gelir gelmez işlemciyi P1'den (öncelik $3$) alır ve $6$'ya kadar çalışır; sonra P4 (öncelik $2$, $5$'te gelmişti) $6$--$10$ arasında çalışır; P1 $10$--$15$ arasında biter; P3 en son çalışır.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+& & \multicolumn{2}{c}{\textbf{Kesintisiz}} & \multicolumn{2}{c}{\textbf{Kesintili}}\\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}
+\textbf{Süreç} & \textbf{Öncelik} & \textbf{Bekleme} & \textbf{Yanıt} & \textbf{Bekleme} & \textbf{Yanıt}\\
+\midrule
+P1 & 3 & 0 & 0 & 8 & 0\\
+P2 & 1 & 5 & 5 & 0 & 0\\
+P3 & 4 & 11 & 11 & 11 & 11\\
+P4 & 2 & 6 & 6 & 1 & 1\\
+\midrule
+\textbf{Ortalama} & & $5.5$ & $5.5$ & $5$ & $3$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Ortalama dönüş süreleri $9.5$ ms (kesintisiz) ve $9$ ms'dir (kesintili). Öncelikli zamanlama ortalamaları en aza indirmeye çalışmaz: \emph{öneme} hizmet eder. Öncelikler \emph{iç} (işletim sisteminin bellek ihtiyacı ya da G/Ç patlamalarının CPU patlamalarına oranı gibi ölçülebilir büyüklüklerden hesapladığı) ya da \emph{dış} (dışarıdan belirlenen: işin önemi, onun için ödeme yapan birim) olabilir.
+
+\subsection{Açlık ve yaşlandırma}
+
+En düşük öncelikli P3 iki sürümde de $11$ ms bekledi. Yüksek öncelikli süreçlerin sürekli geldiği yoğun bir sistemde düşük öncelikli bir süreç \emph{hiçbir zaman} çalışmayabilir. Buna \term{açlık} (starvation) ya da \emph{süresiz bloklanma} (indefinite blocking) denir.
+
+\begin{histnote}[Altı yıl bekleyen iş]
+Sıkça anlatılan bir hikâyeye göre MIT'deki IBM 7094 1973'te kapatıldığında operatörler, 1967'de gönderilmiş ve hiç çalıştırılmamış düşük öncelikli bir süreç bulmuş. Her ayrıntısı doğru olsun ya da olmasın, sorunu çok iyi anlatır.
+\end{histnote}
+
+Standart çare \term{yaşlandırmadır} (aging): bir sürecin önceliğini, ne kadar uzun beklerse o kadar yükseltmek. Örneğin öncelikler $127$ (en düşük) ile $0$ (en yüksek) arasındaysa ve bekleyen bir süreç her saniye bir öncelik düzeyi kazanıyorsa, $127$'den başlayan bir süreç bile en geç
+\[
+127 \times 1\ \text{s} = 127\ \text{s} = 2\ \text{dk}\ 7\ \text{s}
+\]
+sonra $0$ önceliğine ulaşır. Yaşlandırma ``belki hiçbir zaman''ı ``sınırlı bir süre içinde''ye çevirir. Aynı fikirle Bölüm~\ref{sec:cs}'de \emph{sınırlı bekleme} gereksinimi olarak yeniden karşılaşacağız.
+
+% =====================================================================
+\section{Döngüsel Zamanlama (Round Robin)}
+
+\term{Döngüsel zamanlama} (Round Robin, RR), zaman paylaşımlı sistemler için tasarlanmış, kesintili bir FCFS'dir. \term{Zaman dilimi} (time quantum ya da time slice) adı verilen küçük bir zaman birimi $q$ tanımlanır; tipik olarak $10$--$100$ ms. Hazır kuyruğu dairesel bir FIFO kuyruğu olarak ele alınır:
+\begin{enumerate}[leftmargin=1.4em]
+  \item Zamanlayıcı kuyruğun başındaki süreci alır ve $q$ sonra kesme üretecek bir zamanlayıcı kurar.
+  \item CPU patlaması $q$ dolmadan biterse (süreç sonlanır ya da G/Ç için bloklanır), süreç işlemciyi kendiliğinden bırakır ve sıradaki hemen başlar.
+  \item Önce zamanlayıcı çalarsa süreç kesilir ve hazır kuyruğunun \emph{sonuna} konur.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[q/.style={rectangle,rounded corners=2pt,minimum width=1.0cm,minimum height=0.75cm,font=\small\bfseries},
+  arr/.style={-{Stealth[length=2.5mm]},thick,slate}]
+\node[q,fill=charcoal,text=white] (a) at (0,0) {P4};
+\node[q,fill=amber,text=white] (b) at (1.2,0) {P3};
+\node[q,fill=slate,text=white] (c) at (2.4,0) {P2};
+\node[font=\footnotesize\itshape,text=muted] at (1.2,0.7) {hazır kuyruğu (son \dots\ baş)};
+\node[rectangle,rounded corners=3pt,fill=mint,minimum width=2.2cm,minimum height=1.1cm,align=center,font=\small] (cpu) at (5.2,0) {\textbf{CPU}\\P1 çalışıyor};
+\draw[arr] (c) -- (cpu);
+\draw[arr] (cpu.east) -- ++(1.3,0) node[right,font=\footnotesize,text=slate,align=left] {bitti ya da\\G/Ç için bloklandı};
+\draw[-{Stealth[length=2.5mm]},thick,red!60!black] (cpu.south) -- ++(0,-0.7) -| (a.south) node[pos=0.25,below,font=\footnotesize] {zaman dilimi doldu (zamanlayıcı kesmesi): kuyruğun sonuna};
+\end{tikzpicture}
+\caption{Döngüsel zamanlama.}
+\end{figure}
+
+Hazır kuyruğunda $n$ süreç varsa her biri işlemci zamanının $1/n$'ini en çok $q$ uzunluğundaki parçalar hâlinde alır ve hiçbir süreç bir sonraki sırasından önce $(n-1)\,q$'dan fazla beklemez. RR'yi yanıt süresi açısından iyi yapan bu sınırdır.
+
+\subsection{Çözümlü örnek: $q = 4$ ms}
+
+\begin{center}
+\gantt{0.95}{P1/0/4, P2/4/8, P3/8/9, P1/9/12, P4/12/16}
+\end{center}
+
+Hazır kuyruğunu izleyin (baş solda):
+\begin{itemize}
+  \item $t=0$: yalnızca P1 var; tam bir zaman dilimi, $0$--$4$ arasında çalışır.
+  \item $t=4$: P2 ($2$'de geldi) ve P3 ($4$'te geldi) kuyrukta; P1 sona katılır (kuralımız: tam $4$'te gelen P3, P1'den önce girer). Kuyruk: P2, P3, P1.
+  \item $t=8$: P2 $4$ ms'sini kullandı ve bitti. P4 $5$'te geldi. Kuyruk: P3, P1, P4.
+  \item $t=9$: P3 $1$ ms sonra bitti. P1'in $3$ ms daha işi var ve $12$'de biter; sonra P4 $12$--$16$ arasında çalışır.
+\end{itemize}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Süreç} & \textbf{Varış} & \textbf{Patlama} & \textbf{Bitiş} & \textbf{Dönüş} & \textbf{Bekleme} & \textbf{Yanıt}\\
+\midrule
+P1 & 0 & 7 & 12 & 12 & 5 & 0\\
+P2 & 2 & 4 & 8 & 6 & 2 & 2\\
+P3 & 4 & 1 & 9 & 5 & 4 & 4\\
+P4 & 5 & 4 & 16 & 11 & 7 & 7\\
+\midrule
+\textbf{Ortalama} & & & & $8.5$ & $4.5$ & $3.25$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Çözümlü örnek: $q = 2$ ms}
+
+\begin{center}
+\gantt{0.95}{P1/0/2, P2/2/4, P1/4/6, P3/6/7, P2/7/9, P4/9/11, P1/11/13, P4/13/15, P1/15/16}
+\end{center}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Zaman} & \textbf{Olay} & \textbf{Sonraki hazır kuyruğu (baş önce)}\\
+\midrule
+0 & P1 başlar & --- \\
+2 & P2 geldi; P1'in zaman dilimi doldu & P2, P1 \\
+4 & P3 geldi; P2'nin zaman dilimi doldu & P1, P3, P2 \\
+6 & P4 5'te geldi; P1'in zaman dilimi doldu & P3, P2, P4, P1 \\
+7 & P3 biter (1 ms'lik patlama) & P2, P4, P1 \\
+9 & P2 biter & P4, P1 \\
+11 & P4'ün zaman dilimi doldu & P1, P4 \\
+13 & P1'in zaman dilimi doldu & P4, P1 \\
+15 & P4 biter; P1 son 1 ms'sini çalışır & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Bitiş zamanları P1 $16$, P2 $9$, P3 $7$, P4 $15$'tir; dolayısıyla bekleme süreleri $9$, $3$, $2$ ve $6$ ms, yanıt süreleri $0$, $0$, $2$ ve $4$ ms'dir (ortalamalar: bekleme $5$, dönüş $9$, yanıt $1.5$ ms).
+
+$q=4$ ile karşılaştırıldığında ortalama yanıt süresi $3.25$'ten $1.5$ ms'ye iyileşir, ama ortalama bekleme süresi $4.5$'ten $5$ ms'ye çıkar ve bağlam değişimi sayısı $4$'ten $8$'e, iki katına çıkar.
+
+\subsection{Zaman dilimini seçmek}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+\textbf{Zaman dilimi $q$} & \textbf{Ort. bekleme (ms)} & \textbf{Ort. yanıt (ms)} & \textbf{Bağlam değişimi}\\
+\midrule
+1 ms & $5.5$ & $0.75$ & 14\\
+2 ms & $5$ & $1.5$ & 8\\
+4 ms & $4.5$ & $3.25$ & 4\\
+8 ms & $4.75$ & $4.75$ & 3\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+  \item \textbf{$q$ çok büyükse:} RR, FCFS'ye dönüşür. İş kümemizdeki her patlamadan uzun olan $q = 8$ ms ile plan FCFS ile \emph{aynıdır}.
+  \item \textbf{$q$ çok küçükse:} işlemci zamanının büyük bir kısmı geçişe gider. Her geçiş $s$ kadar sürüyorsa, $q$ kadar yararlı işin her dilimi bir geçişe mal olur ve kaybedilen işlemci zamanı payı
+\[
+\frac{s}{q+s}
+\]
+olur. (Bilerek kötümser seçilmiş) $s=0{,}1$ ms'lik bir geçiş maliyetiyle bu, $q=1$ ms için \%9,1, $q=4$ ms için \%2,4, $q=10$ ms için \%1,0 ve $q=100$ ms için \%0,1 eder.
+\end{itemize}
+
+Gerçek bağlam değişimleri birkaç mikrosaniye sürer; buna bir de dolaylı maliyet eklenir: yeni zamanlanan süreç için önbellekler ve TLB ``soğuktur''. Yaygın bir pratik kural, $q$'yu CPU patlamalarının yaklaşık \%80'i $q$'dan kısa olacak biçimde seçmektir; böylece etkileşimli süreçler patlamalarını genellikle tek bir zaman dilimi içinde bitirir.
+
+% =====================================================================
+\section{Çok Düzeyli Kuyruklar ve Gerçek Zamanlayıcılar (Genel Bakış)}
+
+\subsection{Çok düzeyli kuyruk ve çok düzeyli geri beslemeli kuyruk}
+
+Gerçek sistemler birkaç algoritmayı birleştirir. \term{Çok düzeyli kuyruk} (multilevel queue) zamanlayıcısında hazır kuyruğu birkaç kuyruğa bölünür; örneğin RR ile zamanlanan \emph{ön plan} (etkileşimli) süreçleri ve FCFS ile zamanlanan \emph{arka plan} (toplu iş) süreçleri, kuyruklar arasında sabit öncelikle. Süreç kalıcı olarak kendi kuyruğunda kalır.
+
+\term{Çok düzeyli geri beslemeli kuyruk} (multilevel feedback queue, MLFQ) ise süreçlerin davranışlarına göre kuyruklar arasında yer değiştirmesine izin verir. Klasik bir örnekte üç kuyruk vardır:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[q/.style={rectangle,rounded corners=2pt,minimum width=2.0cm,minimum height=0.7cm,font=\small\bfseries},
+ p/.style={rectangle,rounded corners=2pt,fill=light,minimum width=3.4cm,minimum height=0.7cm,font=\small}]
+\node[q,fill=mint] (q0) at (0,0) {Kuyruk 0}; \node[p] (p0) at (3,0) {RR, $q = 8$ ms};
+\node[q,fill=slate,text=white] (q1) at (0,-1.2) {Kuyruk 1}; \node[p] (p1) at (3,-1.2) {RR, $q = 16$ ms};
+\node[q,fill=charcoal,text=white] (q2) at (0,-2.4) {Kuyruk 2}; \node[p] (p2) at (3,-2.4) {FCFS};
+\draw[-{Stealth},thick,red!60!black] (p0.south) -- (p1.north) node[midway,right,font=\footnotesize]{dilimin tamamını kullandı: bir alta iner};
+\draw[-{Stealth},thick,red!60!black] (p1.south) -- (p2.north);
+\node[font=\footnotesize\itshape,text=muted,anchor=west] at (4.9,0) {en yüksek öncelik};
+\node[font=\footnotesize\itshape,text=muted,anchor=west] at (4.9,-2.4) {en düşük öncelik};
+\end{tikzpicture}
+\caption{Üç düzeyli bir geri beslemeli kuyruk.}
+\end{figure}
+
+Yeni bir süreç kuyruk 0'a girer. Patlamasını $8$ ms içinde bitirmezse kuyruk 1'e iner; yine $16$ ms'lik zaman diliminin tamamını kullanırsa kuyruk 2'ye iner. Kuyruk 1 yalnızca kuyruk 0 boşken çalışır, ve bu böyle sürer. Böylece kısa, etkileşimli patlamalar yüksek öncelikte biterken uzun, CPU ağırlıklı süreçler dibe çöker. Düşük bir kuyrukta çok uzun bekleyen bir süreç yeniden yukarı taşınabilir: bu, yaşlandırmadır. MLFQ, patlama uzunluklarını önceden \emph{bilmeden}, her sürecin nasıl davrandığını gözleyerek SJF'ye yaklaşır. En genel yöntemdir ve ayarlaması en zor olanıdır.
+
+\subsection{Linux ne yapıyor?}
+
+Linux sabit bir zaman dilimi kullanmaz. Normal süreçler için zamanlayıcısı \emph{adaleti} hedefler: çalışmaya hazır her görev, işlemciden \term{ağırlığıyla} (weight) orantılı bir pay almalıdır.
+
+\begin{itemize}
+  \item Çekirdek 2.6.23'ten (2007) 6.5'e kadar bu, \textbf{Completely Fair Scheduler (CFS)} idi. Her görevin bir \emph{sanal çalışma süresi} vardır: işlemci süresinin ağırlığına bölümü; CFS her zaman sanal çalışma süresi en küçük olan görevi çalıştırır.
+  \item Çekirdek 6.6'dan (2023) beri varsayılan zamanlayıcı \textbf{EEVDF}'dir (\emph{Earliest Eligible Virtual Deadline First}). Adalet hedefini korur, ama ek olarak her göreve bir sanal son tarih verir; böylece düşük gecikme isteyen görevler daha erken çalışabilir.
+  \item Ağırlık, $-20$ (en çok işlemci) ile $+19$ (en az işlemci) arasında, varsayılanı $0$ olan \term{nice değerinden} gelir. Her nice adımı ağırlığı yaklaşık $1.25$ kat değiştirir; nice $0$'ın ağırlığı $1024$, nice $10$'unki $110$'dur.
+  \item Gerçek zamanlı zamanlama sınıfları (\texttt{SCHED\_FIFO}, \texttt{SCHED\_RR}, öncelikler $1$--$99$) her zaman normal görevlerden önce çalışır.
+\end{itemize}
+
+\begin{example}[nice etkisini gerçek bir çekirdekte ölçmek]
+Sonsuz bir döngünün (\texttt{for(;;) x++;}, program \texttt{code/cpu\_hog.c}) iki kopyası aynı işlemciye sabitlenir; biri nice $0$'da, öteki nice $10$'da. Beklenen paylar şunlardır:
+\[
+\frac{1024}{1024+110} \approx 90.3\%, \qquad \frac{110}{1024+110} \approx 9.7\%, \qquad \text{oran } \frac{1024}{110} \approx 9.31 .
+\]
+Derleme makinemizde (Linux 6.18, yani EEVDF) $10$ s sonra ölçülen:
+\lstinputlisting[style=term]{../code/nice_output.txt}
+Ölçülen $88.0/9.4 \approx 9.4$ oranı tahminle iyi uyuşur. (İki yüzdenin toplamı $100$ etmez, çünkü \cmd{ps} her sürecin başladığı andan beri olan ortalamayı bildirir ve iki süreç tam olarak aynı anda başlamadı. \texttt{CLS TS} ``time sharing'', yani zaman paylaşımı anlamına gelir; normal sınıftır.)
+\end{example}
+
+\subsection{İş kümemiz üzerinde karşılaştırma}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Algoritma} & \textbf{Kesintili} & \textbf{Ort. bekleme} & \textbf{Ort. dönüş} & \textbf{Ort. yanıt} & \textbf{Geçiş}\\
+\midrule
+FCFS & hayır & $4.75$ & $8.75$ & $4.75$ & 3\\
+SJF & hayır & $4$ & $8$ & $4$ & 3\\
+SRTF & evet & $3$ & $7$ & $0.5$ & 5\\
+Öncelik & hayır & $5.5$ & $9.5$ & $5.5$ & 3\\
+Öncelik & evet & $5$ & $9$ & $3$ & 4\\
+RR, $q = 4$ & evet & $4.5$ & $8.5$ & $3.25$ & 4\\
+RR, $q = 2$ & evet & $5$ & $9$ & $1.5$ & 8\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Tüm süreler ms cinsindendir. Bu küçük iş kümesinde SRTF her sütunu kazanır, ama geleceği bilmesi gerekir ve uzun işleri aç bırakabilir. RR hiçbir bilgiye ihtiyaç duymaz ve her sürece $(n-1)q$ içinde sıra gelmesini garanti eder. FCFS en basitidir. Öncelikli zamanlama ortalamaları değil önemi gözetir. Başka bir iş kümesi tablonun ortasındaki sırayı değiştirebilir, ama geçişler bedavayken en küçük ortalama bekleme süresini her zaman SRTF verir.
+
+% =====================================================================
+\section{Yarış Durumları}
+
+1.~bölümde zamanlayıcı süreçleri istediği an kesiyordu. Bağımsız süreçler için bu zararsızdır. Ama bir sürecin iş parçacıkları genel (global) değişkenlerini ve öbek belleğini (heap) paylaşır (4.~hafta); bu durumda bir kesme ya da ikinci bir işlemci ortak veriyi bozabilir.
+
+\subsection{\texttt{counter++} tek bir adım değildir}
+
+İki iş parçacığının artırdığı genel bir \texttt{counter} değişkeni düşünün. C'de bu tek bir deyimdir, ama işlemci üç komut yürütür. Bu, x86-64 üzerinde \texttt{race.c} programımız için \cmd{gcc -O2 -S} komutunun gerçek çıktısıdır:
+
+\begin{lstlisting}[style=term]
+movq  counter(%rip), %rax     # 1. OKU:  counter'ı bellekten rax yazmacına
+addq  $1, %rax                # 2. EKLE: yazmacın içinde 1 ekle
+movq  %rax, counter(%rip)     # 3. YAZ:  yazmacı belleğe geri yaz
+\end{lstlisting}
+
+\texttt{counter} değişkeni ortak bellekte durur, ama \texttt{rax} yazmacı her iş parçacığına özeldir: bir bağlam değişiminde değeri iş parçacığının denetim bloğuna kaydedilir ve daha sonra geri yüklenir. Üç komutun herhangi ikisi arasında bir geçiş olabilir ve çok işlemcili bir sistemde diğer iş parçacığı aynı anda başka bir işlemcide çalışabilir.
+
+\begin{example}[Şanssız bir iç içe geçme]
+\texttt{counter} $5$ ile başlar. A ve B iş parçacıkları \texttt{counter++} işlemini birer kez yürütür; dolayısıyla doğru sonuç $7$'dir.
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}clllll@{}}
+\toprule
+\textbf{Adım} & \textbf{İş parçacığı A} & \textbf{İş parçacığı B} & \textbf{A'nın rax'ı} & \textbf{B'nin rax'ı} & \textbf{counter}\\
+\midrule
+1 & oku & & 5 & -- & 5\\
+2 & & oku & 5 & 5 & 5\\
+3 & 1 ekle & & 6 & 5 & 5\\
+4 & & 1 ekle & 6 & 6 & 5\\
+5 & yaz & & 6 & 6 & 6\\
+6 & & yaz & 6 & 6 & 6 (7 olmalıydı)\\
+\bottomrule
+\end{tabular}
+\end{center}
+B'nin yazması A'nınkinin üstüne yazar: bir artırma kaybolur. Başka sıralar (örneğin önce A'nın üç adımı, sonra B'nin üç adımı) doğru sonucu, $7$'yi verir. Sonuç zamanlamaya bağlıdır.
+\end{example}
+
+\subsection{Tanım}
+
+\begin{keyidea}[Yarış durumu]
+Birden çok iş parçacığı ya da süreç aynı veriye eşzamanlı eriştiğinde, en az biri ona yazdığında ve sonuç erişimlerin hangi sırayla gerçekleştiğine bağlı olduğunda bir \textbf{yarış durumu} (race condition) oluşur.
+\end{keyidea}
+
+Gündelik örnekler: iki ATM aynı anda aynı hesaptan para çeker ve ikisi de eski bakiyeyi okur; iki rezervasyon sunucusu da ``bir koltuk kaldı'' görür ve ikisi de onu satar. Çekirdeğin içinde: iki süreç aynı anda \cmd{fork()} çağırırsa ve çekirdeğin \texttt{next\_available\_pid} değişkeni korunmuyorsa, iki çocuk süreç aynı süreç kimliğini alabilir. Yarış durumları özellikle sinsidir, çünkü \emph{zamanlama hatalarıdır}: bir program bin testi geçip bir sonraki çalıştırmada ya da yalnızca daha hızlı bir makinede başarısız olabilir. Tasarım yoluyla önlenmeleri gerekir.
+
+% =====================================================================
+\section{Kritik Bölge Problemi}
+\label{sec:cs}
+
+\term{Kritik bölge} (critical section), bir iş parçacığının ortak veriye (bir değişkene, bir listeye, bir dosyaya) eriştiği kod parçasıdır. \term{Kritik bölge problemi}, iş parçacıklarının kullanabileceği ve hiçbir ikisinin kritik bölgelerini aynı anda yürütmemesini sağlayan bir protokol tasarlamaktır. Her iş parçacığı şu yapıyı izler:
+
+\begin{lstlisting}
+while (true) {
+    /* giriş bölümü:  izin iste                    */
+        /* kritik bölge: ortak veriyi kullan       */
+    /* çıkış bölümü:  işin bittiğini duyur         */
+    /* kalan bölüm:   geri kalan her şey           */
+}
+\end{lstlisting}
+
+Doğru bir çözüm üç gereksinimi karşılamalıdır:
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Karşılıklı dışlama} (mutual exclusion). Bir iş parçacığı kritik bölgesini yürütüyorsa başka hiçbir iş parçacığı kendi kritik bölgesini yürütemez.
+  \item \textbf{İlerleme} (progress). Kritik bölgesinde hiçbir iş parçacığı yoksa ve bazı iş parçacıkları girmek istiyorsa, sıradakinin kim olacağına yalnızca bu iş parçacıkları karar verir ve karar sonsuza dek ertelenemez. (Kalan bölümündeki iş parçacıklarının veto hakkı yoktur.)
+  \item \textbf{Sınırlı bekleme} (bounded waiting). Bir iş parçacığı girmek için istekte bulunduktan sonra, diğer iş parçacıklarının ondan önce kritik bölgelerine girme sayısının bir sınırı vardır. Başka bir deyişle: açlık yok.
+\end{enumerate}
+Her iş parçacığının sıfırdan büyük bir hızla çalıştığını varsayarız, ama iş parçacıklarının göreli hızları ya da işlemci sayısı hakkında \emph{hiçbir} varsayım yapmayız.
+
+Her gereksinim ``ucuz'' bir çözümü dışarıda bırakır: \emph{kimseyi asla içeri alma} karşılıklı dışlamayı sağlar ama ilerlemeyi sağlamaz; \emph{katı sırayla geçiş} (A, B, A, B, \dots) B girmek istemediğinde ilerlemeyi ihlal eder; her zaman A'yı kayıran bir kilit B için sınırlı beklemeyi ihlal edebilir.
+
+\subsection{Neden kesmeleri kapatmıyoruz?}
+
+Tek işlemcide, çalışan bir iş parçacığı işlemciyi yalnızca bir kesmeyle (ya da kendiliğinden bloklanarak) kaybeder. Dolayısıyla bir iş parçacığı kritik bölgesinin başında kesmeleri kapatıp sonunda yeniden açabilirdi; bağlam değişimi yok, yarış yok. Erken UNIX çekirdekleri tam olarak bunu yapıyordu. Ama:
+\begin{itemize}
+  \item \textbf{Çok işlemcili} bir sistemde diğer işlemciler çalışmayı sürdürür ve ortak veriye yine erişebilir. Kesmeleri \emph{tüm} işlemcilerde kapatmak her birine bir mesaj göndermeyi gerektirir; bu yavaştır ve bütün makineyi durdurur.
+  \item Kesmeleri kapatmak \textbf{ayrıcalıklı bir komuttur} (2.~hafta): kullanıcı programları bunu yapamaz ve yapmalarına izin verilmemelidir, çünkü kesmeleri hiç yeniden açmayan bir program makineyi ele geçirirdi.
+  \item Uzun bir kritik bölge boyunca saate ve G/Ç aygıtlarına hizmet verilmez.
+\end{itemize}
+Linux, çekirdeğin içinde birkaç komutluk süre için \emph{yerel} işlemcide kesmeleri hâlâ kapatır, ama bunu her zaman işlemciler arasında çalışan bir kilitle birlikte yapar.
+
+% =====================================================================
+\section{Peterson Çözümü}
+
+Peterson çözümü (Gary Peterson, 1981), iki iş parçacığı, $P_0$ ve $P_1$ için klasik, yalnızca yazılıma dayalı bir çözümdür. İki ortak değişken kullanır:
+\begin{lstlisting}
+int  turn;       /* bekleme sırası kimde?             */
+bool flag[2];    /* flag[i] == true: Pi girmek istiyor */
+
+/* i iş parçacığının kodu;  j = 1 - i diğer iş parçacığı */
+while (true) {
+    flag[i] = true;              /* girmek istiyorum ...    */
+    turn = j;                    /* ... ama önce sen geç    */
+    while (flag[j] && turn == j)
+        ;                        /* meşgul bekleme */
+    /* kritik bölge */
+    flag[i] = false;             /* işim bitti */
+    /* kalan bölüm */
+}
+\end{lstlisting}
+
+\paragraph{Neden çalışır?}
+\begin{itemize}
+  \item \emph{Karşılıklı dışlama.} İki iş parçacığı da kritik bölgede olsaydı iki bayrak da true olurdu. O zaman her biri bekleme döngüsünden \texttt{turn} kendi numarasına eşit olduğu için çıkmış olmalıydı; oysa \texttt{turn} yalnızca tek bir değer tutar. Somut olarak: \texttt{turn} değişkenine \emph{en son} yazan iş parçacığı sırayı vermiştir ve beklemek zorundadır.
+  \item \emph{İlerleme.} Bir iş parçacığı yalnızca diğeri girmek istiyorsa \emph{ve} sıra ondaysa bekler; diğeri kalan bölümündeyse \texttt{flag[j]} false'tur ve iş parçacığı hemen girer.
+  \item \emph{Sınırlı bekleme.} $P_j$ çıkarken \texttt{flag[j] = false} yapar. Hemen yeniden girmek isterse \texttt{turn = i} yapar ve beklemek zorunda kalır. Dolayısıyla $P_i$, $P_j$'nin en çok bir girişini bekler.
+\end{itemize}
+
+\textbf{Bir uyarı.} Peterson çözümü \emph{fikri} için gösterilir. Modern işlemcilerde yazıldığı hâliyle çalışması garanti değildir: daha hızlı çalışmak için işlemciler ve derleyiciler birbirinden bağımsız bellek erişimlerinin \emph{sırasını değiştirebilir} (örneğin \texttt{flag[j]} okuması fiilen \texttt{flag[i]} yazmasından önce gerçekleşebilir). Doğru sürümler \emph{bellek bariyerleri} (memory barriers) gerektirir. Uygulamada bir sonraki bölümün donanım desteğini kullanırız.
+
+% =====================================================================
+\section{Donanım Desteği: Atomik Komutlar}
+
+Modern işlemciler, bir bellek sözcüğünü tek bir \term{atomik} (bölünmez) işlem olarak okuyup değiştiren özel komutlar sunar: arada başka hiçbir işlemci o sözcüğe erişemez. Açıklaması en kolay olanı \texttt{test\_and\_set}'tir. \emph{Etkisi} C ile yazılabilir, ama donanımın onu tek bir adımda yürüttüğünü unutmayın:
+
+\begin{lstlisting}
+bool test_and_set(bool *target) {   /* ATOMİK olarak yürütülür */
+    bool old = *target;
+    *target = true;
+    return old;
+}
+
+bool lock = false;                  /* ortak; false = boş */
+
+while (true) {
+    while (test_and_set(&lock))
+        ;                           /* dön: kilit zaten alınmış */
+    /* kritik bölge */
+    lock = false;                   /* bırak */
+    /* kalan bölüm */
+}
+\end{lstlisting}
+
+\texttt{test\_and\_set} \texttt{false} döndürürse kilit boştu ve aynı atomik adım onu zaten alınmış olarak işaretledi: kilit artık bu iş parçacığının. \texttt{true} döndürürse kilidi başka bir iş parçacığı tutuyordur ve yeniden deneriz. İki iş parçacığı asla ikisi birden \texttt{false} göremez, çünkü atomik işlemleri birbiri ardına yürütülür. Bu basit kilit karşılıklı dışlamayı ve ilerlemeyi sağlar; sınırlı bekleme biraz daha fazlasını gerektirir (örneğin bekleyen iş parçacıklarına geliş sırasıyla hizmet veren bir \emph{bilet kilidi}, ticket lock).
+
+Gerçek komutlar: x86'da \texttt{xchg} (atomik değiş tokuş) ve \texttt{lock cmpxchg} (\term{karşılaştır ve değiştir}, compare-and-swap, CAS: ``sözcük hâlâ beklediğim değerdeyse onu yeni bir değerle değiştir''); ARM'da \texttt{ldxr}/\texttt{stxr} çifti. C11 standardı bu komutları taşınabilir fonksiyonlar olarak sunar; örneğin \texttt{atomic\_flag\_\allowbreak test\_and\_set()} ve \texttt{atomic\_compare\_\allowbreak exchange\_strong()} fonksiyonları bu amaçla kullanılır.
+
+% =====================================================================
+\section{Muteks Kilitleri}
+
+Uygulama programcıları atomik komutları nadiren doğrudan kullanır. İşletim sistemleri ve kütüphaneler onları iki işlemli bir \term{muteks kilidine} (mutex lock; \emph{mutual exclusion} sözcüklerinden) sarar:
+\begin{lstlisting}
+acquire(&m);       /* m boşalana kadar bekle, sonra al */
+    /* kritik bölge */
+release(&m);       /* geri ver */
+\end{lstlisting}
+\texttt{acquire} ve \texttt{release} çağrılarının kendileri de atomik olmalıdır; donanım komutları bunun içindir. POSIX threads'te bu işlemlerin adları \cmd{pthread\_mutex\_lock()} ve \cmd{pthread\_mutex\_unlock()}'tır.
+
+Bir kilidi beklemenin iki yolu vardır:
+\begin{itemize}
+  \item \textbf{Meşgul bekleme (döner kilit, spinlock).} Bekleyen iş parçacığı kilidi tekrar tekrar sınayarak döngüde döner. Bu işlemci zamanını boşa harcar, ama bağlam değişimi gerekmez. Döner kilitler, kritik bölgeler çok kısaysa çok işlemcili sistemlerde iyi bir seçimdir: pratik kural olarak, kilit iki bağlam değişiminden daha kısa süre tutulacaksa. Tek işlemcide dönmek anlamsızdır, çünkü biz dönerken kilidi tutan iş parçacığı çalışamaz.
+  \item \textbf{Uyuma.} Bekleyen iş parçacığı bloklanır (bir bekleme kuyruğuna konur) ve işlemci başka bir iş parçacığını çalıştırır; \texttt{release} onu uyandırır. Uzun kritik bölgeler için bu daha iyidir. Linux pthread mutekslerini \emph{futex}'lerle (fast user-space mutex, hızlı kullanıcı alanı muteksi) gerçekleştirir: boş bir kilidi almak tek bir atomik komuttur ve sistem çağrısı gerektirmez; yalnızca kilit meşgulse iş parçacığı çekirdekten kendisini uyutmasını ister.
+\end{itemize}
+
+% =====================================================================
+\section{Semaforlar}
+
+1965'te Edsger Dijkstra'nın ortaya koyduğu \term{semafor} (semaphore), ilk değer atama dışında yalnızca iki atomik işlemle erişilen bir $S$ tamsayı değişkenidir:
+\begin{lstlisting}
+wait(S) {            /* Dijkstra: P, Felemenkçe "proberen" (sınamak) */
+    while (S <= 0)
+        ;            /* meşgul bekleme */
+    S--;
+}
+
+signal(S) {          /* Dijkstra: V, Felemenkçe "verhogen" (artırmak) */
+    S++;
+}
+\end{lstlisting}
+POSIX'te bu işlemlerin adları \cmd{sem\_wait()} ve \cmd{sem\_post()}'tur.
+
+\paragraph{İkili ve sayan semaforlar.}
+\begin{itemize}
+  \item \textbf{İkili semafor} (binary semaphore) yalnızca $0$ ve $1$ değerlerini alır. $1$ ile başlatılırsa bir muteks kilidi gibi davranır: kritik bölgeden önce \texttt{wait}, sonra \texttt{signal}.
+  \item \textbf{Sayan semafor} (counting semaphore) negatif olmayan herhangi bir değeri alabilir. Özdeş kaynakların sayısı $N$ ile (diyelim $N=3$ yazıcı) başlatılırsa, kaynağı aynı anda en çok $N$ iş parçacığının kullanmasına izin verir: her iş parçacığı bir yazıcıyı kullanmadan önce \texttt{wait}, sonra \texttt{signal} çağırır. Dördüncü iş parçacığı bir yazıcı boşalana kadar bloklanır.
+\end{itemize}
+
+\paragraph{Sıra dayatmak için semaforlar.} Semaforlar bir sırayı da zorunlu kılabilir. B iş parçacığındaki $S_2$ deyiminin, ancak A iş parçacığındaki $S_1$ deyiminden sonra çalışması gerektiğini varsayalım. $0$ ile başlatılmış bir \texttt{synch} semaforu kullanın: A iş parçacığı $S_1$; \texttt{signal(synch)} yürütür, B iş parçacığı ise \texttt{wait(synch)}; $S_2$. Zamanlayıcı ne yaparsa yapsın B, A bildirimde bulunmadan \texttt{wait}'i geçemez.
+
+\paragraph{Meşgul beklemesiz gerçekleştirme.} Yukarıdaki tanım döner. Gerçek gerçekleştirmeler her semafora bir \emph{bekleme kuyruğu} ekler: \texttt{wait} boş kaynak bulamazsa iş parçacığı bloklanır ve kuyruğa konur; \texttt{signal} kuyruktan bir iş parçacığını çıkarır ve onu hazır hâle getirir. Bazı ders kitabı sürümleri $S$'nin negatif olmasına izin verir; bu durumda $-S$ bekleyen iş parçacıklarının sayısıdır. İşlemlerin kendileri bir önceki bölümün donanım komutlarıyla atomik yapılır; böylece biraz meşgul bekleme kalır, ama bütün kritik bölge için değil, yalnızca \texttt{wait} ve \texttt{signal}'in birkaç komutu için.
+
+% =====================================================================
+\section{Sınırlı Tampon Problemi}
+
+Bir \term{üretici} (producer) iş parçacığı öğeler (örneğin çözülmüş video kareleri) üretir ve onları $n$ gözlü bir tampona koyar; bir \term{tüketici} (consumer) iş parçacığı onları alır (ve gösterir). Tampon doluyken üretici, boşken tüketici beklemelidir; ikisi tampon indislerini asla aynı anda değiştirmemelidir. Üç semafor üretici--tüketici problemini çözer:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Semafor} & \textbf{Başlangıç değeri} & \textbf{Anlamı}\\
+\midrule
+\texttt{empty} & $n$ & boş göz sayısı (sayan)\\
+\texttt{full} & $0$ & dolu göz sayısı (sayan)\\
+\texttt{mutex} & $1$ & tampon ve indisleri için kilit (ikili)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{minipage}[t]{0.46\linewidth}
+\begin{lstlisting}[numbers=none]
+/* üretici */
+while (true) {
+    /* bir öğe üret */
+    wait(empty);
+    wait(mutex);
+    /* öğeyi tampona ekle */
+    signal(mutex);
+    signal(full);
+}
+\end{lstlisting}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.46\linewidth}
+\begin{lstlisting}[numbers=none]
+/* tüketici */
+while (true) {
+    wait(full);
+    wait(mutex);
+    /* öğeyi tampondan çıkar */
+    signal(mutex);
+    signal(empty);
+    /* öğeyi tüket */
+}
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+Roller simetriktir: üretici boş gözleri ``tüketir'' ve dolu gözler ``üretir''; tüketici bunun tersini yapar. Tampon doluyken \texttt{empty} $=0$'dır ve üretici, tüketici bildirimde bulunana kadar \texttt{wait(empty)} içinde bloklanır. İki \texttt{wait} çağrısının sırası önemlidir; bunu bir sonraki bölüm gösteriyor. POSIX semaforlarıyla gerçek bir C sürümü Bölüm~\ref{sec:prodcons}'tedir.
+
+% =====================================================================
+\section{Bir Uyarı: Kilitlenme}
+
+Kilitlerin dikkatsiz kullanımı iş parçacıklarının birbirini sonsuza dek beklemesine yol açabilir. $S$ ve $Q$, $1$ ile başlatılmış iki semafor olsun:
+
+\begin{center}
+\begin{minipage}[t]{0.3\linewidth}
+\begin{lstlisting}[numbers=none]
+/* P0 iş parçacığı */
+wait(S);
+wait(Q);
+  ...
+signal(S);
+signal(Q);
+\end{lstlisting}
+\end{minipage}\qquad
+\begin{minipage}[t]{0.3\linewidth}
+\begin{lstlisting}[numbers=none]
+/* P1 iş parçacığı */
+wait(Q);
+wait(S);
+  ...
+signal(Q);
+signal(S);
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+P0 \texttt{wait(S)} yürütür ve sonra kesilirse, P1 \texttt{wait(Q)} yürütebilir. Şimdi P0 \texttt{wait(Q)} içinde, P1 \texttt{wait(S)} içinde bloklanır: her biri yalnızca diğerinin yapabileceği bir \texttt{signal}'i bekler. Buna \term{kilitlenme} (deadlock) denir. En basit önleme kuralı, tüm iş parçacıklarının kilitleri aynı genel sırayla almasını sağlamaktır (burada: her zaman önce $S$, sonra $Q$).
+
+Sınırlı tamponda da aynı tuzak vardır. Üretici tampon doluyken \texttt{wait(empty)}'den \emph{önce} \texttt{wait(mutex)} çağırsaydı, \texttt{mutex}'i tutarken uyurdu; tüketici bir öğe çıkarmak için asla içeri giremez ve ikisi de sonsuza dek beklerdi. Açlıktan farkına dikkat edin: kilitlenmede gruptaki \emph{hiç kimse} ilerlemez; açlıkta başkaları ilerler. Kilitlenmenin bütünüyle ele alınması (tespit, kaçınma, bankacı algoritması) bu dersin kapsamı dışındadır.
+
+% =====================================================================
+\section{Uygulama: C'de İş Parçacıkları, Yarışlar ve Kilitler}
+
+Programlar \texttt{code/} klasöründedir; hepsini derlemek için \cmd{make} yazın (her biri \cmd{gcc -Wall -O2 -pthread} ile derlenir). POSIX threads kullanırlar: \cmd{pthread\_create()} verilen bir fonksiyonu çalıştıran yeni bir iş parçacığı başlatır, \cmd{pthread\_join()} onun bitmesini bekler. 2.~haftada olduğu gibi C yazmanız beklenmiyor; açıklamaları okuyun ve ne olduğuna odaklanın.
+
+\subsection{Örnek 1: gerçek bir yarış durumu}
+
+\lstinputlisting[caption={},linerange={13-22,31-45}]{../code/race.c}
+
+Değişken \texttt{volatile} olarak bildirilmiştir; böylece derleyici onu her yinelemede gerçekten okuyup yazar; aksi hâlde eniyileyici döngüyü tek bir toplamayla değiştirip yarışı gizlerdi. Derleme makinemizde (2 işlemci) dört çalıştırma, ardından \cmd{taskset} ile tek bir işlemciye sabitlenmiş iki çalıştırma:
+
+\begin{lstlisting}[style=term]
+$ ./race          # run 4 times
+counter = 12250428 of 20000000  (lost 7749572)  0.052 s
+counter = 12005053 of 20000000  (lost 7994947)  0.100 s
+counter = 13797565 of 20000000  (lost 6202435)  0.110 s
+counter = 12046532 of 20000000  (lost 7953468)  0.080 s
+$ taskset -c 0 ./race   # pinned to ONE CPU
+counter = 14324099 of 20000000  (lost 5675901)  0.034 s
+counter = 12867601 of 20000000  (lost 7132399)  0.034 s
+\end{lstlisting}
+
+Artırmaların \%28 ile \%40'ı kayboldu ve sonuç her seferinde farklıydı. İki işlemcide iş parçacıkları gerçekten aynı anda çalışır ve oku--ekle--yaz dizileri sürekli üst üste biner. Belki şaşırtıcı biçimde kayıplar \emph{tek} işlemcide de büyük kalır. Nedeni şudur: bir iş parçacığı okuma ile yazma arasında kesildiğinde diğer iş parçacığı bütün bir zaman dilimi boyunca çalışır ve milyonlarca artırma yapar; ilk iş parçacığı kaldığı yerden devam ettiğinde eski, bayatlamış değerini yazar ve tüm o emeği tek bir komutla siler.
+
+\subsection{Örnek 2: muteksle çözüm}
+
+\lstinputlisting[caption={},linerange={15-23},firstnumber=15]{../code/race_fixed.c}
+
+\begin{lstlisting}[style=term]
+$ ./race_fixed    # run 3 times
+counter = 20000000 of 20000000  (lost       0)  1.122 s
+counter = 20000000 of 20000000  (lost       0)  1.115 s
+counter = 20000000 of 20000000  (lost       0)  0.749 s
+\end{lstlisting}
+
+Sonuç artık her zaman doğrudur, ama program yaklaşık $10$ ila $20$ kat daha yavaştır ($0.05$--$0.11$ s yerine $0.75$--$1.12$ s). Program $2\times10^{7}$ kilitle/aç çifti yürütür ve iki işlemci kilidi (ve onu tutan önbellek satırını) sürekli birbirine paslar. Kilitli artırma başına maliyet şudur:
+\[
+\frac{0.749\ \text{s}}{2\times10^{7}} \approx 37\ \text{ns} \quad\text{ile}\quad \frac{1.122\ \text{s}}{2\times10^{7}} \approx 56\ \text{ns}.
+\]
+\textbf{Ders:} önce doğruluk, sonra başarım. Daha iyi bir tasarım kritik bölgeye nadiren girer: her iş parçacığı özel bir yerel değişkende sayar ve toplamını \texttt{counter}'a kilit altında yalnızca bir kez ekler. O zaman yirmi milyon yerine yalnızca iki kilit işlemi gerekir.
+
+\subsection{Örnek 3: POSIX semaforlarıyla üretici ve tüketici}
+\label{sec:prodcons}
+
+Üretici ve \texttt{main()}'in başı (tüketici, tıpkı sözde koddaki gibi üreticinin ayna görüntüsüdür; programın tamamı \texttt{code/prodcons.c} dosyasında):
+\lstinputlisting[caption={},linerange={21-32,52-59}]{../code/prodcons.c}
+
+\begin{lstlisting}[style=term]
+$ ./prodcons
+consumed  5   running sum  15
+consumed 10   running sum  55
+consumed 15   running sum 120
+consumed 20   running sum 210
+sum of 1..20 = 210 (expected 210)
+\end{lstlisting}
+
+$1+2+\dots+20 = 20\cdot21/2 = 210$ toplamı, tamponun yalnızca $5$ gözü olmasına ve üreticinin $5$ öğe öne geçtiğinde tekrar tekrar bloklanmasına karşın her öğenin tam bir kez ulaştığını gösterir: hiçbiri kaybolmadı ya da yinelenmedi. \cmd{sem\_init()}'in ikinci argümanı olan $0$, semaforun tek bir sürecin iş parçacıkları arasında paylaşıldığı anlamına gelir (sıfırdan farklı bir değer, ortak bellek üzerinden süreçler arasında paylaşıma izin verirdi).
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Yedi cümlede 5. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item FCFS basittir ama konvoy etkisinden muzdariptir: aynı üç iş, yalnızca sıralarına bağlı olarak $17$ ya da $3$ ms ortalama bekleme verir.
+  \item SJF, tüm işler birlikte hazırken; SRTF, işler zamana yayılarak gelirken ortalama bekleme süresini en aza indirir; ikisi de $\tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n$ ile tahmin edilen bir sonraki patlama uzunluğuna ihtiyaç duyar.
+  \item Öncelikli zamanlama düşük öncelikli süreçleri aç bırakabilir; yaşlandırma onların önceliğini zamanla yükseltir.
+  \item Döngüsel zamanlama her beklemeyi $(n-1)q$ ile sınırlar; çok büyük bir $q$ FCFS verir, çok küçük bir $q$ işlemciyi geçişlerle israf eder. Linux normal görevleri nice değerleriyle ağırlıklandırılmış adalete göre zamanlar (CFS, 6.6'dan beri EEVDF).
+  \item Eşzamanlı iş parçacıkları ortak veriye eriştiğinde, en az biri yazdığında ve sonuç zamanlamaya bağlı olduğunda bir yarış durumu doğar; \texttt{counter++} oku--ekle--yaz demektir ve güncelleme kaybettirebilir.
+  \item Kritik bölge probleminin bir çözümü karşılıklı dışlamayı, ilerlemeyi ve sınırlı beklemeyi garanti etmelidir; atomik donanım komutları muteks kilitlerinin ve semaforların temelidir.
+  \item Semaforlar sınırlı tampon problemini çözer (\texttt{empty}, \texttt{full}, \texttt{mutex}), ama tutarsız sıralarla alınan kilitler kilitlenmeye yol açabilir.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Sözlük}
+
+\begin{description}[leftmargin=1em,labelindent=0pt,itemsep=0.1em]
+  \item[Açlık (starvation)] Hazır bir sürecin ihtiyaç duyduğu kaynağı hiçbir zaman alamaması.
+  \item[Karşılıklı dışlama (mutual exclusion)] Herhangi bir anda kritik bölgesini en çok bir iş parçacığının yürütmesi.
+  \item[Kilitlenme (deadlock)] Bir gruptaki her iş parçacığının, yalnızca gruptaki başka bir iş parçacığının tetikleyebileceği bir olayı beklediği durum.
+  \item[Kritik bölge (critical section)] Bir iş parçacığının ortak veriye eriştiği kod.
+  \item[Muteks kilidi (mutex lock)] Karşılıklı dışlama sağlayan, \texttt{acquire} ve \texttt{release} işlemli bir kilit.
+  \item[Semafor (semaphore)] Yalnızca atomik \texttt{wait} (P) ve \texttt{signal} (V) işlemleriyle erişilen bir tamsayı.
+  \item[Sınırlı bekleme (bounded waiting)] Kritik bölgesine girmeyi bekleyen bir iş parçacığının ancak sınırlı sayıda geçilmesi gereksinimi.
+  \item[Yarış durumu (race condition)] Ortak veriye eşzamanlı erişimlerin sonucunun zamanlamalarına bağlı olduğu durum.
+  \item[Yaşlandırma (aging)] Açlığı önlemek için uzun süre beklemiş bir sürecin önceliğini kademeli olarak yükseltmek.
+  \item[Zaman dilimi (time quantum)] Döngüsel zamanlamada bir sürecin tek seferde en çok çalışabileceği süre.
+\end{description}
+
+% =====================================================================
+\Needspace{20\baselineskip}
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Kendi Linux makinenizde yarışlar ve zamanlayıcılar]
+\texttt{code/} klasöründe (laboratuvar bilgisayarları, WSL ya da bir sanal makine):
+\begin{lstlisting}[style=term]
+$ make                       # race, race_fixed, prodcons, cpu_hog derlenir
+$ ./race; ./race; ./race     # her seferinde farklı bir yanlış yanıt mı?
+$ time ./race_fixed          # doğru, ama ne kadar yavaş?
+$ python3 sched_check.py     # bu notlardaki tüm Gantt şemaları
+\end{lstlisting}
+\begin{enumerate}[leftmargin=1.4em]
+  \item \texttt{race} sizin makinenizde kaç güncelleme kaybediyor? Onu tek bir işlemciye sabitlemek (\cmd{taskset -c 0 ./race}) tabloyu değiştiriyor mu?
+  \item \texttt{race\_fixed.c}'yi her iş parçacığı yerel bir değişkende sayacak ve toplamı \texttt{counter}'a kilit altında bir kez ekleyecek biçimde değiştirin. Şimdi ne kadar hızlı? Hâlâ doğru mu?
+  \item \texttt{prodcons.c}'de üreticideki iki \cmd{sem\_wait()} çağrısının yerini değiştirin ve \texttt{SIZE}'ı $1$ yapın. Ne oluyor ve neden?
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item Tüm işler birlikte geldiğinde en kısa iş önce zamanlamasının ortalama bekleme süresini en aza indirdiğini yer değiştirme argümanıyla kanıtlayın.
+  \item SJF bir işlemci zamanlayıcısında neden tam olarak gerçekleştirilemez? İşletim sistemi ona nasıl yaklaşır? $\alpha = 0$ ve $\alpha = 1$ iken tahmine ne olur?
+  \item Açlık nedir? Hangi algoritmalar açlığa yol açabilir? Yaşlandırma onu nasıl çözer?
+  \item Yarış durumunun ne olduğunu kendi sözcüklerinizle açıklayın. İki iş parçacığı \texttt{counter++} işlemini eşzamanlı yürüttüğünde neden yanlış sonuç çıkar?
+  \item Kritik bölge probleminin bir çözümü için üç gereksinimi ifade edin. Karşılıklı dışlamayı sağlayan ama ilerlemeyi sağlamayan bir ``çözüm'' verin.
+  \item Bir döner kilidi ve uyuyan bir muteksi karşılaştırın. Her biri ne zaman daha iyi bir seçimdir?
+  \item İkili ve sayan semafor arasındaki fark nedir? Her birine bir kullanım örneği verin.
+  \item Sınırlı tampon çözümünde \texttt{empty}, \texttt{full} ve \texttt{mutex} semaforlarının her biri neyi sayar ya da korur? Üretici \texttt{mutex}'i \texttt{empty}'den önce alırsa ne ters gider?
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item Dört süreç şöyle geliyor (süreler ms): A ($0$, patlama $6$), B ($1$, patlama $3$), C ($2$, patlama $8$), D ($3$, patlama $2$). (a) FCFS, (b) kesintisiz SJF, (c) SRTF, (d) $q=3$ ile RR için Gantt şemasını çizin ve ortalama bekleme süresini hesaplayın (eşzamanlı olaylar için kuralımızı kullanın).
+  \item $\alpha = 0.5$ ve $\tau_0 = 12$ ms ile üstel ortalama kullanılıyor; bir sürecin ilk üç patlaması $10$, $6$ ve $8$ ms. $\tau_1$, $\tau_2$ ve $\tau_3$'ü hesaplayın.
+  \item Bir bağlam değişimi $0{,}5$ ms, zaman dilimi $20$ ms sürüyor. Tüm süreçler zaman dilimlerinin tamamını kullandığında işlemci zamanının ne kadarı geçişe gider?
+  \item \texttt{race\_fixed} $2\times10^{7}$ kilitli artırmayı $0{,}749$ s'de, \texttt{race} ise aynı sayıda kilitsiz artırmayı $0{,}052$ s'de yaptı. Her durumda artırma başına süreyi ve yavaşlama çarpanını hesaplayın.
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=9]
+  \item (a) FCFS: A $0$--$6$, B $6$--$9$, C $9$--$17$, D $17$--$19$; beklemeler $0,5,7,14$; ortalama $26/4 = 6.5$ ms.
+  (b) SJF: A $0$--$6$, D $6$--$8$, B $8$--$11$, C $11$--$19$; beklemeler $0,7,9,3$ (A, B, C, D); ortalama $19/4 = 4.75$ ms.
+  (c) SRTF: A $0$--$1$, B $1$--$4$, D $4$--$6$, A $6$--$11$, C $11$--$19$; beklemeler A $=11-6=5$, B $=0$, C $=9$, D $=1$; ortalama $15/4 = 3.75$ ms.
+  (d) RR, $q=3$: A $0$--$3$, B $3$--$6$, C $6$--$9$, D $9$--$11$, A $11$--$14$, C $14$--$19$; beklemeler A $=8$, B $=2$, C $=9$, D $=6$; ortalama $25/4 = 6.25$ ms.
+  \item $\tau_1 = 0.5\cdot10 + 0.5\cdot12 = 11$ ms; $\tau_2 = 0.5\cdot6 + 0.5\cdot11 = 8.5$ ms; $\tau_3 = 0.5\cdot8 + 0.5\cdot8.5 = 8.25$ ms.
+  \item $s/(q+s) = 0.5/20.5 \approx 0.024$, yani yaklaşık \%2,4.
+  \item Kilitli: $0.749/(2\times10^{7}) \approx 37\ \text{ns}$; kilitsiz: $0.052/(2\times10^{7}) = 2.6\ \text{ns}$; yavaşlama $\approx 37.45/2.6 \approx 14$. (Üstelik kilitsiz sürüm yanlıştır.)
+\end{enumerate}
+
+% =====================================================================
+\section{İleriye Bakış: 6. Hafta}
+
+\begin{itemize}
+  \item İşlemciden ikinci büyük kaynağa: ana bellek. Adres bağlama; mantıksal ve fiziksel adresler; bellek yönetim birimi (memory-management unit, MMU).
+  \item Takas (swapping) ve bitişik bellek tahsisi; ilk uyan (first fit), en iyi uyan (best fit), en kötü uyan (worst fit).
+  \item Dış ve iç parçalanma (fragmentation). Sayfalama: sayfalar, çerçeveler ve sayfa tabloları; TLB ve etkin erişim süresi; bölütleme (segmentation). (Lütfen ikinin kuvvetlerini gözden geçirin: $2^{10} = 1024$, $2^{12} = 4096$.)
+\end{itemize}
+
+\subsection*{İleri okuma (isteğe bağlı)}
+{\small
+\begin{itemize}[itemsep=0.1em]
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley: Bölüm~5 (CPU Scheduling), Bölüm~6 (Synchronization Tools), Kısım~7.1 (sınırlı tampon); kilitlenme Bölüm~8'de.
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}, bölüm PDF'leri:
+  \begin{itemize}[itemsep=0em]
+    \item Bölüm~7, Scheduling: Introduction: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched.pdf}
+    \item Bölüm~8, Multi-Level Feedback Queue: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-mlfq.pdf}
+    \item Bölüm~26, Concurrency: An Introduction: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf}
+    \item Bölüm~28, Locks: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/threads-locks.pdf}
+    \item Bölüm~31, Semaphores: \url{https://pages.cs.wisc.edu/~remzi/OSTEP/threads-sema.pdf}
+  \end{itemize}
+\end{itemize}}

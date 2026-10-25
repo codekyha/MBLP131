@@ -1,0 +1,38 @@
+student@okan-lab:~/lab$ sleep 100
+^Z
+[1]+  Stopped                 sleep 100
+student@okan-lab:~/lab$ jobs
+[1]+  Stopped                 sleep 100
+student@okan-lab:~/lab$ ps -o pid,stat,cmd
+  PID STAT CMD
+ 2345 Ss   -bash
+ 2401 T    sleep 100
+ 2402 R+   ps -o pid,stat,cmd
+student@okan-lab:~/lab$ bg
+[1]+ sleep 100 &
+student@okan-lab:~/lab$ jobs -l
+[1]+  2401 Running                 sleep 100 &
+student@okan-lab:~/lab$ ps -o pid,stat,cmd
+  PID STAT CMD
+ 2345 Ss   -bash
+ 2401 S    sleep 100
+ 2403 R+   ps -o pid,stat,cmd
+student@okan-lab:~/lab$ sleep 200 &
+[2] 2404
+student@okan-lab:~/lab$ yes > /dev/null &
+[3] 2405
+student@okan-lab:~/lab$ jobs
+[1]   Running                 sleep 100 &
+[2]-  Running                 sleep 200 &
+[3]+  Running                 yes > /dev/null &
+student@okan-lab:~/lab$ fg %3
+yes > /dev/null
+^C
+student@okan-lab:~/lab$ jobs
+[1]-  Running                 sleep 100 &
+[2]+  Running                 sleep 200 &
+student@okan-lab:~/lab$ kill %1 %2
+student@okan-lab:~/lab$ jobs
+[1]-  Terminated              sleep 100
+[2]+  Terminated              sleep 200
+student@okan-lab:~/lab$ jobs

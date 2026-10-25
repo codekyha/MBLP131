@@ -1,0 +1,16 @@
+student@okan-lab:~/lab$ id
+uid=1011(student) gid=1013(student) groups=1013(student),1010(students)
+student@okan-lab:~/lab$ groups
+student students
+student@okan-lab:~/lab$ chgrp students docs/notes_01.txt
+student@okan-lab:~/lab$ ls -l docs/notes_01.txt
+-rw-rw-r-- 1 student students 16 Oct 12 19:38 docs/notes_01.txt
+student@okan-lab:~/lab$ mkdir shared
+student@okan-lab:~/lab$ chgrp students shared
+student@okan-lab:~/lab$ chmod 2770 shared
+student@okan-lab:~/lab$ ls -ld shared
+drwxrws--- 2 student students 4096 Oct 12 19:38 shared
+student@okan-lab:~/lab$ touch shared/plan.txt
+student@okan-lab:~/lab$ ls -l shared
+total 0
+-rw-rw-r-- 1 student students 0 Oct 12 19:38 plan.txt

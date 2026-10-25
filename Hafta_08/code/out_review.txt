@@ -1,0 +1,176 @@
+== Problem 1a / Week 1: multiprogramming and batch utilisation ==
+  U(1) = 1 - 0.6^1 = 0.4000
+  U(3) = 1 - 0.6^3 = 0.7840
+  U(6) = 1 - 0.6^6 = 0.9533
+  U >= 95%: n >= ln 0.05 / ln 0.6 = 5.864 -> n = 6  (0.6^5 = 0.0778, 0.6^6 = 0.0467)
+  batch: U = 4/(4+6) = 0.40; with t_setup = 1: 0.80
+  time-sharing: n q = 30 x 20 ms = 600 ms
+
+== Week 2: microkernel cost, polling ==
+  t_w = 2.0 us: T_mono = 2.20 us, T_micro = 2.70 us, ratio = 1.227
+  polling 200/s x 5 us = 0.0010 = 0.10 % of the CPU
+
+== Problem 1b,c / Week 3: context-switch overhead and fork() ==
+  s = 4 us, q = 2000 us: s/(q+s) = 4/2004 = 0.200 %
+  s = 4 us, q = 50 us: s/(q+s) = 4/54 = 7.407 %
+  fork(); fork(); printf A; fork(); printf B -> A x4, B x8, 8 processes (7 created)
+  real run with os.fork(): {'A': 4, 'B': 8}
+
+== Problem 1d / Week 4: Amdahl's law, S = 0.2 ==
+  N = 2: 1/(0.2 + 0.8/2) = 1.6667
+  N = 4: 1/(0.2 + 0.8/4) = 2.5000
+  N = 8: 1/(0.2 + 0.8/8) = 3.3333
+  limit 1/S = 5.0
+  speedup >= 3 on 4 cores: S <= 1/9 = 0.1111
+
+== Problem 2 / Week 5: CPU scheduling ==
+  jobs (name, arrival, burst, priority): [('P1', 0, 7, 2), ('P2', 2, 4, 1), ('P3', 3, 2, 4), ('P4', 5, 5, 3)]
+--- FCFS ---
+Gantt: [0-7 P1] [7-11 P2] [11-13 P3] [13-18 P4]
+      arr burst prio first done  TAT wait resp
+P1      0     7    2     0    7    7    0    0
+P2      2     4    1     7   11    9    5    5
+P3      3     2    4    11   13   10    8    8
+P4      5     5    3    13   18   13    8    8
+sum waiting 21, sum turnaround 39, sum response 21
+avg waiting 5.25  avg turnaround 9.75  avg response 5.25  context switches 3  CPU busy 18/18 ms
+--- SJF (non-preemptive) ---
+Gantt: [0-7 P1] [7-9 P3] [9-13 P2] [13-18 P4]
+      arr burst prio first done  TAT wait resp
+P1      0     7    2     0    7    7    0    0
+P2      2     4    1     9   13   11    7    7
+P3      3     2    4     7    9    6    4    4
+P4      5     5    3    13   18   13    8    8
+sum waiting 19, sum turnaround 37, sum response 19
+avg waiting 4.75  avg turnaround 9.25  avg response 4.75  context switches 3  CPU busy 18/18 ms
+--- SRTF ---
+Gantt: [0-2 P1] [2-3 P2] [3-5 P3] [5-8 P2] [8-13 P1] [13-18 P4]
+      arr burst prio first done  TAT wait resp
+P1      0     7    2     0   13   13    6    0
+P2      2     4    1     2    8    6    2    0
+P3      3     2    4     3    5    2    0    0
+P4      5     5    3    13   18   13    8    8
+sum waiting 16, sum turnaround 34, sum response 8
+avg waiting 4  avg turnaround 8.5  avg response 2  context switches 5  CPU busy 18/18 ms
+--- Priority (preemptive) ---
+Gantt: [0-2 P1] [2-6 P2] [6-11 P1] [11-16 P4] [16-18 P3]
+      arr burst prio first done  TAT wait resp
+P1      0     7    2     0   11   11    4    0
+P2      2     4    1     2    6    4    0    0
+P3      3     2    4    16   18   15   13   13
+P4      5     5    3    11   16   11    6    6
+sum waiting 23, sum turnaround 41, sum response 19
+avg waiting 5.75  avg turnaround 10.25  avg response 4.75  context switches 4  CPU busy 18/18 ms
+--- Round Robin q = 3 ---
+Gantt: [0-3 P1] [3-6 P2] [6-8 P3] [8-11 P1] [11-14 P4] [14-15 P2] [15-16 P1] [16-18 P4]
+      arr burst prio first done  TAT wait resp
+P1      0     7    2     0   16   16    9    0
+P2      2     4    1     3   15   13    9    1
+P3      3     2    4     6    8    5    3    3
+P4      5     5    3    11   18   13    8    6
+sum waiting 29, sum turnaround 47, sum response 10
+avg waiting 7.25  avg turnaround 11.75  avg response 2.5  context switches 7  CPU busy 18/18 ms
+
+== Week 5: exponential averaging, alpha = 0.5, tau0 = 8, bursts 6, 10, 4 ==
+  tau = 8, 7, 8.5, 6.25
+
+== Problem 3 / Week 5: counter = 10, A: counter++, B: counter-- ==
+  20 interleavings; final values: 9: 9 orders, 10: 2 orders, 11: 9 orders
+
+== Problem 3 / Week 5: counting semaphore S = 2, three threads ==
+  T1 wait   -> enters,  S = 1
+  T2 wait   -> enters,  S = 0
+  T3 wait   -> blocks,  S = 0, queue ['T3']
+  T1 signal -> S = 1; T3 leaves its wait, S = 0
+  T2 signal -> S = 1
+  T3 signal -> S = 2
+
+== Week 6: base and limit ==
+  base 12000, limit 2500, a = 100: 12100
+  base 12000, limit 2500, a = 2499: 14499
+  base 12000, limit 2500, a = 2500: TRAP
+  swap 200 MB at 80 MB/s: 2.5 s each way, 5.0 s out + in
+
+== Problem 4 / Week 6: first-, best-, worst-fit ==
+  holes: 300@100, 600@500, 200@1300, 450@1700, 350@2400 | total 1900 KB
+--- first-fit ---
+  A (340 KB) -> hole 600@500, placed at 500-840, leftover 260 KB
+  B (180 KB) -> hole 300@100, placed at 100-280, leftover 120 KB
+  C (420 KB) -> hole 450@1700, placed at 1700-2120, leftover 30 KB
+  D (500 KB): no hole large enough -> waits (free 960 KB, largest hole 350 KB)
+  holes left: 120@280, 260@840, 200@1300, 30@2120, 350@2400 | total free = 960 KB
+--- best-fit ---
+  A (340 KB) -> hole 350@2400, placed at 2400-2740, leftover 10 KB
+  B (180 KB) -> hole 200@1300, placed at 1300-1480, leftover 20 KB
+  C (420 KB) -> hole 450@1700, placed at 1700-2120, leftover 30 KB
+  D (500 KB) -> hole 600@500, placed at 500-1000, leftover 100 KB
+  holes left: 300@100, 100@1000, 20@1480, 30@2120, 10@2740 | total free = 460 KB
+--- worst-fit ---
+  A (340 KB) -> hole 600@500, placed at 500-840, leftover 260 KB
+  B (180 KB) -> hole 450@1700, placed at 1700-1880, leftover 270 KB
+  C (420 KB): no hole large enough -> waits (free 1380 KB, largest hole 350 KB)
+  D (500 KB): no hole large enough -> waits (free 1380 KB, largest hole 350 KB)
+  holes left: 300@100, 260@840, 200@1300, 270@1880, 350@2400 | total free = 1380 KB
+
+== Problem 5 / Week 6: paging, 16-bit addresses, 4 KB pages ==
+  page table: 0->3, 1->8, 2->6, 4->10, 5->2, 3 and 6..15 invalid
+  0x1c3b =  7227: p = 1, d = 0xc3b = 3131, frame 8 -> 0x8c3b = 35899 (= 8 x 4096 + 3131)
+  0x4f0e = 20238: p = 4, d = 0xf0e = 3854, frame 10 -> 0xaf0e = 44814 (= 10 x 4096 + 3854)
+  0x2010 =  8208: p = 2, d = 0x010 =   16, frame 6 -> 0x6010 = 24592 (= 6 x 4096 + 16)
+  0x3004 = 12292: p = 3, d = 0x004 =    4, invalid -> TRAP
+  process of 9000 B: 2 full pages + 808 B -> 3 frames, internal fragmentation 3288 B
+  page table, 32-bit addresses, 8 KB pages, 4-B entries: 2^19 = 524288 entries, 2097152 B = 2 MB
+  TLB: t_TLB = 10, t_m = 80, alpha = 0.95: EAT = 0.95x90 + 0.05x170 = 94.00 ns = t_TLB + (2-a)t_m = 94.00; simplified 84.00 ns; no TLB 160 ns
+  EAT = 100 ns needs alpha = 2 - 90/80 = 0.875
+
+== Week 6: segment table ==
+  <2, 1499>: limit 1500: 2400 + 1499 = 3899
+  <1, 300>: limit 300: TRAP
+  <0, 799>: limit 800: 1000 + 799 = 1799
+
+== Problem 6 / Week 7: page replacement, 3 frames ==
+FIFO, 3 frames: 11 page faults
+ref    1  2  0  4  2  3  2  1  2  4  0  2  0  1
+fr0    1  1  1  4  4  4  4  1  1  1  1  2  2  2
+fr1    .  2  2  2  2  3  3  3  3  4  4  4  4  1
+fr2    .  .  0  0  0  0  2  2  2  2  0  0  0  0
+fault  F  F  F  F     F  F  F     F  F  F     F
+evict           1     2  0  4     3  2  1     4
+
+LRU, 3 frames: 9 page faults
+ref    1  2  0  4  2  3  2  1  2  4  0  2  0  1
+fr0    1  1  1  4  4  4  4  1  1  1  0  0  0  0
+fr1    .  2  2  2  2  2  2  2  2  2  2  2  2  2
+fr2    .  .  0  0  0  3  3  3  3  4  4  4  4  1
+fault  F  F  F  F     F     F     F  F        F
+evict           1     0     4     3  1        4
+
+OPT, 3 frames: 7 page faults
+ref    1  2  0  4  2  3  2  1  2  4  0  2  0  1
+fr0    1  1  1  1  1  1  1  1  1  1  1  1  1  1
+fr1    .  2  2  2  2  2  2  2  2  2  2  2  2  2
+fr2    .  .  0  4  4  3  3  3  3  4  0  0  0  0
+fault  F  F  F  F     F           F  F         
+evict           0     4           3  4         
+
+  4 frames, FIFO: 8 faults
+  4 frames, LRU: 7 faults
+  4 frames, OPT: 6 faults
+
+== Problem 7 / Week 7: EAT with page faults ==
+  EAT = 0.9998 x 100 + 0.0002 x 6,000,000 = 99.98 + 1200.0 = 1299.98 ns -> 13.0 x slower
+  slow-down < 5 %: p < 5/5,999,900 = 8.333e-07 (1 fault per 1,199,980 accesses)
+
+== Problem 7 / Week 7: direct access, 120-B records, 4096-B blocks ==
+  record 750: byte 90,000; block 90000//4096 = 21; offset 90000 - 21 x 4096 = 3984; last byte 90,119 in block 22  -> CROSSES a block boundary
+  record 40: byte 4,800; block 4800//4096 = 1; offset 4800 - 1 x 4096 = 704; last byte 4,919 in block 1
+
+== Week 7: working set demand ==
+  WSS = [4, 6, 3, 5]: D = 18; m = 16 frames -> thrashing
+
+== Quiz (slides) ==
+  arrival 3, burst 4, finish 15: turnaround 12, waiting 8
+  0x2ABC: p = 2, d = 0xabc, frame 6 -> 0x6abc
+  t_TLB = 10, t_m = 100, alpha = 0.9: EAT = 120.0 ns
+
+wrote review_results.json

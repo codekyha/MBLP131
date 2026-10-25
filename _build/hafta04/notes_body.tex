@@ -1,0 +1,854 @@
+% ============================ Hafta 4 gövdesi ============================
+% İngilizce referans: ../week04/notes_body.tex (aynı bölüm sırası, aynı sayılar)
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 4 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large İş Parçacıkları ve İşlemci Zamanlamasının Temelleri}\par\smallskip
+{\small\itshape\color{white!70} Bir program aynı anda birkaç işi nasıl yapar --- ve sırada kimin çalışacağına kim karar verir?}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item \emph{İş parçacığını} (thread) tanımlamak; bir sürecin iş parçacıklarının neleri paylaştığını, her birinin neleri kendine sakladığını saymak.
+  \item Çok iş parçacıklı programlamanın dört yararını ve \emph{eşzamanlılık} (concurrency) ile \emph{paralellik} (parallelism) arasındaki farkı açıklamak.
+  \item Bir programın $N$ çekirdekteki en büyük hızlanmasını Amdahl yasasıyla hesaplamak.
+  \item Kullanıcı düzeyi ve çekirdek düzeyi iş parçacıklarını; çoktan bire, birebir ve çoktan çoğa modellerini karşılaştırmak.
+  \item Küçük Pthreads programlarını C ile okuyup çalıştırmak, iş parçacıklarını \cmd{ps} ve \cmd{/proc} ile gözlemek.
+  \item İşlemci--G/Ç patlama döngüsünü, hazır kuyruğunu, dört zamanlama karar noktasını, kesintili zamanlamayı ve dağıtıcıyı anlatmak.
+  \item Bir Gantt şemasından işlemci kullanımını, üretilen işi, dönüş, bekleme ve yanıt süresini hesaplamak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{2}
+\tableofcontents
+
+% =====================================================================
+\section{Süreçlerden İş Parçacıklarına}
+
+\subsection{3. haftanın kısa bir tekrarı}
+
+Geçen hafta \term{süreç} (process) kavramıyla tanıştık: yürütülmekte olan bir program. Sürecin bir bellek görüntüsü (kod/metin bölümü, veri, bss, öbek (heap) ve yığıt (stack)), bir işlemci durumu (program sayacı, yazmaçlar) ve açık dosyalar gibi kaynakları vardır; bunların hepsi \term{süreç denetim bloğunda} (process control block, PCB) tutulur. Süreç beş durum arasında gezinir (yeni, hazır, çalışıyor, bekliyor, sonlandı); \term{bağlam değişimi} (context switch) bir sürecin işlemci durumunu PCB'sine kaydedip bir başkasınınkini yükler; \cmd{fork()}, \cmd{exec()} ve \cmd{wait()} süreçleri yaratır, değiştirir ve toplar.
+
+O resimde her süreç aynı anda tam olarak tek bir iş yapar: \emph{tek} bir program sayacı vardır. Bu hafta bu kısıtlamayı kaldırıyoruz.
+
+\subsection{Neden iş parçacığı?}
+
+Saniyede binlerce istek alan bir web sunucusu düşünün. Bir isteğe hizmet etmek biraz işlemci zamanı ve çok fazla bekleme gerektirir: diski, veritabanını, ağı beklemek.
+
+\begin{itemize}
+  \item \textbf{Tek iş parçacıklı} bir sunucu istekleri teker teker işler. 1.~istek diski beklerken 2., 3. ve 4.~istekler, işlemci boşta olduğu hâlde sırada bekler.
+  \item Sunucu her istek için \textbf{yeni bir süreç yaratabilir} (ilk Apache web sunucuları bunu \cmd{fork()} ile yapıyordu). Bu çalışır; ama süreç yaratmak pahalıdır ve süreçler belleği paylaşmadığı için ortak bir web sayfası önbelleğini kolayca kullanamazlar.
+  \item \textbf{Çok iş parçacıklı} bir sunucuda istekleri kabul eden bir \emph{dinleyici} iş parçacığı vardır; her isteği bir \emph{işçi} iş parçacığına verir. Tüm iş parçacıkları tek bir sürecin içinde yaşar ve onun belleğini paylaşır.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  b/.style={rectangle,rounded corners=2pt,minimum height=0.6cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=2.5mm]},color=slate,thick}]
+\node[font=\small\bfseries,text=red!60!black,anchor=west] at (-0.4,1.0) {Tek iş parçacıklı};
+\foreach \i in {1,...,4} \node[b,fill=light,minimum width=1.1cm] (r\i) at (\i*1.25-0.8,0.3) {istek \i};
+\node[b,fill=slate,text=white,minimum width=2.2cm] (t) at (6.4,0.3) {1 iş parçacığı};
+\draw[arr] (r4) -- (t);
+\node[font=\small\bfseries,text=mintdeep,anchor=west] at (8.4,1.0) {Çok iş parçacıklı};
+\node[b,fill=mint,minimum width=1.8cm] (l) at (9.4,0.0) {dinleyici};
+\foreach \i in {1,2,3} {
+  \node[b,fill=charcoal,text=white,minimum width=2.4cm] (w\i) at (12.6,1.1-\i*0.75) {işçi \i};
+  \draw[arr] (l.east) -- (w\i.west);
+}
+\end{tikzpicture}
+\caption{Tek iş parçacıklı sunucu istekleri tek tek işler; çok iş parçacıklı sunucu her isteğe kendi iş parçacığını verir.}
+\end{figure}
+
+Aynı fikir neredeyse her etkileşimli programda karşımıza çıkar. Bir kelime işlemcide bir iş parçacığı tuş vuruşlarını okur, biri ekranı yeniden çizer, biri yazımı denetler, biri de birkaç dakikada bir yedek kopya kaydeder. Bir tarayıcı sayfaları yükler, resimleri çözer ve betikleri birçok iş parçacığında çalıştırır; bir oyun görüntü, fizik, ses ve ağ kodunu ayrı iş parçacıklarında yürütür. Her durumda iş parçacıkları \emph{aynı} veri (belge, sayfa, oyun dünyası) üzerinde çalışır; dolayısıyla belleği paylaşmaları gerekir.
+
+\subsection{İş parçacığı nedir?}
+
+\begin{keyidea}[Tanım]
+\textbf{İş parçacığı} (thread), işlemci kullanımının temel birimidir. Bir \emph{iş parçacığı kimliği} (thread ID), bir \emph{program sayacı} (program counter), bir \emph{yazmaç kümesi} (register set) ve bir \emph{yığıttan} (stack) oluşur. Aynı sürecin diğer iş parçacıklarıyla kod bölümünü, veri bölümünü ve açık dosyalar gibi işletim sistemi kaynaklarını paylaşır.
+\end{keyidea}
+
+Geleneksel, ``ağır siklet'' bir süreç, tam olarak tek bir iş parçacığı olan süreçtir. Çok iş parçacıklı bir sürecin birden çok program sayacı vardır: aynı programın birkaç farklı yeri aynı anda yürütülmektedir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  sh/.style={rectangle,rounded corners=2pt,fill=mint,minimum width=1.3cm,minimum height=0.55cm,font=\small},
+  pr/.style={rectangle,rounded corners=2pt,fill=light,minimum width=1.3cm,minimum height=0.48cm,font=\footnotesize},
+  th/.style={-{Stealth[length=2.5mm]},very thick,color=mintdeep}]
+% tek
+\draw[slate,rounded corners=3pt] (-0.2,-3.6) rectangle (4.4,0.5);
+\node[font=\small\bfseries] at (2.1,0.85) {tek iş parçacıklı süreç};
+\foreach \x/\t in {0.6/kod,2.1/veri,3.6/dosyalar} \node[sh] at (\x,0) {\t};
+\node[pr] at (2.1,-0.8) {yazmaçlar}; \node[pr] at (2.1,-1.4) {PC}; \node[pr] at (2.1,-2.0) {yığıt};
+\draw[th] (2.1,-2.4) -- (2.1,-3.4);
+% çok
+\draw[slate,rounded corners=3pt] (5.3,-3.6) rectangle (10.9,0.5);
+\node[font=\small\bfseries] at (8.1,0.85) {çok iş parçacıklı süreç (3 iş parçacığı)};
+\foreach \x/\t in {6.4/kod,8.1/veri,9.8/dosyalar} \node[sh,minimum width=1.5cm] at (\x,0) {\t};
+\foreach \x in {6.4,8.1,9.8} {
+  \node[pr] at (\x,-0.8) {yazmaçlar}; \node[pr] at (\x,-1.4) {PC}; \node[pr] at (\x,-2.0) {yığıt};
+  \draw[th] (\x,-2.4) -- (\x,-3.4);
+}
+\end{tikzpicture}
+\caption{Nane yeşili: sürecin tüm iş parçacıklarınca paylaşılır. Gri: her iş parçacığına özel bir kopya. Her ok bir yürütme akışıdır (bir iş parçacığı).}
+\end{figure}
+
+3.~haftanın diliyle söylersek PCB ikiye bölünür: sürece ait bir kısım (bellek haritası, açık dosyalar, kullanıcı kimliği) ve iş parçacığına ait küçük bir kısım (durum, kaydedilmiş yazmaçlar ve program sayacı, yığıt işaretçisi). Linux her iş parçacığına \emph{görev} (task) der ve her birine kendi çekirdek kaydını verir; bir sürecin iş parçacıkları yalnızca aynı bellek haritasını ve aynı açık dosya tablosunu gösterir. Eski kaynaklar iş parçacıklarına \term{hafif süreç} (lightweight process, LWP) der; bu kısaltma \cmd{ps} çıktısında hâlâ görünür.
+
+\subsection{Ne paylaşılır, ne özeldir?}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{4.4cm} l >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Öğe} & \textbf{İş parçacıkları\dots} & \textbf{Neden} \\
+\midrule
+Kod (metin bölümü) & paylaşır & Tüm iş parçacıkları aynı programın fonksiyonlarını çalıştırır. \\
+Global veri ve öbek & paylaşır & Global bir değişken ya da \cmd{malloc} ile ayrılmış bir dizi her iş parçacığınca görülür. \\
+Açık dosyalar, PID, kullanıcı kimliği & paylaşır & Kaynaklar iş parçacığına değil, sürece aittir. \\
+Program sayacı ve yazmaçlar & özel & Her iş parçacığı kodda kendi yerindedir. \\
+Yığıt (yerel değişkenler) & özel & Her iş parçacığının kendi fonksiyon çağrı zinciri vardır. \\
+İş parçacığı kimliği, zamanlama durumu & özel & İşletim sistemi her iş parçacığını ayrı zamanlar. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Paylaşım iş parçacıklarının varlık nedenidir --- ve aynı zamanda başlıca tehlikesidir. İki iş parçacığı aynı değişkeni aynı anda güncellerse güncellemeler kaybolabilir. Buna \term{yarış durumu} (race condition) denir ve 5.~haftanın ikinci yarısının ana konusudur.
+
+\subsection{Çok iş parçacıklı programlamanın yararları}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Yanıt verebilirlik (responsiveness).} Bir iş parçacığı bloke olsa (G/Ç beklese) ya da uzun bir hesap yapsa bile diğer iş parçacıkları çalışmayı sürdürür. Tanıdık ``uygulama yanıt vermiyor'' mesajı çoğunlukla kullanıcı arayüzünü yöneten tek iş parçacığının başka bir işle meşgul olduğu anlamına gelir.
+  \item \textbf{Kaynak paylaşımı (resource sharing).} İş parçacıkları süreçlerinin belleğini ve kaynaklarını kendiliğinden paylaşır. Ayrı süreçler iş birliği yapmak için paylaşılan bellek ya da borular (pipe) gibi açık mekanizmalar kullanmak zorundadır.
+  \item \textbf{Ekonomi (economy).} İş parçacığı yaratmak ve aynı sürecin iş parçacıkları arasında geçiş yapmak, süreçlere göre çok daha ucuzdur; çünkü yeni bir adres alanı yaratmak ya da adres alanını değiştirmek gerekmez. Bunu Bölüm~\ref{sec:createcost}'te ölçüyoruz.
+  \item \textbf{Ölçeklenebilirlik (scalability).} Çok çekirdekli bir işlemcide bir sürecin iş parçacıkları farklı çekirdeklerde paralel çalışabilir. Tek iş parçacıklı bir süreç, makinede kaç çekirdek olursa olsun yalnızca birini kullanabilir.
+\end{enumerate}
+
+\begin{histnote}[İş parçacıkları neden vazgeçilmez oldu?]
+Yaklaşık 2005'e kadar her yeni işlemci kuşağı daha yüksek bir saat frekansında çalışıyordu; böylece eski tek iş parçacıklı programlar kendiliğinden hızlanıyordu. Sonra güç tüketimi ve ısı, saat hızlarının artışını kabaca $3$--$5$~GHz düzeyinde durdurdu. Çip üreticileri fazladan transistörleri bunun yerine tek bir çipe birkaç çekirdek koymak için kullandı. O zamandan beri bir program yeni donanımda ancak birkaç çekirdeği kullanabiliyorsa, yani çok iş parçacıklıysa (ya da birkaç sürece bölünmüşse) hızlanır.
+\end{histnote}
+
+% =====================================================================
+\section{Çok Çekirdekli Programlama}
+
+\subsection{Eşzamanlılık ve paralellik}
+
+Bu iki sözcük sıkça karıştırılır.
+
+\begin{itemize}
+  \item Bir sistem, birden çok görevin \emph{ilerlemesini} destekliyorsa \term{eşzamanlıdır} (concurrent). Tek çekirdekte işletim sistemi bunu birkaç milisaniyede bir iş parçacıkları arasında geçiş yaparak sağlar; insana iş parçacıkları aynı anda çalışıyormuş gibi görünür.
+  \item Bir sistem birden çok görevi \emph{aynı anda} yürütebiliyorsa \term{paraleldir} (parallel). Bunun için en az iki çekirdek gerekir.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.62cm]
+\node[font=\small\bfseries,anchor=east] at (-0.2,1.875) {tek çekirdek};
+\node[font=\small\bfseries,anchor=east] at (-0.2,0.675) {çekirdek 0};
+\node[font=\small\bfseries,anchor=east] at (-0.2,0.0) {çekirdek 1};
+\foreach \i in {0,...,15} {
+  \pgfmathtruncatemacro{\k}{mod(\i,4)}
+  \ifcase\k \def\c{mint}\def\tc{black}\or \def\c{charcoal}\def\tc{white}\or \def\c{slate}\def\tc{white}\or \def\c{mint!25}\def\tc{black}\fi
+  \pgfmathtruncatemacro{\tn}{\k+1}
+  \fill[\c,draw=white,thick] (\i,1.6) rectangle ++(1,0.55); \node[font=\scriptsize\bfseries,text=\tc] at (\i+0.5,1.875) {T\tn};
+  \pgfmathtruncatemacro{\m}{mod(\i,2)}
+  \ifcase\m \def\ca{mint}\def\cb{charcoal}\def\ta{black}\def\tb{white}\def\na{1}\def\nb{2}\or \def\ca{slate}\def\cb{mint!25}\def\ta{white}\def\tb{black}\def\na{3}\def\nb{4}\fi
+  \fill[\ca,draw=white,thick] (\i,0.4) rectangle ++(1,0.55); \node[font=\scriptsize\bfseries,text=\ta] at (\i+0.5,0.675) {T\na};
+  \fill[\cb,draw=white,thick] (\i,-0.275) rectangle ++(1,0.55); \node[font=\scriptsize\bfseries,text=\tb] at (\i+0.5,0.0) {T\nb};
+}
+\draw[-{Stealth},slate,thick] (0,-0.6) -- (16.3,-0.6) node[right,font=\footnotesize\itshape] {zaman};
+\end{tikzpicture}
+\caption{Tek çekirdekte dört iş parçacığı (paralellik olmadan eşzamanlılık) ve iki çekirdekte (paralellikle birlikte eşzamanlılık).}
+\end{figure}
+
+Paralellik eşzamanlılığı gerektirir, ama tersi doğru değildir. Bu haftanın ölçümlerinde kullanılan test makinesinin iki çekirdeği vardır (\cmd{nproc} komutu \texttt{2} yazar).
+
+\subsection{Programlama zorlukları}
+
+Birkaç çekirdeği iyi kullanan programlar yazmak zordur. Genellikle beş zorluk sayılır:
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Görevleri belirlemek:} işin bağımsız çalışabilecek parçalarını bulmak.
+  \item \textbf{Denge:} her çekirdeğe benzer miktarda iş vermek; aksi hâlde biri bitirene kadar bazı çekirdekler boşta bekler.
+  \item \textbf{Veriyi bölmek:} veriyi, her iş parçacığı kendi parçası üzerinde çalışacak biçimde ayırmak.
+  \item \textbf{Veri bağımlılığı:} B görevi A görevinin sonucuna ihtiyaç duyuyorsa B, A'yı beklemelidir. İş parçacıkları \emph{eşzamanlanmalıdır} (synchronisation; 5.~hafta).
+  \item \textbf{Test ve hata ayıklama:} iş parçacıkları çok sayıda farklı sırayla iç içe geçebilir; bir hata milyonda bir çalıştırmada ortaya çıkabilir.
+\end{enumerate}
+
+İki temel paralellik türü vardır. \term{Veri paralelliğinde} (data parallelism) aynı işlem verinin farklı parçalarına uygulanır; dizi toplama programımız (Bölüm~\ref{sec:arraysum}) bir örnektir. \term{Görev paralelliğinde} (task parallelism) farklı iş parçacıkları farklı işlemler yapar; yukarıdaki kelime işlemci iş parçacıkları gibi. Gerçek programlar çoğu zaman ikisini karıştırır.
+
+\subsection{Amdahl yasası}
+
+Neredeyse her programın çekirdekler arasında bölünemeyen bir kısmı vardır: girdiyi okumak, kısmi sonuçları birleştirmek, yanıtı yazdırmak. Gene Amdahl (IBM) 1967'de bu \emph{seri} kısmın, kaç çekirdek kullanılırsa kullanılsın, elde edilebilecek hızlanmayı sınırladığını gözlemledi.
+
+Tek çekirdekteki çalışma süresi $1$ olsun (normalize ediyoruz) ve $S$ bu sürenin seri olan kesri olsun, $0 \le S \le 1$. Geri kalan $1-S$ kesri $N$ çekirdek arasında kusursuzca bölünebilsin. O zaman
+\[
+T(1) = S + (1-S) = 1, \qquad T(N) = S + \frac{1-S}{N}.
+\]
+\Needspace{7\baselineskip}
+\term{Hızlanma} (speedup) eski sürenin yeni süreye oranıdır:
+\begin{keyidea}[Amdahl yasası]
+\[
+\text{hızlanma}(N) = \frac{T(1)}{T(N)} \;\le\; \frac{1}{S + \dfrac{1-S}{N}},
+\qquad
+\lim_{N\to\infty} \text{hızlanma}(N) = \frac{1}{S}.
+\]
+\end{keyidea}
+Eşitsizlik işareti bunun en iyi durum olduğunu hatırlatır: gerçek programlar iş parçacığı yaratmanın, onları eşzamanlamanın ve bellek bant genişliğini paylaşmanın bedelini de öder.
+
+\begin{example}[\%75 paralel, \%25 seri]
+$S = 0.25$ alalım; o hâlde $1-S = 0.75$.
+\begin{align*}
+N=2:&\quad \frac{1}{0.25 + 0.75/2} = \frac{1}{0.625} = 1.60,\\
+N=4:&\quad \frac{1}{0.25 + 0.75/4} = \frac{1}{0.4375} \approx 2.29,\\
+N=8:&\quad \frac{1}{0.25 + 0.75/8} = \frac{1}{0.34375} \approx 2.91,\\
+N=16:&\quad \frac{1}{0.25 + 0.75/16} = \frac{1}{0.296875} \approx 3.37,\\
+N\to\infty:&\quad \frac{1}{0.25} = 4.
+\end{align*}
+Donanımı $8$ çekirdekten $16$ çekirdeğe çıkararak ikiye katlamak, hızlanmayı yalnızca 2,91'den 3,37'ye yükseltir. Hiçbir çekirdek sayısı bu programı $4$ kattan fazla hızlandıramaz.
+\end{example}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=10cm,height=5.6cm,xmode=log,log basis x=2,xmin=1,xmax=64,ymin=0,ymax=21,
+  xlabel={çekirdek sayısı $N$},ylabel={hızlanma},xtick={1,2,4,8,16,32,64},xticklabels={1,2,4,8,16,32,64},
+  legend pos=north west,legend style={font=\footnotesize,draw=none},grid=major,grid style={light},
+  tick label style={font=\footnotesize},label style={font=\small}]
+\addplot[mintdeep,very thick,domain=1:64,samples=60] {1/(0.05+0.95/x)};
+\addplot[mint,very thick,domain=1:64,samples=60] {1/(0.25+0.75/x)};
+\addplot[red!60!black,very thick,domain=1:64,samples=60] {1/(0.5+0.5/x)};
+\legend{$S=0.05$ (sınır 20),$S=0.25$ (sınır 4),$S=0.5$ (sınır 2)}
+\end{axis}
+\end{tikzpicture}
+\caption{Amdahl yasası: hızlanma $1/S$ değerinde düzleşir.}
+\end{figure}
+
+Pratik ders: \emph{önce seri kısmı küçültün, sonra çekirdek ekleyin.} Binlerce çekirdeği olan grafik işlemcileri (GPU) için yazılan programların seri kısmı küçücük tutacak biçimde tasarlanmasının nedeni budur.
+
+% =====================================================================
+\Needspace{8\baselineskip}
+\section{Kullanıcı İş Parçacıkları, Çekirdek İş Parçacıkları ve Çoklu İş Parçacığı Modelleri}
+
+\subsection{Kullanıcı düzeyi ve çekirdek düzeyi iş parçacıkları}
+
+İş parçacıkları iki düzeyde sağlanabilir.
+
+\paragraph{Kullanıcı düzeyi iş parçacıkları} (user-level threads) süreç içindeki bir kütüphane tarafından yönetilir. Çekirdeğin onlardan haberi yoktur: tek iş parçacıklı sıradan bir süreç görür.
+\begin{itemize}
+  \item[\textcolor{mintdeep}{$+$}] İş parçacığı yaratmak ve iş parçacıkları arasında geçiş yapmak sıradan fonksiyon çağrılarıdır: çok hızlıdır, sistem çağrısı gerekmez.
+  \item[\textcolor{red!60!black}{$-$}] Bir iş parçacığı bloke eden bir sistem çağrısı yaparsa (örneğin yavaş bir aygıttan \cmd{read()}), çekirdek bütün süreci bloke eder ve tüm iş parçacıkları durur.
+  \item[\textcolor{red!60!black}{$-$}] Çekirdek tek bir varlığı zamanladığı için iş parçacıkları aynı anda iki çekirdekte çalışamaz.
+\end{itemize}
+
+\paragraph{Çekirdek düzeyi iş parçacıkları} (kernel-level threads) işletim sistemi çekirdeği tarafından yaratılır, zamanlanır ve yönetilir; her birinin kendi çekirdek kaydı vardır.
+\begin{itemize}
+  \item[\textcolor{mintdeep}{$+$}] Bir iş parçacığı bloke olursa çekirdek aynı sürecin başka bir iş parçacığını çalıştırır.
+  \item[\textcolor{mintdeep}{$+$}] Bir sürecin iş parçacıkları birkaç çekirdekte paralel çalışabilir.
+  \item[\textcolor{red!60!black}{$-$}] İş parçacığı yaratmak ve geçiş yapmak sistem çağrısı gerektirir ve kullanıcı iş parçacıklarına göre daha yavaştır.
+\end{itemize}
+
+Her kullanıcı iş parçacığı eninde sonunda bir çekirdek iş parçacığı üzerinde çalışmalıdır. Kullanıcı iş parçacıklarının çekirdek iş parçacıklarına eşlenme biçimine \term{çoklu iş parçacığı modeli} (multithreading model) denir.
+
+\subsection{Üç model}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  u/.style={circle,fill=mint,minimum size=0.6cm,inner sep=0pt,font=\footnotesize\bfseries},
+  k/.style={circle,fill=white,draw=white,minimum size=0.6cm,inner sep=0pt,font=\footnotesize\bfseries},
+  l/.style={mintdeep,thick}]
+\foreach \ox/\title in {0/{çoktan bire},5.3/{birebir},10.6/{çoktan çoğa}} {
+  \fill[light,rounded corners=2pt] (\ox,1.6) rectangle ++(4.6,1.0);
+  \fill[charcoal,rounded corners=2pt] (\ox,-0.5) rectangle ++(4.6,1.0);
+  \node[font=\small\bfseries] at (\ox+2.3,3.0) {\title};
+}
+% çoktan bire
+\foreach \i in {0,...,3} { \draw[l] (0.575+\i*1.15,2.1) -- (2.3,0); }
+\foreach \i in {0,...,3} \node[u] at (0.575+\i*1.15,2.1) {K};
+\node[k] at (2.3,0) {Ç};
+% birebir
+\foreach \i in {0,...,3} { \draw[l] (5.875+\i*1.15,2.1) -- (5.875+\i*1.15,0); \node[u] at (5.875+\i*1.15,2.1) {K}; \node[k] at (5.875+\i*1.15,0) {Ç}; }
+% çoktan çoğa
+\foreach \a/\b in {0/0,1/0,2/1,3/2,4/2} \draw[l] (11.06+\a*0.92,2.1) -- (11.37+\b*1.53,0);
+\foreach \a in {0,...,4} \node[u] at (11.06+\a*0.92,2.1) {K};
+\foreach \b in {0,1,2} \node[k] at (11.37+\b*1.53,0) {Ç};
+\end{tikzpicture}
+\caption{Üç çoklu iş parçacığı modeli. Açık bant: kullanıcı iş parçacıklarının (K) bulunduğu kullanıcı alanı; koyu bant: çekirdek iş parçacıklarının (Ç) bulunduğu çekirdek alanı. (İngilizce kaynaklarda U = user, K = kernel kullanılır.)}
+\end{figure}
+
+\paragraph{Çoktan bire (many-to-one).} Birçok kullanıcı iş parçacığı tek bir çekirdek iş parçacığına eşlenir; iş parçacığı yönetimini kullanıcı alanındaki bir kütüphane yapar. Hızlıdır; ama tek bir bloke eden sistem çağrısı tüm iş parçacıklarını bloke eder ve aynı anda yalnızca bir iş parçacığı çekirdekte olabildiğinden model birden çok çekirdeği kullanamaz. Örnekler: Solaris Green Threads, GNU Portable Threads. Bugün çok az sistem kullanır.
+
+\paragraph{Birebir (one-to-one).} Her kullanıcı iş parçacığı kendi çekirdek iş parçacığına eşlenir. Bloke eden bir çağrı yalnızca çağıran iş parçacığını bloke eder ve iş parçacıkları çok çekirdekli işlemcilerde paralel çalışır. Bedeli, her kullanıcı iş parçacığının bir çekirdek iş parçacığı gerektirmesidir: iş parçacığı yaratmak bir sistem çağrısı ister ve çok büyük sayıda iş parçacığı çekirdeğe yük olur. \textbf{Linux ve Windows birebir modeli kullanır.} Linux'ta \cmd{pthread\_create()} \cmd{clone()} sistem çağrısını çağırır ve her iş parçacığı çekirdekte kendi iş parçacığı kimliğini (TID) alır.
+
+\paragraph{Çoktan çoğa (many-to-many).} Birçok kullanıcı iş parçacığı, daha az ya da eşit sayıda çekirdek iş parçacığı üzerine çoğullanır. Program istediği kadar kullanıcı iş parçacığı yaratabilir ve bunlar yine paralel çalışabilir; bloke eden bir çağrı her şeyi durdurmaz. Bedeli karmaşıklıktır: kütüphanedeki zamanlayıcı ile çekirdekteki zamanlayıcının iş birliği yapması gerekir. Yaygın bir türev olan \emph{iki düzeyli model} (two-level model), bir kullanıcı iş parçacığının kendi çekirdek iş parçacığına bağlanmasına da izin verir. İşletim sistemi çekirdekleri bu modeli bırakıp birebir modele geçti; ama dil çalışma ortamları onu yeniden canlandırdı: Go'nun \emph{goroutine}'leri ve Java'nın \emph{sanal iş parçacıkları} (virtual threads; Java~21, 2023), milyonlarca hafif görevi birkaç çekirdek iş parçacığı üzerinde çalıştırır.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{@{}l l l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Model} & \textbf{Kullanıcı : çekirdek} & \textbf{Paralel mi?} & \textbf{Bloke eden çağrı durdurur\dots} & \textbf{Kullananlar} \\
+\midrule
+Çoktan bire & $N:1$ & hayır & tüm iş parçacıklarını & Green threads (eski) \\
+Birebir & $1:1$ & evet & yalnızca o iş parçacığını & Linux, Windows \\
+Çoktan çoğa & $N:M$, $M\le N$ & evet & yalnızca o iş parçacığını & Go, Java sanal iş parçacıkları \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+
+% =====================================================================
+\section{İş Parçacığı Kütüphaneleri ve Uygulamalı Pthreads}
+\label{sec:handson}
+
+Bir \term{iş parçacığı kütüphanesi} (thread library), programcıya iş parçacığı yaratmak ve yönetmek için bir API sunar. Üç ana kütüphane vardır: \textbf{POSIX Pthreads} (Linux, macOS ve diğer UNIX sistemleri), \textbf{Windows iş parçacığı API'si} ve \textbf{Java iş parçacıkları}. Linux ve Windows'ta Java iş parçacıkları, Java sanal makinesi tarafından çekirdek iş parçacıklarına birebir eşlenir.
+
+Pthreads bir gerçekleme değil, bir \emph{belirtimdir} (specification; POSIX standardının parçası). Linux'ta C kütüphanesinde (glibc, NPTL adıyla) \cmd{clone()} sistem çağrısının üzerine gerçeklenmiştir. Temel çağrılar şunlardır:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\ttfamily}l X}
+\toprule
+\textrm{\textbf{Çağrı}} & \textbf{Ne yapar?} \\
+\midrule
+pthread\_create(\&t, NULL, f, arg) & \cmd{f(arg)} fonksiyonunu çalıştıran yeni bir iş parçacığı başlatır; tutamacı \cmd{t}'ye yazılır. \\
+pthread\_join(t, \&result) & \cmd{t} iş parçacığı bitene kadar bekler (süreçlerdeki \cmd{wait()} gibi). \\
+pthread\_exit(value) & Çağıran iş parçacığını sonlandırır (\cmd{f}'den dönmek de aynı işi görür). \\
+pthread\_self() & Çağıran iş parçacığının kendi tutamacını döndürür. \\
+gcc -pthread prog.c & Pthreads kütüphanesiyle derler ve bağlar. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Bir iş parçacığı fonksiyonu her zaman \cmd{void *f(void *arg)} biçimindedir: genel bir işaretçi alır ve genel bir işaretçi döndürür. Birden çok değer geçirmek için bir \cmd{struct}'a işaretçi verin.
+
+Aşağıdaki programlar bu notların yanındaki \texttt{code/} klasöründe, bir \texttt{Makefile} ile birlikte bulunur (\cmd{make} yazmanız yeterli). Programlar \cmd{gcc -Wall -O2 -pthread} ile derlendi ve başka işlerle paylaşılan iki çekirdekli bir Linux sanal makinesinde çalıştırıldı. 2.~haftada olduğu gibi bu derste C yazmanız beklenmiyor: açıklamaları okuyun ve programın ne yaptığına odaklanın.
+
+\subsection{Örnek 1: iş parçacığı gerçekten süreçten ucuz mu?}
+\label{sec:createcost}
+
+\lstinputlisting[caption={}]{../code/create_cost_excerpt.c}
+
+\begin{lstlisting}[style=term]
+$ ./create_cost
+fork + wait          :  205.5 us per process
+pthread_create + join:   51.9 us per thread
+a thread is about 4 times cheaper to create
+\end{lstlisting}
+
+(\texttt{us} mikrosaniye, yani $\mu$s demektir.) \cmd{fork()} yeni bir adres alanı yaratmak zorundadır: bellek sayfalarının kendisi biri yazana kadar yazınca kopyala (copy-on-write) yöntemiyle paylaşılsa bile sayfa tablolarını ve birçok çekirdek yapısını kopyalar. Yeni bir iş parçacığı ise yalnızca bir yığıt ve küçük bir çekirdek kaydı ister. Hızlı bir fiziksel makinede iş parçacığı yaratmak çoğu zaman yalnızca $10$--$20\ \mu$s sürer ve oran daha büyüktür; ders kitapları $10$ ile $30$ arasında çarpanlar aktarır. Bizim yaklaşık $4$ olan oranımız, bazı işlemlerin daha yavaş olduğu bir sanal makineden gelmektedir.
+
+\subsection{Örnek 2: üç iş parçacığından merhaba}
+
+\lstinputlisting[caption={}]{../code/thread_hello.c}
+
+\begin{lstlisting}[style=term]
+$ gcc -Wall -O2 -pthread thread_hello.c -o thread_hello
+$ ./thread_hello
+main    : PID = 6351, TID = 6351
+thread 1: PID = 6351, TID = 6352
+thread 3: PID = 6351, TID = 6354
+thread 2: PID = 6351, TID = 6353
+main    : all threads done, shared_counter = 3
+\end{lstlisting}
+
+Üç gözlem:
+\begin{itemize}
+  \item Tüm iş parçacıkları \emph{aynı} PID'yi yazar: tek bir sürece aittirler. Her birinin \emph{kendi} TID'si vardır, çünkü her biri ayrı bir çekirdek iş parçacığıdır (birebir model). Ana iş parçacığının TID'si PID'ye eşittir.
+  \item 3.~iş parçacığı 2.~iş parçacığından önce yazdı. Sırayı zamanlayıcı belirler ve sıra çalıştırmadan çalıştırmaya değişir; bir program buna asla güvenmemelidir.
+  \item \cmd{shared\_counter} $3$ değeriyle biter: global değişken paylaşılır. Ama \cmd{shared\_counter++}, iş parçacıkları aynı anda çalışırken güvenli değildir (aslında ``yükle, topla, sakla'' adımlarından oluşur). Üç artırmayla hata neredeyse hiç görünmez; milyonlarca artırmada görünür. Bunu 5.~haftada düzelteceğiz.
+\end{itemize}
+
+\paragraph{İş parçacıklarını görmek.} Her işçi iki saniye uyur; bu da bize çalışan sürece bakmak için zaman kazandırır. \cmd{ps} komutunun \cmd{-L} seçeneği her iş parçacığı için bir satır yazar (bazı sütunlar çıkarıldı):
+
+\begin{lstlisting}[style=term]
+$ ./thread_hello &
+$ ps -eLf | grep thread_hello
+UID    PID  PPID   LWP  C NLWP CMD
+root 27241 27234 27241  0    4 ./thread_hello
+root 27241 27234 27243  0    4 ./thread_hello
+root 27241 27234 27244  0    4 ./thread_hello
+root 27241 27234 27245  0    4 ./thread_hello
+$ ls /proc/27241/task
+27241  27243  27244  27245
+$ grep Threads /proc/27241/status
+Threads:   4
+\end{lstlisting}
+
+PID her satırda aynıdır; \texttt{LWP} (lightweight process, hafif süreç) iş parçacığı kimliği, \texttt{NLWP} ise iş parçacığı sayısıdır: ana iş parçacığı artı üç işçi. \cmd{/proc/<pid>/task/} dizini her iş parçacığı için bir alt dizin içerir. Başka araçlar: \cmd{top -H} ya da \cmd{htop} iş parçacıklarını etkileşimli olarak gösterir; Windows'ta Görev Yöneticisi $\to$ \emph{Ayrıntılar} sekmesine bir \emph{İş parçacıkları} sütunu eklenebilir.
+
+\subsection{Örnek 3: bir diziyi $T$ iş parçacığıyla toplamak}
+\label{sec:arraysum}
+
+\lstinputlisting[caption={}]{../code/array_sum_excerpt.c}
+
+$N = 10^{8}$ tamsayıdan ($400$ MB) oluşan dizi $T$ eşit dilime bölünür. $k$.~iş parçacığı, indisleri $kN/T$'den $(k+1)N/T$'ye kadar (bu son değer hariç) olan elemanları kendi gözü olan \cmd{partial[k]}'ya toplar. Hiçbir iki iş parçacığı aynı değişkene yazmadığı için kilit gerekmez. Ana iş parçacığı her iş parçacığını \cmd{pthread\_join()} ile bekler ve kısmi toplamları ekler. Tam program \texttt{code/array\_sum.c} ayrıca süreyi \cmd{clock\_gettime()} ile ölçer ve ölçülen süre kararlı olacak kadar uzun olsun diye diziyi $20$ kez toplar; doğru sonuç $10^{7} \times (0+1+\dots+9) \times 20 = 10^{7}\times 45\times 20 = 9\times10^{9}$'dur ve her çalıştırma bu değeri verdi.
+
+\Needspace{9\baselineskip}
+\begin{lstlisting}[style=term]
+$ nproc
+2
+$ ./array_sum 1
+threads = 1   sum = 9000000000   time = 1.686 s
+$ ./array_sum 2
+threads = 2   sum = 9000000000   time = 0.999 s
+$ ./array_sum 4
+threads = 4   sum = 9000000000   time = 0.855 s
+\end{lstlisting}
+
+Makine başka işlerle paylaşıldığı için tek tek çalıştırmalar yaklaşık $\pm 30\%$'a kadar değişti. Bu yüzden her durumu $9$ kez çalıştırıp ortancayı (medyan) veriyoruz:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+\textbf{İş parçacığı $T$} & \textbf{Ortanca süre} & \textbf{En iyi süre} & \textbf{Hızlanma (ortanca)} \\
+\midrule
+1 & $1.564$ s & $1.498$ s & $1.00$ \\
+2 & $0.932$ s & $0.761$ s & $1.564/0.932 \approx 1.68$ \\
+4 & $0.855$ s & $0.728$ s & $1.564/0.855 \approx 1.83$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Yorum.} İki iş parçacığı 1,68 kat hızlanma sağlar; iyi, ama ideal değer olan $2$'nin altında. Dört iş parçacığı pek daha iyi değildir, çünkü makinenin yalnızca iki çekirdeği vardır: herhangi bir anda en çok iki iş parçacığı çalışabilir. (Meşgul bir makinede dört iş parçacığı, yalnızca süreç işlemci zamanından daha büyük pay aldığı için ikiden biraz daha hızlı olabilir; ama çekirdek sayısının izin verdiğinden asla daha hızlı olamaz.) Ölçümü Amdahl yasası anlatıyormuş gibi davranırsak $S$'yi çözebiliriz:
+\[
+1.68 = \frac{1}{S + (1-S)/2} \;\Longrightarrow\; S + \frac{1-S}{2} = \frac{1}{1.68} \;\Longrightarrow\; S = \frac{2}{1.68} - 1 \approx 0.19 .
+\]
+Buradaki ``seri kısım'' gerçekte bölünemeyen kod değildir: iş parçacıklarını yaratma ve bekleme süresi, iki çekirdeğin aynı bellek bant genişliği için yarışması (tamsayı toplamayı aritmetik değil, bellek hızı sınırlar) ve makinedeki diğer işlerdir. Amdahl yasası kesin bir öngörü değil, bir model ve bir üst sınırdır.
+
+
+% =====================================================================
+\section{İşlemci Zamanlaması: Temel Kavramlar}
+
+Tek çekirdekli bir makinede aynı anda yalnızca bir iş parçacığı çalışabilir; $N$ çekirdekte en çok $N$. Çalışmaya hazır diğer tüm iş parçacıkları beklemek zorundadır. Bir çekirdek her boşaldığında işletim sistemi sırada hangi iş parçacığının çalışacağını seçmelidir. Bu seçime \term{işlemci zamanlaması} (CPU scheduling) denir. Ders kitapları ``süreç zamanlaması''ndan söz eder; Linux ve Windows'ta çekirdek aslında çekirdek iş parçacıklarını zamanlar. Ama aşağıdaki her şey ikisi için de geçerlidir ve biz ders kitabını izleyerek ``süreç'' diyoruz.
+
+\subsection{İşlemci--G/Ç patlama döngüsü}
+
+Sürecin yürütülmesi, işlemcide çalışma ile G/Ç bekleme arasında bir \emph{döngüden} oluşur. Süreç bir süre çalışır (bir \term{CPU patlaması}, CPU burst), sonra G/Ç bekler (bir \term{G/Ç patlaması}, I/O burst), sonra yeniden çalışır ve bu, son bir CPU patlaması sonlanma isteğiyle bitene kadar sürer.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.42cm]
+\node[font=\small\bfseries,anchor=east] at (-0.3,1.6) {işlemci yoğun};
+\node[font=\small\bfseries,anchor=east] at (-0.3,0.4) {G/Ç yoğun};
+\foreach \a/\b/\c/\t in {0/11/mint/CPU,11/13/light/{G/Ç},13/25/mint/CPU,25/27/light/{G/Ç},27/30/mint/CPU} {
+  \fill[\c,draw=white,thick] (\a,1.3) rectangle (\b,1.9);
+  \node[font=\scriptsize] at ({(\a+\b)/2},1.6) {\t};
+}
+\foreach \a/\b/\c/\t in {0/2/mint/CPU,2/7/light/{G/Ç},7/8.5/mint/CPU,8.5/14/light/{G/Ç},14/16/mint/CPU,16/21/light/{G/Ç},21/22.5/mint/CPU,22.5/28/light/{G/Ç},28/30/mint/CPU} {
+  \fill[\c,draw=white,thick] (\a,0.1) rectangle (\b,0.7);
+  \node[font=\scriptsize] at ({(\a+\b)/2},0.4) {\t};
+}
+\draw[-{Stealth},slate,thick] (0,-0.25) -- (30.5,-0.25) node[right,font=\footnotesize\itshape] {zaman};
+\end{tikzpicture}
+\caption{İşlemci yoğun bir sürecin az sayıda uzun CPU patlaması, G/Ç yoğun bir sürecin ise çok sayıda kısa CPU patlaması vardır.}
+\end{figure}
+
+\begin{itemize}
+  \item \term{İşlemci yoğun} (CPU-bound) bir süreç zamanının çoğunu hesaplamayla geçirir: video kodlama, derleme, bilimsel benzetim.
+  \item \term{G/Ç yoğun} (I/O-bound) bir süreç zamanının çoğunu G/Ç bekleyerek geçirir ve çok sayıda kısa CPU patlaması vardır: metin düzenleyici, web sunucusu, dosya kopyalama.
+\end{itemize}
+
+Gerçek sistemlerde yapılan ölçümler, CPU patlamalarının uzunluklarının tipik bir örüntü izlediğini gösterir: çok sayıda kısa patlama (birkaç milisaniye) ve az sayıda uzun patlama. Dağılım kabaca üsteldir. Zamanlama algoritmaları bu gerçeğe göre tasarlanır (5.~hafta). Süreç G/Ç beklerken işlemci boşta kalırdı --- zamanlayıcı onu başka bir sürece vermedikçe: 1.~haftadaki çoklu programlama fikri.
+
+\subsection{Örnek 4: işlemci yoğun ve G/Ç yoğun, ölçülmüş}
+
+\lstinputlisting[caption={}]{../code/burst_excerpt.c}
+
+Kabuktaki \cmd{time} komutu üç sayı raporlar: \texttt{real} geçen duvar saati süresidir; \texttt{user} ve \texttt{sys} sürecin kullanıcı modunda ve çekirdek modunda tükettiği işlemci zamanıdır.
+
+\Needspace{12\baselineskip}
+\begin{lstlisting}[style=term]
+$ time ./burst cpu
+cpu: harmonic sum = 20.384191
+real    0m1.266s
+user    0m1.197s
+sys     0m0.001s
+$ time ./burst io
+io: wrote 1000 blocks of 4 KB, each followed by fsync
+real    0m0.384s
+user    0m0.000s
+sys     0m0.104s
+\end{lstlisting}
+
+\begin{example}[Süreç zamanın ne kadarında bekledi?]
+İşlemci yoğun çalıştırmada $\text{user}+\text{sys} = 1.198$ s $\approx$ real $= 1.266$ s: süreç neredeyse tüm zaman boyunca işlemciyi kullandı. G/Ç yoğun çalıştırmada
+\[
+\frac{\text{user} + \text{sys}}{\text{real}} = \frac{0.000 + 0.104}{0.384} \approx 0.27,
+\]
+yani süreç işlemciyi zamanın yalnızca \%27'sinde kullandı; zamanın yaklaşık \%73'ünde \cmd{fsync()} içinde bloke olmuş, diski bekliyordu. Bu süre boyunca işlemci diğer süreçlere açıktı. Ayrıca işlemci zamanının neredeyse tamamının \texttt{sys} olduğuna dikkat edin: \cmd{write()} ve \cmd{fsync()} sistem çağrılarıdır. (Harmonik toplam da tutarlıdır: $\sum_{i=1}^{n} 1/i \approx \ln n + 0.5772$ ve $\ln(4\times10^{8}) + 0.5772 \approx 20.384$.)
+\end{example}
+
+\subsection{İşlemci zamanlayıcısı ve hazır kuyruğu}
+
+İşlemci her boşa çıktığında işletim sistemi \term{hazır kuyruğundaki} (ready queue) süreçlerden birini çalıştırmak üzere seçer. İşletim sisteminin bu seçimi yapan kısmına \term{kısa vadeli zamanlayıcı} (short-term scheduler) ya da \term{işlemci zamanlayıcısı} (CPU scheduler) denir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  pcb/.style={rectangle,rounded corners=2pt,fill=white,minimum width=1.1cm,minimum height=0.55cm,font=\footnotesize\bfseries},
+  arr/.style={-{Stealth[length=2.5mm]},color=slate,thick}]
+\fill[light,rounded corners=3pt] (0,0) rectangle (5.4,0.9);
+\foreach \i/\t in {0/7,1/3,2/9,3/2} \node[pcb] at (0.75+\i*1.3,0.45) {PCB \t};
+\node[font=\footnotesize\bfseries,text=mintdeep,anchor=west] at (0,1.15) {hazır kuyruğu};
+\node[rectangle,rounded corners=2pt,fill=mint,minimum width=1.6cm,minimum height=0.9cm,font=\small\bfseries] (cpu) at (7.4,0.45) {CPU};
+\draw[arr,mintdeep] (5.5,0.45) -- node[below,font=\scriptsize\itshape]{dağıt} (cpu.west);
+\fill[light,rounded corners=3pt] (0,-2.3) rectangle (5.4,-1.4);
+\foreach \i/\t in {0/5,1/1} \node[pcb] at (0.75+\i*1.3,-1.85) {PCB \t};
+\node[font=\footnotesize\bfseries,text=slate,anchor=west] at (0,-2.6) {G/Ç bekleme kuyruğu};
+\draw[arr] (cpu.south) |- node[pos=0.75,above,font=\scriptsize\itshape]{G/Ç isteği} (5.5,-1.85);
+\draw[arr] (-0.1,-1.85) -- (-0.5,-1.85) |- node[pos=0.25,left,font=\scriptsize\itshape]{G/Ç bitti} (-0.1,0.45);
+\draw[arr] (cpu.north) |- node[pos=0.75,above,font=\scriptsize\itshape]{zaman dilimi doldu} (2.7,1.7) -- (2.7,1.4);
+\end{tikzpicture}
+\caption{Süreçler hazır kuyruğu, işlemci ve aygıt bekleme kuyrukları arasında hareket eder.}
+\end{figure}
+
+\begin{itemize}
+  \item Hazır kuyruğu, 3.~hafta diyagramındaki \emph{hazır} durumunda olan süreçlerin PCB'lerini tutar: tam olarak şu anda çalışabilecek süreçlerin.
+  \item Hazır kuyruğu mutlaka ilk giren ilk çıkar (FIFO) olmak zorunda değildir. Bir öncelik kuyruğu, bir ağaç ya da sırasız bir liste olabilir; süreçlerin kuyruktan alınma sırası \term{zamanlama algoritmasıdır} (scheduling algorithm; 5.~hafta). Linux hazır görevlerini dengeli bir ikili ağaçta (kırmızı-siyah ağaç, red--black tree) tutar.
+  \item Kısa vadeli zamanlayıcı çok sık çalışır --- birkaç milisaniyede bir --- bu yüzden hızlı olmalıdır.
+\end{itemize}
+
+\subsection{Zamanlayıcı ne zaman karar vermek zorundadır?}
+
+Zamanlama kararları, hepsi süreç durum diyagramında görülebilen dört durumda verilebilir:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  st/.style={rectangle,rounded corners=3pt,minimum width=2.2cm,minimum height=0.8cm,font=\small,fill=light},
+  arr/.style={-{Stealth[length=2.5mm]},thick,color=slate},
+  red/.style={-{Stealth[length=2.5mm]},very thick,color=red!60!black},
+  n/.style={circle,fill=red!60!black,text=white,font=\scriptsize\bfseries,inner sep=1.5pt}]
+\node[st] (new) at (0,2.2) {yeni};
+\node[st] (ready) at (1.8,0) {hazır};
+\node[st,fill=mint] (run) at (6.2,0) {çalışıyor};
+\node[st] (wait) at (4.0,-2.2) {bekliyor};
+\node[st] (term) at (8.2,2.2) {sonlandı};
+\draw[arr] (new) -- node[left,font=\scriptsize]{kabul edildi} (ready);
+\draw[arr] ([yshift=5pt]ready.east) -- node[above,font=\scriptsize]{dağıtım} ([yshift=5pt]run.west);
+\draw[red] ([yshift=-5pt]run.west) -- node[below]{\tikz\node[n]{2};} ([yshift=-5pt]ready.east);
+\draw[red] (run) -- node[right=2pt]{\tikz\node[n]{1};} (wait);
+\draw[red] (wait) -- node[left=2pt]{\tikz\node[n]{3};} (ready);
+\draw[red] (run) -- node[right=2pt]{\tikz\node[n]{4};} (term);
+\end{tikzpicture}
+\caption{Bir zamanlama kararının verilebileceği dört geçiş.}
+\end{figure}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item Süreç \emph{çalışıyor} durumundan \emph{bekliyor} durumuna geçer: G/Ç ister ya da bir çocuk süreç için \cmd{wait()} çağırır.
+  \item Süreç \emph{çalışıyor} durumundan \emph{hazır} durumuna geçer: bir kesme olur; örneğin zamanlayıcı saati (timer) zaman diliminin bittiğini bildirir.
+  \item Süreç \emph{bekliyor} durumundan \emph{hazır} durumuna geçer: G/Ç'si tamamlanmıştır.
+  \item Süreç \emph{sonlanır}.
+\end{enumerate}
+
+1. ve 4.~durumlarda seçenek yoktur: işlemci boşalmıştır ve (hazır kuyruğu boş değilse) yeni bir süreç \emph{seçilmelidir}. 2. ve 3.~durumlarda bir seçenek vardır: işletim sistemi o anki sürecin devam etmesine izin \emph{verebilir} ya da başka bir sürece geçebilir --- örneğin az önce hazır hâle gelen daha önemli bir sürece.
+
+\subsection{Kesintisiz ve kesintili zamanlama}
+
+\begin{itemize}
+  \item \term{Kesintisiz} (non-preemptive) ya da \emph{iş birlikçi} (cooperative) zamanlamada zamanlayıcı yalnızca 1. ve 4.~durumlarda çalışır. Bir süreç işlemciyi aldığında, bloke olana ya da sonlanana kadar elinde tutar. Bu basittir; ama tek bir uzun ya da hatalı süreç diğer herkesi bekletebilir. Windows~3.x ve klasik Mac~OS (OS~X öncesi) böyle çalışıyordu: sonsuz döngüye takılan bir program bütün bilgisayarı dondururdu.
+  \item \term{Kesintili} (preemptive) zamanlamada zamanlayıcı 2. ve 3.~durumlarda da çalışabilir: işletim sistemi zamanlayıcı kesmesini kullanarak işlemciyi çalışan bir süreçten geri alabilir. Tüm modern genel amaçlı işletim sistemleri --- Windows, macOS, Linux, Android, iOS --- kesintilidir.
+\end{itemize}
+
+Kesinti (preemption) daha iyi yanıt verebilirlik sağlar ve sistemi kontrolden çıkan programlardan korur; ama bir bedeli vardır: bir süreç \emph{herhangi bir} komutta, hatta başka bir süreç ya da iş parçacığıyla paylaştığı veriyi güncellemenin ortasında kesilebilir. Yarış durumları böyle ortaya çıkar ve 5.~hafta bu yüzden eşzamanlama ile devam eder.
+
+\subsection{Dağıtıcı}
+
+Zamanlayıcı sırada \emph{hangi} sürecin çalışacağına karar verir; \term{dağıtıcı} (dispatcher) ise işlemciyi o sürece fiilen veren modüldür. Üç görevi vardır:
+\begin{enumerate}[leftmargin=1.4em]
+  \item bağlamı değiştirmek: eski sürecin durumunu PCB'sine kaydetmek ve yenisinin durumunu yüklemek;
+  \item kullanıcı moduna geçmek;
+  \item yeni programda doğru yere (kaydedilmiş program sayacına) atlamak.
+\end{enumerate}
+
+Dağıtıcının bir süreci durdurup başka birini başlatması için gereken süreye \term{dağıtım gecikmesi} (dispatch latency) denir. Saf ek yüktür: bu süre içinde yararlı hiçbir iş yapılmaz.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.75cm]
+\fill[mint,draw=white,thick] (0,0) rectangle (4.5,0.75); \node[font=\small\bfseries] at (2.25,0.375) {$P_0$ çalışıyor};
+\fill[red!60!black,draw=white,thick] (4.5,0) rectangle (7,0.75);
+\fill[charcoal,draw=white,thick] (7,0) rectangle (12,0.75); \node[font=\small\bfseries,text=white] at (9.5,0.375) {$P_1$ çalışıyor};
+\draw[{Stealth[length=2mm]}-{Stealth[length=2mm]},thick,red!60!black] (4.5,-0.2) -- (7,-0.2) node[midway,below=3pt,font=\footnotesize,align=center,text=red!60!black] {dağıtım gecikmesi\\$P_0$ kaydedilir, $P_1$ yüklenir};
+\end{tikzpicture}
+\caption{Dağıtım gecikmesi (ölçekli değildir: gecikme mikrosaniyeler, zaman dilimi milisaniyeler mertebesindedir).}
+\end{figure}
+
+Dağıtım gecikmesi küçüktür, tipik olarak birkaç mikrosaniye; ama çok sık yaşanır. \cmd{vmstat 1} komutu, başka bilgilerin yanı sıra saniyedeki bağlam değişimi sayısını \texttt{cs} sütununda yazar. Başka iş yapmayan test makinemizde art arda iki bir saniyelik örnek $487$ ve $614$ gösterdi; meşgul bir sunucu kolayca on binlere ulaşır.
+
+\paragraph{Gönüllü ve zorla bağlam değişimleri.} Linux, bir sürecin işlemciyi bloke olduğu için kendisinin kaç kez bıraktığını (\emph{gönüllü}, voluntary geçiş; 1.~durum) ve zamanlayıcının işlemciyi kaç kez elinden aldığını (\emph{zorla}, involuntary geçiş; 2.~durum) ayrı ayrı sayar. GNU \cmd{time} programı \cmd{-v} seçeneğiyle ikisini de raporlar (kullanıcı ve sistem süreleri dahil diğer satırlar çıkarıldı):
+
+\begin{lstlisting}[style=term]
+$ /usr/bin/time -v ./burst cpu
+  Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.22
+  Voluntary context switches: 1
+  Involuntary context switches: 50
+$ /usr/bin/time -v ./burst io
+  Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.46
+  Voluntary context switches: 3714
+  Involuntary context switches: 0
+\end{lstlisting}
+
+{\sloppy İşlemci yoğun program neredeyse hiç bloke olmadı, ama 1,22~s içinde $50$ kez kesildi: ortalama yaklaşık $24$~ms'de bir. G/Ç yoğun program hiç kesilmedi, ama $3714$ kez bloke oldu (her \cmd{fsync()} birden fazla kez bekleyebilir, örneğin dosya sistemi günlüğü (journal) için). Aynı sayaçlar, çalışan bir süreç için \cmd{/proc/<pid>/status} dosyasında da görülebilir; ilgili alanlar şunlardır:
+\texttt{voluntary\_ctxt\_switches} ve \texttt{nonvoluntary\_ctxt\_switches}.\par}
+
+% =====================================================================
+\section{Zamanlama Ölçütleri}
+
+Farklı zamanlama algoritmaları farklı süreçleri kayırır. Onları karşılaştırmak için ölçülebilir ölçütlere ihtiyacımız var.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.3cm} X l}
+\toprule
+\textbf{Ölçüt} & \textbf{Tanım} & \textbf{Hedef} \\
+\midrule
+İşlemci kullanımı (CPU utilisation) & İşlemcinin yararlı işle meşgul olduğu zamanın oranı; gerçek bir sistemde yaklaşık \%40'tan (hafif yük) \%90'a (ağır yük) kadar. & en büyük \\
+Üretilen iş (throughput) & Birim zamanda tamamlanan süreç sayısı. & en büyük \\
+Dönüş süresi (turnaround time) & Bir sürecin gelişinden (sunuluşundan) tamamlanmasına kadar geçen süre; hazır kuyruğunda bekleme, çalışma ve G/Ç dahil. & en küçük \\
+Bekleme süresi (waiting time) & Sürecin \emph{hazır kuyruğunda} beklediği toplam süre. & en küçük \\
+Yanıt süresi (response time) & Gelişten, sürecin işlemciyi ilk kez aldığı ana (ilk yanıtına) kadar geçen süre. & en küçük \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Zamanlama algoritması bir sürecin ne kadar hesap yaptığını ya da G/Ç'sinin ne kadar sürdüğünü değiştirmez; yalnızca sürecin hazır kuyruğunda ne kadar oturduğunu değiştirir. Zamanlayıcıdan en doğrudan etkilenen ölçütün \emph{bekleme süresi} olmasının nedeni budur.
+
+\subsection{Tanımların formülleri}
+
+Geliş zamanı $T_{\text{geliş}}$, toplam CPU patlama süresi $T_{\text{patlama}}$, işlemciyi ilk aldığı an $T_{\text{ilk çalışma}}$ ve tamamlanma zamanı $T_{\text{tamamlanma}}$ olan ve hiç G/Ç yapmayan bir süreç için:
+\begin{align*}
+T_{\text{dönüş}} &= T_{\text{tamamlanma}} - T_{\text{geliş}},\\
+T_{\text{bekleme}} &= T_{\text{dönüş}} - T_{\text{patlama}},\\
+T_{\text{yanıt}} &= T_{\text{ilk çalışma}} - T_{\text{geliş}}.
+\end{align*}
+Süreç G/Ç de yapıyorsa G/Ç'de geçen süre de çıkarılmalıdır: $T_{\text{bekleme}} = T_{\text{dönüş}} - T_{\text{patlama}} - T_{\text{G/Ç}}$; çünkü bekleme süresi yalnızca hazır kuyruğunda geçen süreyi sayar. Uzunluğu $T$ olan ve işlemcinin $B$ kadar meşgul olduğu bir zaman aralığında tamamlanan $n$ süreç için
+\[
+\text{işlemci kullanımı} = \frac{B}{T}, \qquad \text{üretilen iş} = \frac{n}{T}.
+\]
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.8cm]
+\fill[light,draw=white,thick] (0,0) rectangle (4,0.6); \node[font=\footnotesize] at (2,0.3) {bekler (hazır)};
+\fill[mint,draw=white,thick] (4,0) rectangle (7,0.6); \node[font=\footnotesize] at (5.5,0.3) {çalışır};
+\fill[light,draw=white,thick] (7,0) rectangle (9,0.6); \node[font=\footnotesize] at (8,0.3) {bekler};
+\fill[mint,draw=white,thick] (9,0) rectangle (11,0.6); \node[font=\footnotesize] at (10,0.3) {çalışır};
+\foreach \t/\l in {0/geliş,4/ilk çalışma,11/tamamlanma} {
+  \draw[red!60!black,dashed,thick] (\t,-0.3) -- (\t,1.0);
+  \node[font=\scriptsize\bfseries,text=red!60!black] at (\t,-0.5) {\l};
+}
+\foreach \t in {0,4,7,9,11} \node[font=\scriptsize,text=muted] at (\t,1.2) {$\t$};
+\end{tikzpicture}
+\caption{Bir kez kesintiye uğrayan bir süreç: patlama $=3+2=5$, bekleme $=4+2=6$, dönüş $=11$, yanıt $=4$.}
+\end{figure}
+
+\begin{example}[Formülleri şekil üzerinde sağlamak]
+$T_{\text{dönüş}} = 11 - 0 = 11$; $T_{\text{bekleme}} = 11 - 5 = 6$, ki bu gerçekten de hazır kuyruğunda geçen $4 + 2$ birimdir; $T_{\text{yanıt}} = 4 - 0 = 4$. Böyle bir süreç için yanıt $\le$ bekleme $\le$ dönüş. Kesintisiz zamanlamada bir süreç tek çalışmasından önce yalnızca bir kez bekler; bu yüzden yanıt süresi bekleme süresine eşittir.
+\end{example}
+
+\subsection{Çözümlü örnek: geliş sırasına göre dört süreç}
+
+Tek bir işlemciye dört süreç geliyor. Onları ``akla ilk gelen'' sırayla, yani ilk gelen ilk hizmet alır (first come, first served, FCFS) kuralıyla ve kesinti olmadan çalıştırıyoruz. Bunun iyi bir sıra olup olmadığı 5.~haftanın sorusudur; burada yalnızca tanımları alıştırma olarak uyguluyoruz. Tüm süreler milisaniyedir.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}ccc@{}}
+\toprule
+\textbf{Süreç} & \textbf{Geliş} & \textbf{Patlama} \\
+\midrule
+$P_1$ & $0$ & $5$ \\
+$P_2$ & $1$ & $3$ \\
+$P_3$ & $2$ & $6$ \\
+$P_4$ & $16$ & $2$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Gantt şemasını kurmak.} $t=0$'da yalnızca $P_1$ vardır ve çalışır. $P_2$ ($t=1$) ve $P_3$ ($t=2$), $P_1$ çalışırken gelir ve hazır kuyruğunda bekler. $t=5$'te $P_1$ biter ve önce gelmiş olan $P_2$, $t=8$'e kadar çalışır; ardından $P_3$, $t=14$'e kadar çalışır. Şimdi hazır kuyruğu boştur; bu yüzden işlemci $P_4$ $t=16$'da gelene kadar boşta kalır; $P_4$ $t=18$'e kadar çalışır.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.72cm]
+\foreach \a/\b/\l/\c/\tc in {0/5/P_1/mint/black,5/8/P_2/charcoal/white,8/14/P_3/slate/white,16/18/P_4/mint!25/black} {
+  \fill[\c,draw=white,thick] (\a,0) rectangle (\b,0.75);
+  \node[font=\small\bfseries,text=\tc] at ({(\a+\b)/2},0.375) {$\l$};
+}
+\draw[slate,dashed] (14,0) rectangle (16,0.75); \node[font=\footnotesize\itshape,text=muted] at (15,0.375) {boş};
+\foreach \t in {0,5,8,14,16,18} \node[font=\footnotesize] at (\t,-0.3) {$\t$};
+\end{tikzpicture}
+\caption{Çözümlü örneğin Gantt şeması (FCFS sırası).}
+\end{figure}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}ccccccc@{}}
+\toprule
+\textbf{Süreç} & \textbf{Geliş} & \textbf{Patlama} & \textbf{Tamamlanma} & \textbf{Dönüş} & \textbf{Bekleme} & \textbf{Yanıt} \\
+\midrule
+$P_1$ & $0$ & $5$ & $5$ & $5-0=5$ & $5-5=0$ & $0$ \\
+$P_2$ & $1$ & $3$ & $8$ & $8-1=7$ & $7-3=4$ & $4$ \\
+$P_3$ & $2$ & $6$ & $14$ & $14-2=12$ & $12-6=6$ & $6$ \\
+$P_4$ & $16$ & $2$ & $18$ & $18-16=2$ & $2-2=0$ & $0$ \\
+\midrule
+\textbf{Ortalama} & & & & $26/4 = 6.5$ & $10/4 = 2.5$ & $2.5$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+  \item Ortalama dönüş süresi $= (5+7+12+2)/4 = 6.5$ ms; ortalama bekleme süresi $= (0+4+6+0)/4 = 2.5$ ms; ortalama yanıt süresi $= 2.5$ ms (zamanlama kesintisiz olduğu için bekleme süresine eşit).
+  \item İşlemci kullanımı $= 16\ \text{ms meşgul} / 18\ \text{ms} \approx 88.9\%$. Boşta geçen aralık kullanımı düşürür, ama hiç kimsenin bekleme süresini artırmaz.
+  \item Üretilen iş $= 4 / 18\ \text{ms} \approx 0.22$ süreç/ms, yani saniyede yaklaşık $222$ süreç.
+\end{itemize}
+
+\subsection{İyileştirme hedefleri}
+
+Özetle işlemci kullanımını ve üretilen işi \textbf{en büyük}; dönüş, bekleme ve yanıt süresini \textbf{en küçük} yapmak isteriz. Genellikle \emph{ortalama} değer iyileştirilir. Bazı durumlarda en küçük ya da en büyük değeri iyileştirmek daha iyidir; etkileşimli sistemlerde \emph{öngörülebilir} (düşük varyanslı) bir yanıt süresi, düşük bir ortalamadan daha önemli olabilir: hep $50$ ms süren bir tepki, ara sıra $2$ s'ye çıkan $5$ ms'lik bir tepkiden daha iyi hissettirir.
+
+Bu hedefler çatışır ve farklı sistemler onlara farklı ağırlıklar verir:
+\begin{itemize}
+  \item \textbf{Toplu iş sistemleri ve sunucular:} üretilen iş ve işlemci kullanımı.
+  \item \textbf{Masaüstü bilgisayarlar ve telefonlar:} yanıt süresi ve öngörülebilirliği.
+  \item \textbf{Gerçek zamanlı sistemler:} her son tarihe uymak, her türlü ortalamadan daha önemlidir.
+\end{itemize}
+Tipik bir ödünleşim: süreçler arasında daha sık geçiş yapmak yanıt süresini iyileştirir, ama her geçiş dağıtım gecikmesine mal olur; dolayısıyla üretilen iş düşer. Bu, 2.~haftadaki verimlilik ile kullanım kolaylığı çatışmasının yeni bir biçimidir.
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Yedi cümlede 4. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item İş parçacığı; kendi kimliği, program sayacı, yazmaçları ve yığıtı olan bir yürütme birimidir; bir sürecin iş parçacıkları onun kodunu, verisini, öbeğini ve açık dosyalarını paylaşır.
+  \item Çok iş parçacıklı programlama yanıt verebilirlik, kaynak paylaşımı, ekonomi (makinemizde iş parçacığı yaratmak süreç yaratmaktan yaklaşık $4$ kat ucuzdu) ve çok çekirdekli işlemcilerde ölçeklenebilirlik sağlar.
+  \item Eşzamanlılık birkaç görevin ilerlemesi demektir; paralellik birkaç görevin aynı anda çalışması demektir ve birkaç çekirdek gerektirir.
+  \item Amdahl yasası, $\text{hızlanma} \le 1/\bigl(S + (1-S)/N\bigr)$, seri kesir $S$'nin hızlanmayı $1/S$ ile sınırladığını gösterir.
+  \item Kullanıcı iş parçacıkları çekirdek iş parçacıklarına çoktan bire, birebir (Linux, Windows) ya da çoktan çoğa eşlenir; Pthreads \cmd{pthread\_create()} ve \cmd{pthread\_join()} çağrılarını sunar.
+  \item Süreçler CPU ve G/Ç patlamaları arasında gidip gelir; kısa vadeli zamanlayıcı dört tür olayda hazır kuyruğundan sıradaki süreci seçer; kesintili zamanlayıcılar çalışan bir süreci kesebilir de; geçişi dağıtıcı yapar.
+  \item Zamanlayıcılar işlemci kullanımı ve üretilen işle (en büyük) ve dönüş, bekleme ve yanıt süresiyle (en küçük) değerlendirilir.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Sözlük}
+
+\begin{description}[leftmargin=0pt,itemsep=0.15em]
+  \item[Amdahl yasası (Amdahl's law)] Seri kesri $S$ olan bir programın $N$ çekirdekteki hızlanması için üst sınır: $1/(S + (1-S)/N)$.
+  \item[Bekleme süresi (waiting time)] Bir sürecin hazır kuyruğunda geçirdiği toplam süre.
+  \item[CPU patlaması / G/Ç patlaması (CPU burst / I/O burst)] Bir sürecin hesap yaptığı / G/Ç beklediği dönem.
+  \item[Çekirdek düzeyi iş parçacığı (kernel-level thread)] İşletim sistemi çekirdeğinin yarattığı ve zamanladığı iş parçacığı.
+  \item[Çoklu iş parçacığı modeli (multithreading model)] Kullanıcı iş parçacıklarının çekirdek iş parçacıklarına eşlenmesi: çoktan bire, birebir ya da çoktan çoğa.
+  \item[Dağıtıcı (dispatcher)] İşlemciyi zamanlayıcının seçtiği sürece veren işletim sistemi modülü.
+  \item[Dağıtım gecikmesi (dispatch latency)] Dağıtıcının bir süreci durdurup başka birini başlatması için gereken süre.
+  \item[Dönüş süresi (turnaround time)] Tamamlanma zamanı eksi geliş zamanı.
+  \item[Eşzamanlılık (concurrency)] Birkaç görevin aynı dönem içinde, gerekirse tek çekirdekte sırayla, ilerlemesi.
+  \item[Hazır kuyruğu (ready queue)] Çalışmaya hazır olup bir işlemci bekleyen süreçler kümesi.
+  \item[İş parçacığı (thread)] İşlemcide yürütmenin birimi: iş parçacığı kimliği, program sayacı, yazmaçlar ve yığıt; gerisini süreciyle paylaşır.
+  \item[İşlemci yoğun, G/Ç yoğun (CPU-bound, I/O-bound)] Zamanının çoğunu hesaplayarak / G/Ç bekleyerek geçiren süreç.
+  \item[Kesintili zamanlama (preemptive scheduling)] İşletim sisteminin işlemciyi çalışan bir süreçten geri alabildiği zamanlama.
+  \item[Kısa vadeli (işlemci) zamanlayıcı (short-term / CPU scheduler)] İşletim sisteminin hazır kuyruğundan çalışacak sıradaki süreci seçen kısmı.
+  \item[Kullanıcı düzeyi iş parçacığı (user-level thread)] Kullanıcı alanındaki bir kütüphanenin yönettiği, çekirdeğin görmediği iş parçacığı.
+  \item[Paralellik (parallelism)] Birkaç görevin farklı çekirdeklerde aynı anda yürütülmesi.
+  \item[Pthreads] İş parçacığı yaratmak ve yönetmek için POSIX standart API'si.
+  \item[Üretilen iş (throughput)] Birim zamanda tamamlanan süreç sayısı.
+  \item[Yanıt süresi (response time)] Gelişten, sürecin işlemciyi ilk kez aldığı ana kadar geçen süre.
+\end{description}
+
+% =====================================================================
+\Needspace{8\baselineskip}
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Kendi makinenizde iş parçacıkları ve zamanlama]
+\textbf{Linux} (laboratuvar bilgisayarları, WSL ya da bir sanal makine), \texttt{code/} klasörünün içinde:
+\begin{lstlisting}[style=term]
+$ nproc                        # kaç çekirdek?
+$ make                         # dört programı da derle
+$ ./array_sum 1; ./array_sum 2; ./array_sum 4
+$ ./thread_hello & ps -eLf | grep thread_hello
+$ time ./burst cpu ; time ./burst io
+$ vmstat 1 5                   # cs sütunu = saniyedeki bağlam değişimi
+\end{lstlisting}
+\textbf{Windows:} Görev Yöneticisi $\to$ \emph{Ayrıntılar} sekmesinde bir sütun başlığına sağ tıklayın, \emph{Sütunları seç}'i seçin ve \emph{İş parçacıkları}'nı ekleyin. Görev Yöneticisi $\to$ \emph{Performans} $\to$ \emph{CPU}, çekirdek ve mantıksal işlemci sayısını gösterir.
+\begin{enumerate}[leftmargin=1.4em]
+  \item Makinenizde kaç çekirdek var? $2$, $4$ ve $8$ iş parçacığıyla hangi hızlanmayı elde ediyorsunuz?
+  \item İki iş parçacığıyla elde ettiğiniz hızlanmadan Amdahl yasasıyla $S$'yi tahmin edin.
+  \item Bilgisayarınızda en çok iş parçacığına sahip program hangisi?
+  \item Bir sayfayı okurken tarayıcınız işlemci yoğun mu, G/Ç yoğun mu? Ya video oynatırken?
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item İş parçacığını tanımlayın. Bir sürecin hangi kısımları iş parçacıklarınca paylaşılır, hangileri her iş parçacığına özeldir?
+  \item Çok iş parçacıklı programlamanın dört yararını, her birine bir örnekle verin.
+  \item Eşzamanlılık ile paralellik arasındaki farkı açıklayın. Tek çekirdekli bir bilgisayar eşzamanlı olabilir mi? Paralel olabilir mi?
+  \item Çok çekirdekli programlamanın beş zorluğunu sayın. Dizi toplama programı bunlardan hangisinden kaçınır ve nasıl?
+  \item Kullanıcı düzeyi ve çekirdek düzeyi iş parçacıklarını karşılaştırın: her birinin bir avantajı ve bir dezavantajı.
+  \item Çoktan bire bir iş parçacığı kütüphanesi neden ikinci bir çekirdeği kullanamaz? Linux ve Windows hangi modeli kullanır?
+  \item \cmd{thread\_hello} programında neden tüm iş parçacıkları aynı PID'yi ama farklı TID'leri yazar? Satırların sırası neden değişebilir?
+  \item İşlemci--G/Ç patlama döngüsünü anlatın. İşlemci yoğun ve G/Ç yoğun süreçler nasıl farklılaşır ve \cmd{time} bu farkı nasıl ortaya koyar?
+  \item Bir zamanlama kararının verilebileceği dört durumu sayın. Bunların hangilerinde yeni bir süreç \emph{seçilmelidir}?
+  \item Kesintili ve kesintisiz zamanlama arasındaki fark nedir? Kesinti neden yarış durumlarına yol açar?
+  \item Dağıtıcı ne yapar? Dağıtım gecikmesi nedir ve neden küçük olmalıdır?
+  \item Zamanlama algoritmasından en doğrudan etkilenen ölçüt neden bekleme süresidir?
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item Bir program \%60 paraleldir ($S = 0.4$). $2$, $4$ ve $8$ çekirdekteki en büyük hızlanmayı ve sonsuz sayıda çekirdek için sınırı hesaplayın.
+  \item Bir program tek çekirdekte $100$ s çalışıyor; bunun $80$ s'si kusursuzca paralelleştirilebiliyor. Program $8$ çekirdekte ne kadar sürer ve hızlanma nedir?
+  \item $4$ çekirdekte en az $3$ kat hızlanmaya ihtiyacınız var. Buna izin veren en büyük seri kesir $S$ nedir?
+  \item Bir web sunucusu saniyede $2000$ istek alıyor. Ölçtüğümüz maliyetlerle (süreç yaratmak $205.5\ \mu$s, iş parçacığı yaratmak $51.9\ \mu$s), her istek için yalnızca bir süreç ya da bir iş parçacığı yaratmaya bir çekirdeğin ne kadarı harcanır?
+  \item Dört süreç kesintisiz FCFS ile çalışıyor: $A$ (geliş $0$, patlama $8$), $B$ ($2$, $4$), $C$ ($4$, $1$), $D$ ($6$, $3$); süreler ms. Gantt şemasını çizin; her sürecin dönüş ve bekleme süresini, ortalamaları, işlemci kullanımını ve üretilen işi hesaplayın.
+  \item Bir bağlam değişimi $5\ \mu$s sürüyor. Zaman dilimi (a) $10$ ms, (b) $1$ ms ise işlemci zamanının ne kadarı ek yüktür? (Her zaman diliminden sonra bir geçiş olduğunu varsayın.)
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=13]
+  \item $N=2$: $1/(0.4 + 0.3) \approx 1.43$; $N=4$: $1/(0.4 + 0.15) \approx 1.82$; $N=8$: $1/(0.4 + 0.075) \approx 2.11$; sınır $1/0.4 = 2.5$.
+  \item $T(8) = 20 + 80/8 = 30$ s; hızlanma $= 100/30 \approx 3.33$. (Burada $S = 0.2$: $1/(0.2 + 0.8/8) = 1/0.3 \approx 3.33$.)
+  \item $3 = 1/\bigl(S + (1-S)/4\bigr) \Rightarrow S + (1-S)/4 = 1/3 \Rightarrow 4S + 1 - S = 4/3 \Rightarrow 3S = 1/3 \Rightarrow S = 1/9 \approx 0.11$; yani en çok yaklaşık \%11 seri.
+  \item Süreçler: $2000 \times 205.5\times10^{-6}\ \text{s} = 0.411$ s işlemci zamanı/saniye, yani bir çekirdeğin \%41,1'i. İş parçacıkları: $2000 \times 51.9\times10^{-6} \approx 0.104$ s, yani \%10,4. (Gerçek sunucular bundan bile kaçınmak için iş parçacıklarını bir \emph{iş parçacığı havuzundan} (thread pool) yeniden kullanır.)
+  \item Gantt şeması: $A$ $0$--$8$, $B$ $8$--$12$, $C$ $12$--$13$, $D$ $13$--$16$. Dönüş: $A = 8$, $B = 12-2 = 10$, $C = 13-4 = 9$, $D = 16-6 = 10$; ortalama $37/4 = 9.25$ ms. Bekleme: $A = 0$, $B = 10-4 = 6$, $C = 9-1 = 8$, $D = 10-3 = 7$; ortalama $21/4 = 5.25$ ms. İşlemci hiç boşta kalmaz: kullanım \%100; üretilen iş $4/16 = 0.25$ süreç/ms. (Kısa süreç $C$'nin $1$ ms'lik bir patlama için $8$ ms beklediğine dikkat edin --- 5.~hafta için bir ipucu.)
+  \item (a) $5/(10\,000 + 5) \approx 0.05\%$; (b) $5/(1000 + 5) \approx 0.50\%$. On kat kısa bir zaman dilimi on kat fazla ek yük getirir.
+\end{enumerate}
+
+% =====================================================================
+\section{İleriye Bakış: 5. Hafta}
+
+\begin{itemize}
+  \item Zamanlama algoritmaları: ilk gelen ilk hizmet alır (FCFS), en kısa iş önce (SJF) ve onun kesintili biçimi SRTF, öncelikli zamanlama ve döngüsel sıralı zamanlama (round robin, RR).
+  \item Her algoritma için, tam olarak bu haftanın ölçütlerini kullanarak Gantt şemaları ve ortalama bekleme ve dönüş süreleri.
+  \item Süreç eşzamanlaması: yarış durumları (bizim \cmd{shared\_counter++} örneğimiz) ve kritik bölge problemi (critical-section problem).
+  \item Muteks kilitleri (mutex locks) ve semaforlar.
+\end{itemize}
+
+\Needspace{12\baselineskip}
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley, Bölüm~4 (Threads \& Concurrency, Kısım~4.1--4.4) ve Bölüm~5 (CPU Scheduling, Kısım~5.1--5.2).
+  \item W.\ Stallings, \emph{Operating Systems: Internals and Design Principles}, 9.\ baskı, Pearson, Bölüm~4 ve~9.
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}:
+  \begin{itemize}
+    \item Bölüm~26, ``Concurrency: An Introduction'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf}
+    \item Bölüm~27, ``Interlude: Thread API'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/threads-api.pdf}
+    \item Bölüm~7, ``Scheduling: Introduction'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched.pdf}
+  \end{itemize}
+\end{itemize}

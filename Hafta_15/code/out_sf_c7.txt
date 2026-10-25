@@ -1,0 +1,2 @@
+student@okan-lab:~/lab$ du -sh logs
+36K     logs

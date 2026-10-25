@@ -1,0 +1,14 @@
+student@okan-lab:~/lab$ chmod +x scripts/count_lines.sh
+student@okan-lab:~/lab$ ./scripts/count_lines.sh logs
+logs/access.log: 300 lines
+logs/system.log: 120 lines
+total: 420 lines
+student@okan-lab:~/lab$ ./scripts/count_lines.sh data
+data/cities.txt: 30 lines
+data/numbers.txt: 20 lines
+data/students.csv: 41 lines
+total: 91 lines
+student@okan-lab:~/lab$ ./scripts/count_lines.sh nosuchdir
+usage: ./scripts/count_lines.sh DIRECTORY
+student@okan-lab:~/lab$ echo $?
+1

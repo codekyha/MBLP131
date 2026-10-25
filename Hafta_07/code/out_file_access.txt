@@ -1,0 +1,4 @@
+sequential:  [0 Ayse]  [1 Mehmet]  [2 Elif]  [3 Can]  [4 Zeynep]
+direct: record 3 at byte 96 -> [3 Can]
+after update: record 1 -> [1 Mehmet (updated)]
+file size: 160 bytes

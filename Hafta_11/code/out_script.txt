@@ -1,0 +1,26 @@
+student@okan-lab:~/lab$ cd scripts
+student@okan-lab:~/lab/scripts$ echo '#!/bin/bash' > hello.sh
+student@okan-lab:~/lab/scripts$ echo 'echo "Hello, $USER! You are in $PWD"' >> hello.sh
+student@okan-lab:~/lab/scripts$ cat hello.sh
+#!/bin/bash
+echo "Hello, $USER! You are in $PWD"
+student@okan-lab:~/lab/scripts$ ls -l hello.sh
+-rw-rw-r-- 1 student student 49 Oct 12 19:38 hello.sh
+student@okan-lab:~/lab/scripts$ ./hello.sh
+bash: ./hello.sh: Permission denied
+student@okan-lab:~/lab/scripts$ bash hello.sh
+Hello, student! You are in /home/student/lab/scripts
+student@okan-lab:~/lab/scripts$ chmod u+x hello.sh
+student@okan-lab:~/lab/scripts$ ls -l hello.sh
+-rwxrw-r-- 1 student student 49 Oct 12 19:38 hello.sh
+student@okan-lab:~/lab/scripts$ ./hello.sh
+Hello, student! You are in /home/student/lab/scripts
+student@okan-lab:~/lab/scripts$ hello.sh
+bash: hello.sh: command not found
+student@okan-lab:~/lab/scripts$ cd ../src
+student@okan-lab:~/lab/src$ gcc -Wall -O2 hello.c -o hello
+student@okan-lab:~/lab/src$ ls -l hello.c hello
+-rwxrwxr-x 1 student student 15960 Oct 12 19:38 hello
+-rw-rw-r-- 1 student student    90 Oct 12 19:38 hello.c
+student@okan-lab:~/lab/src$ ./hello
+Hello from the lab!

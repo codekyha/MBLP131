@@ -1,0 +1,10 @@
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Request} & \textbf{First-fit} & \textbf{Best-fit} & \textbf{Worst-fit}\\
+\midrule
+A $= 210$ & $250@200$ $\to$ leaves $40$ & $250@200$ $\to$ leaves $40$ & $500@600$ $\to$ leaves $290$\\
+B $= 380$ & $500@600$ $\to$ leaves $120$ & $400@1600$ $\to$ leaves $20$ & $400@1600$ $\to$ leaves $20$\\
+C $= 290$ & $400@1600$ $\to$ leaves $110$ & $300@2200$ $\to$ leaves $10$ & $300@2200$ $\to$ leaves $10$\\
+D $= 450$ & \textcolor{red!60!black}{must wait} & $500@600$ $\to$ leaves $50$ & \textcolor{red!60!black}{must wait}\\
+\bottomrule
+\end{tabular}

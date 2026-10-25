@@ -1,0 +1,6 @@
+$ taskset -c 1 ./cpu_hog &
+$ taskset -c 1 nice -n 10 ./cpu_hog &
+$ sleep 10; ps -o pid,ni,cls,pcpu,comm -C cpu_hog
+  PID  NI CLS %CPU COMMAND
+ 7150   0  TS 88.0 cpu_hog
+ 7151  10  TS  9.4 cpu_hog

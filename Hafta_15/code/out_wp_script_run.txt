@@ -1,0 +1,9 @@
+student@okan-lab:~/lab$ chmod u+x scripts/dept_stats.sh
+student@okan-lab:~/lab$ ./scripts/dept_stats.sh ECT
+ECT: 17 students, average final 63
+student@okan-lab:~/lab$ ./scripts/dept_stats.sh CS
+CS: 10 students, average final 65
+student@okan-lab:~/lab$ ./scripts/dept_stats.sh
+usage: ./scripts/dept_stats.sh DEPARTMENT
+student@okan-lab:~/lab$ echo $?
+1

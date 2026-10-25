@@ -1,0 +1,75 @@
+student@okan-lab:~/lab$ ls data > list.txt
+student@okan-lab:~/lab$ ls docs >> list.txt
+student@okan-lab:~/lab$ wc -l list.txt
+9 list.txt
+student@okan-lab:~/lab$ ls data nosuch > ok.txt 2> err.txt
+student@okan-lab:~/lab$ cat err.txt
+ls: cannot access 'nosuch': No such file or directory
+student@okan-lab:~/lab$ wc -l < logs/system.log
+120
+student@okan-lab:~/lab$ ls data nosuch > both.txt 2>&1
+student@okan-lab:~/lab$ ls data nosuch 2>&1 > both.txt
+ls: cannot access 'nosuch': No such file or directory
+student@okan-lab:~/lab$ find . -name "*.md" 2> /dev/null
+./projects/beta/README.md
+./projects/alpha/README.md
+student@okan-lab:~/lab$ grep -c ERROR logs/system.log
+13
+student@okan-lab:~/lab$ grep -vn INFO logs/system.log | head -n 3
+2:2026-10-12 09:11:00 WARN  high memory usage
+3:2026-10-12 09:22:00 WARN  high memory usage
+13:2026-10-12 09:12:00 ERROR failed to mount /dev/sdb1
+student@okan-lab:~/lab$ grep -c " 404 " logs/access.log
+57
+student@okan-lab:~/lab$ grep ",EE," data/students.csv
+2026011,Deniz Aydin,EE,60,53
+2026031,Ece Ozturk,EE,61,73
+student@okan-lab:~/lab$ grep -c "^10\.0\.5\.38 " logs/access.log
+37
+student@okan-lab:~/lab$ tail -n +2 data/students.csv | cut -d, -f3 | sort | uniq -c
+     10 CS
+     17 ECT
+      2 EE
+     11 ME
+student@okan-lab:~/lab$ tail -n +2 data/students.csv | sort -t, -k5 -nr | head -n 3 | cut -d, -f2,5
+Onur Dogan,100
+Elif Yilmaz,99
+Emre Dogan,98
+student@okan-lab:~/lab$ cut -d" " -f9 logs/access.log | sort | uniq -c | sort -rn
+    148 200
+     57 404
+     34 304
+     24 500
+     20 301
+     17 403
+student@okan-lab:~/lab$ cut -d" " -f7 logs/access.log | sort | uniq -c | sort -rn | head -n 3
+     41 /courses/mcmp117
+     37 /about.html
+     33 /index.html
+student@okan-lab:~/lab$ grep " 404 " logs/access.log | cut -d" " -f7 | sort | uniq -c | sort -rn | head -n 1
+      9 /images/logo.png
+student@okan-lab:~/lab$ grep ERROR logs/system.log | cut -c12-13 | uniq -c
+      3 09
+      4 10
+      1 12
+      3 13
+      2 14
+student@okan-lab:~/lab$ cut -d, -f2 data/students.csv | sort | uniq -d
+Elif Yilmaz
+Mehmet Aydin
+Onur Dogan
+Selin Yildiz
+student@okan-lab:~/lab$ grep " 500 " logs/access.log | tee errors_500.txt | wc -l
+24
+student@okan-lab:~/lab$ find docs -name "*.txt" -print0 | xargs -0 wc -l
+  1 docs/notes_02.txt
+ 15 docs/syllabus.txt
+  1 docs/notes_01.txt
+  1 docs/notes_03.txt
+  5 docs/linux_quotes.txt
+  2 docs/final report.txt
+ 25 total
+student@okan-lab:~/lab$ cut -d" " -f1 logs/access.log | sort -u | wc -l
+6
+student@okan-lab:~/lab$ cut -d" " -f1 logs/access.log | sort | uniq -c | sort -n | head -n 1
+     37 10.0.5.38

@@ -1,0 +1,951 @@
+% =====================================================================
+%  MBLP131 -- İşletim Sistemleri Temelleri
+%  Hafta 6 Ders Notları: Bellek Yönetimi: Bitişik Tahsis, Sayfalama ve Bölütleme
+%  XeLaTeX ile iki kez derleyin:  xelatex MBLP131_Hafta6_Notlar.tex
+%  ./figures/ ve ../code/ klasörlerine ihtiyaç duyar.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\newcommand{\weeknum}{6}
+% ---------- Page & fonts ---------------------------------------------
+\usepackage[a4paper,margin=2.3cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{turkish}
+\IfFontExistsTF{Calibri}{\setmainfont{Calibri}}{\setmainfont{Carlito}}
+\IfFontExistsTF{Cambria}{\newfontfamily\headfont{Cambria}}{\newfontfamily\headfont{Caladea}}
+\IfFontExistsTF{Consolas}{\setmonofont[Scale=0.95]{Consolas}}{\setmonofont[Scale=0.88]{DejaVu Sans Mono}}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\linespread{1.12}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+% ---------- Colours (course design system) ----------------------------
+\usepackage{xcolor}
+\definecolor{dark}{HTML}{212121}
+\definecolor{charcoal}{HTML}{36454F}
+\definecolor{slate}{HTML}{50808E}
+\definecolor{mint}{HTML}{02C39A}
+\definecolor{mintdeep}{HTML}{028090}
+\definecolor{light}{HTML}{F2F2F2}
+\definecolor{muted}{HTML}{6B7679}
+
+% ---------- Packages ---------------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{needspace}
+\graphicspath{{figures/}}
+\usepackage[font=small,labelfont={bf,color=mintdeep},justification=centering]{caption}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\setlist{itemsep=0.25em,topsep=0.3em}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=mintdeep,urlcolor=mintdeep,citecolor=mintdeep]{hyperref}
+
+% ---------- Headings ----------------------------------------------------
+\titleformat{\section}{\headfont\Large\bfseries\color{charcoal}}{\color{mint}\thesection}{0.7em}{}
+\titleformat{\subsection}{\headfont\large\bfseries\color{charcoal}}{\color{mintdeep}\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\headfont\normalsize\bfseries\color{mintdeep}}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+
+% ---------- Header / footer -----------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}MBLP131 --- İşletim Sistemleri Temelleri}
+\fancyhead[R]{\small\color{muted}Hafta \weeknum{} Ders Notları}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% ---------- Boxes ---------------------------------------------------------
+\newtcolorbox{keyidea}[1][Key idea]{enhanced,breakable,colback=charcoal,colframe=charcoal,
+  coltext=white,fonttitle=\headfont\bfseries\color{mint},title={#1},
+  attach title to upper={\par\smallskip},boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{example}[1][Worked example]{enhanced,colback=light,colframe=light,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{tryit}[1][Try it yourself]{enhanced,breakable,colback=white,colframe=mint,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.8pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{histnote}[1][Historical note]{enhanced,breakable,colback=white,colframe=slate!40,
+  fonttitle=\headfont\bfseries\color{slate},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.5pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt,fontupper=\small}
+
+% Photo helper: fits image inside a box, never distorted (keepaspectratio)
+\newcommand{\photo}[3]{\includegraphics[width=#1,height=#2,keepaspectratio]{#3}}
+
+\newcommand{\term}[1]{\textbf{\color{mintdeep}#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+
+% ---------- Code listings ----------------------------------------------------
+\usepackage{listings}
+\lstdefinestyle{course}{
+  basicstyle=\ttfamily\small, columns=fullflexible, keepspaces=true,
+  backgroundcolor=\color{dark}, rulecolor=\color{dark}, frame=single, framesep=6pt,
+  xleftmargin=8pt, xrightmargin=8pt, aboveskip=0.8em, belowskip=0.6em,
+  basicstyle=\ttfamily\small\color{light},
+  keywordstyle=\color{mint}\bfseries, commentstyle=\color{white!60}\itshape,
+  stringstyle=\color{orange!70!yellow}, numberstyle=\tiny\color{muted},
+  numbers=left, numbersep=10pt, showstringspaces=false, breaklines=true,
+  tabsize=4, upquote=true}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}}
+\lstset{style=course,language=C}
+\usepackage{textcomp}
+
+% listings 1.9 + XeLaTeX: Turkish letters above U+00FF (ı İ ğ Ğ ş Ş) must be declared as letters
+\makeatletter
+\lst@CCPut \lst@ProcessLetter {"130}{"131}{"11E}{"11F}{"15E}{"15F}\z@
+\lst@AddToHook{SelectCharTable}{\catcode"130=13 \catcode"131=13 \catcode"11E=13
+  \catcode"11F=13 \catcode"15E=13 \catcode"15F=13 }
+\makeatother
+
+\begin{document}
+% ============================ Hafta 6 gövdesi ============================
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 6 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large Bellek Yönetimi: Bitişik Tahsis, Sayfalama ve Bölütleme}\par\smallskip
+{\small\itshape\color{white!70} Birçok program, tek bir RAM: her süreç kendine ait, korunmuş bir bellek parçasını nasıl alır?}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item İşletim sisteminin belleği neden yönetmesi gerektiğini açıklamak; derleme, yükleme ve yürütme zamanında adres bağlamayı birbirinden ayırmak.
+  \item Mantıksal (sanal) adresi fiziksel adresten ayırmak; taban (yer değiştirme) ve sınır yazmaçlı bir bellek yönetim biriminin (MMU) adresleri nasıl çevirip koruduğunu onluk ve onaltılık tabanda göstermek.
+  \item Takas sürelerini hesaplamak ve modern sistemlerin neden bütün süreçleri değil sayfaları takas ettiğini açıklamak.
+  \item İlk uyan, en iyi uyan ve en kötü uyan yöntemlerini bir delik listesine uygulamak; dış ve iç parçalanmayı, sıkıştırmayı ve \%50 kuralını açıklamak.
+  \item Bir adresi sayfa numarası ve ofsete bölmek, bir sayfa tablosu üzerinden çevirmek, sayfa tablosu boyutunu ve iç parçalanmayı hesaplamak.
+  \item TLB'li sayfalı bir belleğin etkin erişim süresini hesaplamak.
+  \item Bölütlenmiş bir $\langle s, d\rangle$ adresini bölüt tablosuyla çevirmek, sayfalama ile bölütlemeyi karşılaştırmak ve x86-64 Linux'un gerçekte neyi kullandığını söylemek.
+  \item Bir Linux sürecinin sanal adreslerini, sayfa boyunu ve bellek haritasını gösteren küçük C programlarını çalıştırmak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{Bellek Neden Yönetilir?}
+
+Geçen hafta (5.~hafta) işletim sisteminin \emph{işlemciyi} süreçler arasında nasıl paylaştırdığını inceledik: FCFS, SJF/SRTF, Öncelik ve Round Robin gibi zamanlama algoritmaları sıradaki süreci seçer; iş parçacıkları ortak veriyi paylaştığında mutex ve semaforlar yarış durumlarını önler. 2.~haftanın diliyle bu, \emph{zaman çoğullama} idi. Bu haftanın konusu \emph{alan çoğullama}: \term{ana belleği} (RAM) aynı anda birçok süreç arasında paylaştırmak.
+
+Önceki haftalardan iki olguyu hatırlayalım:
+\begin{itemize}
+  \item \textbf{Bellek hiyerarşisi (2.~hafta).} İşlemci komutları yalnızca yazmaçlardan ve ana bellekten yürütebilir, verileri yalnızca oradan yükleyebilir (önbellekler RAM'in kopyalarını tutar). Disklere ve SSD'lere yalnızca G/Ç yoluyla ulaşılır. Bu yüzden bir programın çalışabilmesi için (en azından kısmen) RAM'de olması gerekir.
+  \item \textbf{Sürecin bellek düzeni (3.~hafta).} Her süreç belleğini \emph{metin} (kod), \emph{veri} (global değişkenler), \emph{öbek} (heap, \cmd{malloc}) ve \emph{yığıt} (stack; yerel değişkenler, dönüş adresleri) olarak görür.
+\end{itemize}
+
+Çoklu programlamada bu süreçlerden birçoğu aynı anda RAM'de bulunur. İşletim sistemi, donanımın yardımıyla üç sorunu çözmek zorundadır:
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Tahsis.} RAM'in hangi kısmı hangi sürece verilecek? RAM dolarsa ne olacak?
+  \item \textbf{Koruma.} Bir süreç başka bir sürecin ya da çekirdeğin belleğini okuyamamalı, üzerine yazamamalıdır. Bir program belleğe saniyede yüz milyonlarca kez dokunduğundan her erişim denetlenmelidir; bu da ancak \emph{donanımla} mümkündür.
+  \item \textbf{Yer değiştirme (relocation).} Program nereye yükleneceğini önceden bilmez ve işletim sistemi onu daha sonra taşımak isteyebilir.
+\end{enumerate}
+
+% =====================================================================
+\section{Adresler ve Bellek Yönetim Birimi}
+\label{sec:mmu}
+
+\subsection{Adres bağlama}
+
+Bir C programında \cmd{count = count + 1;} yazarsınız. \cmd{count} değişkeni bir \emph{addır}; işlemci ise bir \emph{sayıya}, yani \cmd{count}'u tutan baytların adresine ihtiyaç duyar. Adları adreslere dönüştürmeye \term{adres bağlama} (address binding) denir. Kaynak koddan çalışan bir sürece giden yolda program birkaç araçtan geçer ve bağlama üç farklı zamanda yapılabilir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  st/.style={rectangle,rounded corners=2pt,minimum width=2.4cm,minimum height=1.0cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=2.5mm]},color=slate,thick}]
+\node[st,fill=light] (src) at (0,0) {\textbf{Kaynak}\\ \texttt{count.c}};
+\node[st,fill=mint!25] (obj) at (3.9,0) {\textbf{Nesne modülü}\\ \texttt{count.o}};
+\node[st,fill=mint!25] (exe) at (7.8,0) {\textbf{Yürütülebilir}\\ diskte};
+\node[st,fill=mint] (mem) at (11.7,0) {\textbf{Süreç}\\ bellekte};
+\draw[arr] (src) -- node[above,font=\footnotesize\itshape,text=slate]{derleyici} (obj);
+\draw[arr] (obj) -- node[above,font=\footnotesize\itshape,text=slate]{bağlayıcı} (exe);
+\draw[arr] (exe) -- node[above,font=\footnotesize\itshape,text=slate]{yükleyici} (mem);
+\node[font=\footnotesize,text=muted] at (1.95,-0.95) {derleme zamanı};
+\node[font=\footnotesize,text=muted] at (9.75,-0.95) {yükleme zamanı};
+\node[font=\footnotesize,text=muted] at (11.9,-1.35) {yürütme zamanı};
+\end{tikzpicture}
+\caption{Kaynak koddan çalışan bir sürece.}
+\end{figure}
+
+\begin{description}[leftmargin=0pt,style=nextline,itemsep=0.3em]
+  \item[Derleme zamanı (compile time)] Sürecin bellekte nerede duracağı derleme sırasında biliniyorsa derleyici \term{mutlak kod} (absolute code) üretebilir. Başlangıç konumu değişirse program yeniden derlenmelidir. MS-DOS \texttt{.COM} programları böyle çalışırdı.
+  \item[Yükleme zamanı (load time)] Aksi hâlde derleyici \term{yer değiştirebilir kod} (relocatable code) üretir: ``bu modülün başından 14 bayt ötede'' gibi adresler. Yükleyici, program belleğe alınırken bunları mutlak adreslere çevirir. Yüklendikten sonra program taşınamaz.
+  \item[Yürütme zamanı (execution time)] Süreç çalışırken taşınabilecekse bağlama, komut gerçekten çalışana kadar ertelenmelidir: her adres, her bellek erişiminde donanım tarafından çevrilir. Bu, özel bir donanım (MMU) gerektirir; ama tüm modern genel amaçlı işletim sistemlerinin yaptığı budur.
+\end{description}
+
+\subsection{Mantıksal ve fiziksel adres}
+
+İşlemcinin bir programı yürütürken ürettiği adres \term{mantıksal adrestir} (logical address); yürütme zamanında bağlamada buna \term{sanal adres} (virtual address) da denir. Bellek biriminin gerçekte gördüğü, bellek yoluna (bus) konan adres ise \term{fiziksel adrestir} (physical address). Bir programın üretebileceği tüm mantıksal adreslerin kümesi onun \term{mantıksal adres uzayıdır}; bunlara karşılık gelen fiziksel adreslerin kümesi de \term{fiziksel adres uzayıdır}.
+
+Derleme ve yükleme zamanında bağlamada mantıksal ve fiziksel adresler aynıdır. Yürütme zamanında bağlamada farklıdırlar ve çalışma anındaki çeviriyi \term{bellek yönetim birimi} (memory-management unit, MMU) adı verilen bir donanım aygıtı yapar. Kullanıcı programı fiziksel adresleri hiçbir zaman görmez: \cmd{printf("\%p")} ile yazdırdığınız her işaretçi mantıksaldır. Bunu Bölüm~\ref{sec:handson}'de deneyle kanıtlayacağız.
+
+\subsection{En basit MMU: yer değiştirme yazmacı}
+
+En basit MMU tek bir \term{yer değiştirme yazmacı} (relocation register) içerir; buna \term{taban yazmacı} (base register) da denir. Bu yazmacın değeri, bir kullanıcı sürecinin ürettiği her adrese, adres belleğe gönderildiği anda eklenir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  b/.style={rectangle,rounded corners=2pt,minimum height=1.0cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=2.5mm]},color=slate,thick}]
+\node[b,fill=charcoal,text=white,minimum width=1.8cm] (cpu) at (0,0) {\textbf{İşlemci}};
+\node[circle,fill=mint,minimum size=0.9cm,font=\large\bfseries] (add) at (5,0) {$+$};
+\node[b,fill=mint!25,minimum width=2.8cm] (rel) at (5,1.8) {yer değiştirme yazmacı\\ \textbf{14000}};
+\node[b,fill=light,minimum width=1.8cm,minimum height=2.4cm] (mem) at (10.2,0) {\textbf{Bellek}};
+\draw[arr] (cpu) -- node[above,font=\footnotesize,text=mintdeep]{mantıksal adres $346$} (add);
+\draw[arr] (rel) -- (add);
+\draw[arr] (add) -- node[above,font=\footnotesize,text=mintdeep]{fiziksel adres $14346$} (mem);
+\draw[dashed,slate,rounded corners=3pt] (3.2,-0.9) rectangle (6.8,2.55);
+\node[font=\footnotesize\bfseries,text=slate,anchor=south west] at (3.25,-0.9) {MMU};
+\end{tikzpicture}
+\caption{Yer değiştirme yazmacıyla dinamik yer değiştirme.}
+\end{figure}
+
+Program $0$ ile $2999$ arasındaki adresleri kullandığını sanır. İşletim sistemi onu $14000$ fiziksel adresine yüklemiş ve yer değiştirme yazmacına $14000$ yazmıştır. İşlemci ``$346$ adresindeki sözcüğü yükle'' komutunu yürüttüğünde MMU belleğe $14000 + 346 = 14346$ gönderir. Süreci taşımak için işletim sistemi onun baytlarını başka bir yere kopyalar ve tek bir yazmacı değiştirir. Yer değiştirme yazmacını yüklemek \emph{ayrıcalıklı} bir komuttur (2.~hafta): onu yalnızca çekirdek değiştirebilir.
+
+\subsection{Taban ve sınır yazmaçlarıyla koruma}
+
+Yer değiştirme tek başına hiçbir şeyi korumaz: bir program çok büyük bir mantıksal adres kullanıp başka bir sürecin alanına ulaşabilir. İkinci bir yazmaç, \term{sınır yazmacı} (limit register), mantıksal adres uzayının boyunu tutar. MMU önce mantıksal adresi sınırla karşılaştırır, ancak ondan sonra tabanı ekler:
+\[
+0 \le a_{\text{mant}} < \text{sınır ise:}\quad a_{\text{fiz}} = \text{taban} + a_{\text{mant}};
+\qquad \text{değilse: işletim sistemine tuzak (adresleme hatası).}
+\]
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  b/.style={rectangle,rounded corners=2pt,minimum height=0.9cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=2.5mm]},color=slate,thick}]
+\node[b,fill=charcoal,text=white,minimum width=1.5cm] (cpu) at (0,0) {\textbf{İşlemci}};
+\node[diamond,aspect=1.6,fill=mint,inner sep=1pt,font=\footnotesize\bfseries,align=center] (chk) at (3.6,0) {mantıksal\\$<$ sınır?};
+\node[b,fill=mint!25,minimum width=2.0cm] (lim) at (3.6,2.0) {sınır\\ \textbf{3000}};
+\node[circle,fill=mint,minimum size=0.85cm,font=\large\bfseries] (add) at (7.2,0) {$+$};
+\node[b,fill=mint!25,minimum width=2.4cm] (base) at (7.2,2.0) {taban (yer değiştirme)\\ \textbf{14000}};
+\node[b,fill=light,minimum width=1.6cm,minimum height=2.2cm] (mem) at (10.4,0.3) {\textbf{Bellek}};
+\node[b,fill=red!60!black,text=white,minimum width=3.6cm] (trap) at (3.6,-2.2) {\textbf{tuzak}: adresleme hatası};
+\draw[arr] (cpu) -- node[above,font=\footnotesize]{mantıksal} (chk);
+\draw[arr] (lim) -- (chk);
+\draw[arr] (chk) -- node[above,font=\footnotesize,text=mintdeep]{evet} (add);
+\draw[arr] (base) -- (add);
+\draw[arr] (add) -- node[above,font=\footnotesize]{fiziksel} (mem.west|-add);
+\draw[arr,red!60!black] (chk) -- node[right,font=\footnotesize]{hayır} (trap);
+\end{tikzpicture}
+\caption{Taban ve sınır yazmaçlarıyla donanım düzeyinde adres koruması.}
+\end{figure}
+
+Denetim donanımda, her erişimde ve toplamayla paralel yapıldığından korumanın zaman maliyeti neredeyse sıfırdır. Denetim başarısız olursa işlemci bir \emph{tuzak} (trap; yazılım kaynaklı bir kesme, 2.~hafta) üretir ve işletim sistemi genellikle süreci sonlandırır. Linux'ta bunu \emph{Segmentation fault (core dumped)} iletisi olarak görürsünüz; bugün bu tuzağı sayfalama donanımı üretir (Bölüm~\ref{sec:protbits}), ama fikir aynıdır.
+
+\begin{example}[Onluk ve onaltılık tabanda taban ve sınır]
+\textbf{Onluk.} $\text{taban} = 14000$, $\text{sınır} = 3000$.
+\begin{itemize}
+  \item $a = 346$: $346 < 3000$, dolayısıyla $a_{\text{fiz}} = 14000 + 346 = 14346$.
+  \item $a = 2999$: $2999 < 3000$, dolayısıyla $a_{\text{fiz}} = 16999$; sürecin kullanabileceği son bayt.
+  \item $a = 3500$: $3500 \ge 3000$: \textbf{tuzak}.
+\end{itemize}
+Süreç tam olarak $[\text{taban},\ \text{taban}+\text{sınır}) = [14000,\ 17000)$ fiziksel aralığına sahiptir.
+
+\textbf{Onaltılık.} $\text{taban} = \texttt{0x4000}$ ($=16384$), $\text{sınır} = \texttt{0x1000}$ ($=4096$).
+\begin{itemize}
+  \item $a = \texttt{0x02A4}$ ($=676$): $\texttt{0x02A4} < \texttt{0x1000}$, dolayısıyla $a_{\text{fiz}} = \texttt{0x4000} + \texttt{0x02A4} = \texttt{0x42A4}$. Onluk tabanda kontrol: $16384 + 676 = 17060 = \texttt{0x42A4}$.
+  \item $a = \texttt{0x1200}$: $\texttt{0x1200} \ge \texttt{0x1000}$: \textbf{tuzak}.
+\end{itemize}
+Tabanın alt üç onaltılık basamağı sıfır olduğundan toplama işlemi ofseti bu basamaklara yazmaktan ibarettir. Geçerli fiziksel aralık \texttt{0x4000}--\texttt{0x4FFF}'tir.
+\end{example}
+
+\begin{histnote}[Gerçek makinelerde taban ve sınır]
+CDC~6600 süper bilgisayarı (1964) her işi RA (reference address) ve FL (field length) adlı iki yazmaçla koruyordu; bu, tam olarak burada anlatılan taban/sınır çiftidir. IBM~System/360 farklı bir yöntem kullandı (2~KB'lık bloklar üzerinde 4 bitlik bellek anahtarları). Günümüz bilgisayarlarında taban/sınır fikri x86 işlemcilerinin bölüt tanımlayıcılarında (segment descriptor) yaşamaya devam ediyor (Bölüm~\ref{sec:x86}).
+\end{histnote}
+
+% =====================================================================
+\section{Takas}
+
+Tüm süreçler için yeterli RAM yoksa işletim sistemi bir süreci geçici olarak bellekten çıkarıp bir \term{yardımcı belleğe} (backing store; hızlı bir disk ya da SSD) taşıyabilir ve daha sonra geri getirebilir. Buna \term{takas} (swapping) denir. Dışarı takas edilmiş bir süreç, yeniden içeri alınana kadar çalışamaz; yürütme zamanında bağlama kullanılıyorsa RAM'de farklı bir yere geri dönebilir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[b/.style={rectangle,rounded corners=2pt,minimum width=2.6cm,minimum height=0.8cm,align=center,font=\small}]
+\fill[light,rounded corners=3pt] (-1.6,-2.6) rectangle (1.6,1.4);
+\node[font=\footnotesize\bfseries] at (0,1.15) {ana bellek};
+\node[b,fill=charcoal,text=white] at (0,0.45) {İS};
+\node[b,fill=mint] (p1) at (0,-0.55) {P1};
+\node[b,fill=white,text=slate] at (0,-1.8) {kullanıcı alanı};
+\node[cylinder,shape border rotate=90,aspect=0.25,fill=charcoal,text=white,minimum width=2.6cm,minimum height=3.2cm,align=center,font=\small] (disk) at (6,-0.6) {};
+\node[font=\footnotesize\bfseries,text=white] at (6,0.4) {yardımcı bellek};
+\node[b,fill=mint!25,minimum width=1.8cm] (p2) at (6,-0.8) {P2};
+\draw[-{Stealth},very thick,mintdeep] (1.4,-0.4) -- node[above,font=\footnotesize]{\textcircled{1} P1 dışarı} (4.9,-0.4);
+\draw[-{Stealth},very thick,mintdeep] (4.9,-1.4) -- node[below,font=\footnotesize]{\textcircled{2} P2 içeri} (1.4,-1.4);
+\end{tikzpicture}
+\caption{Yardımcı bellek olarak bir disk kullanılarak iki sürecin takası (İS: işletim sistemi).}
+\end{figure}
+
+Takasın maliyetine \emph{aktarım süresi} hâkimdir ve bu süre taşınan bellek miktarıyla orantılıdır.
+
+\begin{example}[Bir takas ne kadar sürer?]
+Bir süreç $100$~MB yer kaplıyor; yardımcı bellek $50$~MB/s hızla aktarıyor. Süreci dışarı takas etmek
+\[
+t_{\text{dışarı}} = \frac{100\ \text{MB}}{50\ \text{MB/s}} = 2\ \text{s}
+\]
+sürer; aynı boyda başka bir süreci içeri almak da $2$~s daha: disk gecikmesi dışında toplam yaklaşık $4$~s. Bunu $10$~ms'lik bir Round Robin zaman dilimiyle (5.~hafta) karşılaştırın: tek bir takas $4\ \text{s} / 10\ \text{ms} = 400$ dilime eşittir.
+
+Buna karşılık tek bir $4$~KB'lık sayfayı aynı hızla taşımak $4096\ \text{B} / (50\times10^{6}\ \text{B/s}) \approx 82\ \mu\text{s}$ sürer.
+\end{example}
+
+Bu nedenle bütün süreçlerin standart takası, genel amaçlı sistemlerde artık en fazla acil durumlarda kullanılır. Linux, Windows ve macOS bunun yerine tek tek \emph{sayfaları} takas eder (Bölüm~\ref{sec:paging}); ayrıntılar, yani isteğe bağlı sayfalama ve sayfa değiştirme, 7.~haftanın konusudur. Mobil sistemler (iOS, Android) genellikle hiç takas yapmaz: bellek azaldığında arka plandaki uygulamalardan durumlarını kaydetmelerini ister, sonra onları sonlandırır.
+
+% =====================================================================
+\section{Bitişik Bellek Tahsisi}
+\label{sec:contig}
+
+\term{Bitişik bellek tahsisinde} (contiguous allocation) her süreç fiziksel bellekte bitişik tek bir blok kaplar. Taban ve sınır yazmaçlarıyla bu doğal bir yöntemdir: bütün süreci tek bir sayı çifti tanımlar.
+
+\subsection{Değişken bölümler ve delik listesi}
+
+\term{Değişken bölüm} (variable partition) yönteminde işletim sistemi her sürece tam ihtiyacı kadar büyüklükte bir blok verir. Başlangıçta tüm kullanıcı belleği tek bir büyük boş bloktur. Süreçler gelip gittikçe bellek, tahsis edilmiş bloklarla \term{delik} (hole) adı verilen boş blokların karışımına dönüşür. İşletim sistemi deliklerin bir listesini tutar. Bir süreç geldiğinde yeterince büyük bir delik arar, gerekeni tahsis eder ve kalanı daha küçük bir delik olarak bırakır. Bir süreç sonlandığında bloğu deliğe dönüşür ve komşu deliklerle birleştirilir.
+
+Bu bölüm boyunca tek bir örnek kullanıyoruz. Bellek $2800$~KB'tır (sayılar okunaklı kalsın diye oyuncak bir boyut); ilk $300$~KB'ı işletim sistemi (İS) kaplar, beş süreç P1--P5 bellektedir ve beş delik vardır:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.0055cm]
+\fill[charcoal] (0,0) rectangle (300,0.9);
+\node[font=\footnotesize\bfseries,text=white] at (150,0.45) {İS};
+\foreach \a/\b/\t in {450/600/P1, 1050/1200/P2, 1400/1600/P3, 1950/2100/P4, 2650/2800/P5} {
+  \fill[gray!35] (\a,0) rectangle (\b,0.9);
+  \node[font=\footnotesize\bfseries] at ({(\a+\b)/2},0.45) {\t};
+}
+\foreach \a/\s in {300/150, 600/450, 1200/200, 1600/350, 2100/550} {
+  \draw[slate,dashed] (\a,0) rectangle ({\a+\s},0.9);
+  \node[font=\footnotesize,text=slate] at ({\a+\s/2},0.45) {\s};
+}
+\foreach \a in {0,300,600,1050,1200,1600,2100,2800} \node[font=\tiny,text=muted] at (\a,-0.25) {\a};
+\end{tikzpicture}
+\caption{Sürekli kullanılan örnek: delik boyları KB cinsinden, adresler (KB) çubuğun altında.}
+\end{figure}
+
+Adres sırasıyla (başlangıç, boy) çiftleri olarak delik listesi şudur:
+\[
+(300,150),\ (600,450),\ (1200,200),\ (1600,350),\ (2100,550),\qquad \text{toplam boş} = 1700\ \text{KB}.
+\]
+
+\subsection{Yerleştirme algoritmaları: ilk uyan, en iyi uyan, en kötü uyan}
+
+Yeni bir süreç hangi deliği almalıdır? Üç klasik strateji şunlardır:
+\begin{description}[leftmargin=0pt,style=nextline,itemsep=0.3em]
+  \item[İlk uyan (first-fit)] Yeterince büyük \emph{ilk} deliği tahsis et. Arama, uygun bir delik bulunur bulunmaz durabilir (listenin başından ya da son aramanın bittiği yerden başlanarak; ikincisine sonraki uyan, next-fit, denir).
+  \item[En iyi uyan (best-fit)] Yeterince büyük \emph{en küçük} deliği tahsis et. Liste boya göre sıralı tutulmuyorsa tamamı taranmalıdır. En küçük artık deliği üretir.
+  \item[En kötü uyan (worst-fit)] \emph{En büyük} deliği tahsis et. Bu da tam bir tarama gerektirir. Fikir, artığın işe yarayacak kadar büyük kalmasıdır.
+\end{description}
+
+\begin{example}[Dört istek, üç strateji]
+Süreçler şu sırayla geliyor: A $=220$~KB, B $=400$~KB, C $=130$~KB, D $=430$~KB. Her istek, seçilen deliğin başından kesilip alınır.
+
+\textbf{A isteği (220 KB).} Yeterince büyük delikler: $450$, $350$, $550$. İlk uyan adres sırasındaki ilk deliği, $450@600$'ü alır; en iyi uyan en küçüğünü, $350@1600$'ü; en kötü uyan en büyüğünü, $550@2100$'ü.
+
+Aynı biçimde devam edersek:
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{İstek} & \textbf{İlk uyan} & \textbf{En iyi uyan} & \textbf{En kötü uyan} \\
+\midrule
+A = 220 & $450@600$ $\to$ kalan $230$ & $350@1600$ $\to$ kalan $130$ & $550@2100$ $\to$ kalan $330$ \\
+B = 400 & $550@2100$ $\to$ kalan $150$ & $450@600$ $\to$ kalan $50$ & $450@600$ $\to$ kalan $50$ \\
+C = 130 & $150@300$ $\to$ kalan $20$ & $130@1820$ $\to$ kalan $0$ & $350@1600$ $\to$ kalan $220$ \\
+D = 430 & \textcolor{red!60!black}{beklemek zorunda} & $550@2100$ $\to$ kalan $120$ & \textcolor{red!60!black}{beklemek zorunda} \\
+\bottomrule
+\end{tabular}
+\end{center}
+İlk uyanda D geldiğinde $950$~KB boştur, ama en büyük delik yalnızca $350$~KB'tır; en kötü uyanda en büyük delik $330$~KB'tır. Bu örnekte dört sürecin hepsini yalnızca en iyi uyan yerleştirebiliyor.
+\end{example}
+
+Tablo, küçük bir Python betiğiyle, \texttt{code/fit.py}, doğrulandı. Betiğin kalbi deliği seçen fonksiyondur; geri kalanı istekler üzerinde döner ve sonucu yazdırır (program çıktısı İngilizcedir: \texttt{hole} = delik, \texttt{leftover} = kalan, \texttt{waits} = bekler):
+
+\lstinputlisting[language=Python,caption={},firstline=16,lastline=25,firstnumber=16]{../code/fit.py}
+
+\begin{lstlisting}[style=term]
+$ python3 fit.py
+\end{lstlisting}
+\vspace{-0.9em}
+\lstinputlisting[style=term]{../code/out_fit.txt}
+
+Tek bir örnek genel olarak hiçbir şey kanıtlamaz: en iyi uyan, işe yaramayan çok sayıda küçük delik bırakma eğilimindedir (burada $50$~KB; başka dizilerde birkaç baytlık delikler). Silberschatz'ın aktardığı benzetimler, ilk uyan ve en iyi uyanın hem zaman hem de bellek kullanımı açısından en kötü uyandan daha iyi olduğunu gösterir; bellek kullanımında ilk uyan ile en iyi uyandan biri açıkça üstün değildir, ama ilk uyan genellikle daha hızlıdır.
+
+\subsection{Parçalanma}
+
+\paragraph{Dış parçalanma (external fragmentation).} Bir isteği karşılamaya yetecek kadar toplam bellek vardır, ama bitişik değildir: birçok küçük deliğe bölünmüştür. İlk uyan çalıştırmasında $950$~KB boştu, ama D ($430$~KB) yüklenemedi. Dış parçalanma, değişken boylu bloklar dağıtan her yöntemin (değişken bölümler, bölütleme) tipik sorunudur.
+
+\begin{keyidea}[\%50 kuralı]
+İlk uyanın istatistiksel çözümlemesi (Knuth'a dayanarak Silberschatz'ın aktardığı biçimiyle), bazı iyileştirmelerle bile, $N$ blok tahsis edildiğinde $0.5N$ blok daha parçalanmaya gittiğini gösterir. Bu durumda belleğin kullanılamayabilecek kısmı
+\[
+\frac{0.5N}{N + 0.5N} = \frac{1}{3}
+\]
+olur.
+\end{keyidea}
+
+\paragraph{İç parçalanma (internal fragmentation).} Bir sürece tahsis edilmiş ama onun kullanmadığı bellek: bir bloğun \emph{içindeki} israf. Bellek sabit boyutlu birimlerle dağıtıldığında ortaya çıkar. $18\,464$ baytlık bir delik bulunduğunu ve bir sürecin $18\,462$ bayt istediğini varsayalım. Listede $2$ baytlık bir delik tutmak (liste girdisi) deliğin kendisinden daha pahalıya gelir; bu yüzden tahsis edici $18\,464$ baytın hepsini verir ve $2$ bayt iç parçalanmaya gider. İç parçalanma, sabit bölümlerin ve sayfalamanın tipik sorunudur.
+
+\subsection{Sıkıştırma}
+
+Dış parçalanmanın bir çaresi \term{sıkıştırmadır} (compaction): bellek içeriği, tüm boş bellek tek bir büyük blokta toplanacak biçimde yeniden düzenlenir. İlk uyan sonucumuzda İS, C, P1, A, P2, P3, P4, B, P5 blokları $1850$~KB kaplar; belleğin alt ucuna taşındıklarında $2800 - 1850 = 950$~KB'lık tek bir delik kalır ve D sığar (geriye $520$~KB kalır).
+
+Sıkıştırma yalnızca yer değiştirme dinamikse (yürütme zamanında bağlama) mümkündür: işletim sistemi baytları taşır ve taban yazmacını günceller. Üstelik pahalıdır: en kötü durumda belleğin tamamı kopyalanır, ilgili süreçler durdurulmalıdır ve bir aygıt bir tampona yazarken o tampona G/Ç yapan süreç taşınamaz. Daha iyi bir çare, bir sürecin belleğinin \emph{bitişik olmamasına} izin vermektir. Sayfalamanın fikri budur.
+
+% =====================================================================
+\section{Sayfalama}
+\label{sec:paging}
+
+\subsection{Sayfalar ve çerçeveler}
+
+\term{Sayfalama} (paging) dış parçalanmayı tamamen ortadan kaldırır. Fiziksel bellek \term{çerçeve} (frame) adı verilen sabit boyutlu bloklara, mantıksal bellek ise \term{sayfa} (page) adı verilen aynı boyda bloklara bölünür. Bir süreç yüklendiğinde sayfaları \emph{herhangi} boş çerçevelere yerleştirilir. Süreç başına bir \term{sayfa tablosu} (page table) her sayfanın hangi çerçevede durduğunu kaydeder. İşletim sistemi bir boş çerçeve listesi tutar.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  pg/.style={rectangle,fill=mint,minimum width=1.9cm,minimum height=0.55cm,font=\footnotesize\bfseries},
+  pt/.style={rectangle,fill=mint!25,minimum width=1.0cm,minimum height=0.55cm,font=\footnotesize\bfseries},
+  arr/.style={-{Stealth[length=2mm]},color=slate}]
+\node[font=\footnotesize\bfseries,align=center] at (0,0.75) {mantıksal bellek\\(5 sayfa)};
+\foreach \i/\f in {0/5,1/9,2/1,3/7,4/12} {
+  \node[pg] (p\i) at (0,-\i*0.65) {sayfa \i};
+  \node[font=\tiny,text=muted] at (2.6,-\i*0.65) {\i};
+  \node[pt] (t\i) at (3.3,-\i*0.65) {\f};
+  \draw[arr] (p\i.east) -- (2.4,-\i*0.65);
+}
+\node[font=\footnotesize\bfseries] at (3.0,0.6) {sayfa tablosu};
+\node[font=\footnotesize\bfseries] at (7.0,1.2) {fiziksel bellek};
+\foreach \f in {0,...,15} {
+  \pgfmathsetmacro{\yy}{0.8-\f*0.3}
+  \draw[gray!60,fill=white] (6.0,\yy) rectangle (8.0,\yy-0.3);
+  \node[font=\tiny,text=muted,anchor=east] at (5.95,\yy-0.15) {\f};
+}
+\foreach \i/\f in {0/5,1/9,2/1,3/7,4/12} {
+  \pgfmathsetmacro{\yy}{0.8-\f*0.3}
+  \fill[mint] (6.0,\yy) rectangle (8.0,\yy-0.3);
+  \node[font=\tiny\bfseries] at (7.0,\yy-0.15) {sayfa \i};
+}
+\end{tikzpicture}
+\caption{Sayfalama: bir sürecin beş sayfası on altı çerçeveye dağılmış. Bu sayfa tablosu aşağıdaki tüm örneklerde ve \texttt{page\_split.c}'de kullanılmaktadır.}
+\end{figure}
+
+Sayfa boyunu donanım belirler ve her zaman $2$'nin bir kuvvetidir; tipik olarak $4$~KB (x86-64 üzerinde Linux; \cmd{getconf PAGESIZE} $4096$ yazdırır), bazen $16$~KB (Apple silicon) ya da daha büyük.
+
+\subsection{Adresi sayfa numarası ve ofsete bölmek}
+
+Mantıksal adres uzayı $2^{m}$ bayt ($m$ bitlik adresler) ve sayfa boyu $2^{n}$ bayt ise, bir mantıksal adresin üstteki $m-n$ biti \term{sayfa numarasını} (page number) $p$, alttaki $n$ biti de \term{sayfa ofsetini} (page offset, sayfa içi konum) $d$ verir:
+\begin{center}
+\begin{tikzpicture}
+\node[rectangle,fill=mint,minimum width=5.5cm,minimum height=0.8cm,align=center,font=\small] (p) {sayfa numarası $p$\\ $m-n$ bit};
+\node[rectangle,fill=charcoal,text=white,minimum width=4cm,minimum height=0.8cm,align=center,font=\small,right=0pt of p] {sayfa ofseti $d$\\ $n$ bit};
+\end{tikzpicture}
+\end{center}
+\[
+p = \left\lfloor \frac{a}{2^{n}} \right\rfloor = a \gg n, \qquad
+d = a \bmod 2^{n} = a \mathbin{\&} (2^{n}-1), \qquad
+a_{\text{fiz}} = f \cdot 2^{n} + d,
+\]
+burada $f$, sayfa tablosunun $p$ numaralı girdisinde bulunan çerçeve numarasıdır. Sayfa boyu $2$'nin kuvveti olduğundan bölme gerekmez: donanım üstteki bitleri doğrudan sayfa tablosunda dizin olarak kullanır, alttaki bitleri değiştirmeden kopyalar. Örneğin $16$ bitlik adresler ve $4$~KB'lık sayfalarla ($n=12$) $p$ $4$ bittir ve adres uzayında $2^{4}=16$ sayfa vardır; $32$ bitlik adreslerle $p$ $20$ bittir ($2^{20}$ sayfa).
+
+Kullanışlı bir kısayol: bir onaltılık basamak tam olarak $4$ bittir; bu yüzden $4$~KB'lık sayfalarda ofset, adresin son üç onaltılık basamağıdır.
+
+\begin{example}[Mantıksal adres \texttt{0x3A7F}'nin çevirisi]
+$16$ bitlik adresler, $4$~KB'lık sayfalar, yukarıdaki şeklin sayfa tablosu (sayfa $0\to5$, $1\to9$, $2\to1$, $3\to7$, $4\to12$).
+
+İkilik tabanda $\texttt{0x3A7F} = \underbrace{0011}_{p}\ \underbrace{1010\ 0111\ 1111}_{d}$; dolayısıyla $p = 3$ ve $d = \texttt{0xA7F}$.
+
+Onluk tabanda: $\texttt{0x3A7F} = 14975$; $p = \lfloor 14975/4096 \rfloor = 3$, $d = 14975 - 3\cdot4096 = 2687 = \texttt{0xA7F}$.
+
+Sayfa tablosu $f = 7$ çerçevesini verir; buradan
+\[
+a_{\text{fiz}} = 7 \times 4096 + 2687 = 28672 + 2687 = 31359 = \texttt{0x7A7F}.
+\]
+Onaltılık tabanda sayfa basamağı $3$'ü çerçeve basamağı $7$ ile değiştirmek yeterlidir. Benzer biçimde \texttt{0x1234} için $p=1$, $d=\texttt{0x234}$, çerçeve $9$, fiziksel $\texttt{0x9234} = 37428$; \texttt{0x5000} için ise $p = 5$'tir ve bu sayfa sürecin parçası değildir: tuzak.
+\end{example}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  f/.style={rectangle,minimum height=0.7cm,font=\small\ttfamily},
+  arr/.style={-{Stealth[length=2.5mm]},color=slate,thick}]
+\node[rectangle,fill=charcoal,text=white,minimum width=1.3cm,minimum height=0.8cm,font=\small\bfseries] (cpu) at (0,0) {İşlemci};
+\node[f,fill=mint,minimum width=0.7cm] (p) at (1.9,0) {3};
+\node[f,fill=light,minimum width=1.1cm,right=0pt of p] (d) {A7F};
+\node[f,fill=mint,minimum width=0.7cm] (f) at (8.2,0) {7};
+\node[f,fill=light,minimum width=1.1cm,right=0pt of f] (d2) {A7F};
+\node[rectangle,fill=light,minimum width=1.6cm,minimum height=0.8cm,font=\small\bfseries] (mem) at (11.5,0) {Bellek};
+\draw[arr] (cpu) -- (p);
+\draw[arr] (d2) -- (mem);
+\foreach \i/\v in {0/5,1/9,2/1,3/7,4/12} {
+  \node[rectangle,fill=mint!25,minimum width=1.0cm,minimum height=0.45cm,font=\footnotesize\bfseries] (r\i) at (5.0,-0.9-\i*0.5) {\v};
+  \node[font=\tiny,text=muted] at (4.3,-0.9-\i*0.5) {\i};
+}
+\node[font=\footnotesize\bfseries] at (5.0,-0.45) {sayfa tablosu};
+\fill[mint] ($(r3.south west)$) rectangle ($(r3.north east)$); \node[font=\footnotesize\bfseries] at (r3) {7};
+\draw[arr,mintdeep] (p.south) |- (r3.west);
+\draw[arr,mintdeep] (r3.east) -| (f.south);
+\draw[arr,dashed] (d.north) -- ++(0,0.5) -| node[pos=0.25,above,font=\footnotesize\itshape]{ofset değişmeden kopyalanır} (d2.north);
+\end{tikzpicture}
+\caption{Sayfalama donanımı \texttt{0x3A7F}'yi \texttt{0x7A7F}'ye çeviriyor.}
+\end{figure}
+
+\subsection{Sayfalamada iç parçalanma}
+
+Sayfalamada dış parçalanma yoktur: her boş çerçeve her sayfayı tutabilir. Ancak bellek tam çerçeveler hâlinde verildiğinden bir sürecin son çerçevesi genellikle dolu değildir.
+
+\begin{example}[10.000 baytlık bir süreç]
+$4096$ baytlık sayfalarla: $10\,000 = 2 \times 4096 + 1808$. Sürecin $3$ çerçeveye ihtiyacı vardır; üçüncüsü yalnızca $1808$ bayt tutar, dolayısıyla $4096 - 1808 = 2288$ bayt iç parçalanmaya gider.
+\end{example}
+
+En kötü durumda bir süreç $n$ sayfa artı bir bayt ister ve neredeyse bütün bir çerçeveyi boşa harcar. Süreç boyları sayfa boyundan bağımsızsa son sayfa ortalama yarı doludur: beklenen iç parçalanma \textbf{süreç başına yarım sayfadır}. Bu, küçük sayfalardan yana bir argümandır; ama daha küçük sayfa daha çok sayfa, daha büyük sayfa tabloları ve daha az verimli disk G/Ç'si demektir. Sayfa boyları zamanla büyüdü. x86-64 üzerinde Linux normalde $4$~KB'lık sayfalar kullanır; bellek gereksinimi çok büyük programlar için ayrıca $2$~MB ya da $1$~GB'lık \emph{dev sayfalar} (huge pages) vardır (test makinemiz \texttt{/proc/meminfo} içinde \texttt{Hugepagesize: 2048 kB} bildiriyor).
+
+\subsection{Sayfa tablosu ne kadar büyüktür?}
+
+Bir sayfa tablosunda mantıksal adres uzayının her sayfası için bir girdi bulunur.
+
+\begin{example}[32 bitlik bir adres uzayı için sayfa tablosu boyutu]
+$32$ bitlik mantıksal adresler, $4$~KB'lık sayfalar, $4$ baytlık sayfa tablosu girdileri:
+\[
+\text{girdi sayısı} = \frac{2^{32}}{2^{12}} = 2^{20} = 1\,048\,576,
+\qquad
+\text{boyut} = 2^{20} \times 4\ \text{B} = 2^{22}\ \text{B} = 4\ \text{MB}
+\]
+\emph{süreç başına}. $100$ süreçle bu, çoğu adres uzayının kullanılmayan kısımlarını tanımlayan $400$~MB'lık sayfa tablosu demektir. $64$ bitlik sistemlerde sorun çok daha büyüktür: $48$ bitlik bir adres uzayı için $8$ baytlık girdilerle düz bir tablo $2^{36} \times 8\ \text{B} = 512$~GB gerektirirdi.
+\end{example}
+
+Burada yalnızca ana hatlarını verdiğimiz çözüm \term{çok düzeyli} (hiyerarşik, multi-level) sayfa tablosudur: sayfa tablosunun kendisi de sayfalanır. $32$ bitlik adresler için iki düzeyli bir yöntemde $20$ bitlik sayfa numarası, $2^{10}$ girdilik bir dış tabloda (tam olarak bir $4$~KB'lık sayfa) dizin olan $p_1$ ($10$ bit) ile bir iç tabloda dizin olan $p_2$'ye ($10$ bit) bölünür; iç tablolar yalnızca adres uzayının gerçekten kullanılan kısımları için var olur. x86-64 dört düzey kullanır ($9+9+9+9$ bit sayfa numarası artı $12$ bitlik ofset $=48$ bit); yeni işlemciler beşinci bir düzeyi destekler ($57$ bitlik adresler). Her düzeydeki her tablo tam olarak bir $4$~KB'lık sayfaya sığar ($8$ baytlık $2^{9}$ girdi).
+
+\subsection{Çeviri önbelleği (TLB)}
+
+Sayfa tablosu ana bellekte tutulur ve bir yazmaç (x86'da \texttt{CR3}) onu gösterir. Bu durumda her veri erişimi \emph{iki} bellek erişimi gerektirir: biri sayfa tablosu girdisi, biri verinin kendisi için. Sayfalama belleğin hızını yarıya indirirdi. Standart çözüm, MMU'nun içinde küçük ve hızlı bir donanım önbelleğidir: \term{çeviri önbelleği} (translation look-aside buffer, TLB). Her TLB girdisi bir (sayfa numarası, çerçeve numarası) çifti tutar; tüm girdiler paralel olarak aranır (ilişkisel bellek, associative memory). TLB'lerde tipik olarak $32$ ile yaklaşık $1536$ arasında girdi bulunur.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  b/.style={rectangle,rounded corners=2pt,minimum height=0.8cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=2.5mm]},color=slate,thick}]
+\node[b,fill=charcoal,text=white,minimum width=1.3cm] (cpu) at (0,0) {\textbf{İşlemci}};
+\node[b,fill=mint,minimum width=0.6cm] (p) at (1.8,0) {$p$};
+\node[b,fill=light,minimum width=0.6cm,right=0pt of p] (d) {$d$};
+\node[b,fill=mint!25,minimum width=2.2cm,minimum height=1.6cm] (tlb) at (5.0,0) {\textbf{TLB}\\ $p \to f$ çiftleri};
+\node[b,fill=light,minimum width=2.2cm] (pt) at (5.0,-2.4) {sayfa tablosu\\ RAM'de};
+\node[b,fill=mint,minimum width=0.6cm] (f) at (8.4,0) {$f$};
+\node[b,fill=light,minimum width=0.6cm,right=0pt of f] (d2) {$d$};
+\node[b,fill=light,minimum width=1.4cm,minimum height=2.0cm] (mem) at (11.2,-0.6) {\textbf{Bellek}};
+\draw[arr] (cpu) -- (p);
+\draw[arr] (d.east) -- (tlb.west);
+\draw[arr,mintdeep] (tlb) -- node[above,font=\footnotesize]{isabet} (f);
+\draw[arr,red!60!black] (tlb) -- node[right,font=\footnotesize]{ıska} (pt);
+\draw[arr,red!60!black] (pt.east) -| node[pos=0.3,below,font=\footnotesize]{$+1$ bellek erişimi} (f.south);
+\draw[arr] (d2.east) -- (mem.west|-d2);
+\end{tikzpicture}
+\caption{TLB'li sayfalama donanımı.}
+\end{figure}
+
+Bir \emph{TLB isabetinde} (hit) çerçeve numarası neredeyse anında elde edilir. Bir \emph{TLB ıskasında} (miss) sayfa tablosu girdisi bellekten okunmalıdır (x86'da donanım, bazı başka mimarilerde işletim sistemi tarafından); ardından girdi, belki daha eski bir girdinin yerine, TLB'ye yazılır. Programlar \emph{yerellik} (locality) gösterdiği için (döngüler aynı kodu yürütür, diziler sırayla gezilir, yığıt hep tepesine yakın kullanılır) \%99'un üzerindeki isabet oranları yaygındır. Bağlam değişiminde eski sürecin TLB girdileri boşaltılmalı ya da yeni sürecin kullanamaması için bir adres uzayı kimliğiyle (address-space identifier, ASID) etiketlenmelidir.
+
+\subsubsection{Etkin erişim süresi}
+
+$\alpha$ \term{isabet oranı} (hit ratio; sayfa numarasını TLB'de bulan erişimlerin oranı), $t_{m}$ bir bellek erişiminin süresi ve $t_{\text{TLB}}$ bir TLB aramasının süresi olsun.
+
+\begin{keyidea}[Bu derste kullanılan uzlaşım]
+TLB aramasını her erişimde sayarız ve bir ıska fazladan bir bellek erişimine mal olur:
+\[
+\text{EAT} = \alpha\,(t_{\text{TLB}} + t_{m}) + (1-\alpha)\,(t_{\text{TLB}} + 2t_{m}) = t_{\text{TLB}} + (2-\alpha)\,t_{m}.
+\]
+\end{keyidea}
+
+\begin{example}[Etkin erişim süresi]
+$t_{\text{TLB}} = 20$~ns ve $t_{m} = 100$~ns alalım.
+\begin{align*}
+\alpha = 0.80:&\quad \text{EAT} = 0.80 \times 120 + 0.20 \times 220 = 96 + 44 = 140\ \text{ns} &&(t_m\text{'den } \%40\ \text{yavaş}),\\
+\alpha = 0.98:&\quad \text{EAT} = 0.98 \times 120 + 0.02 \times 220 = 117.6 + 4.4 = 122\ \text{ns} &&(\%22\ \text{yavaş}).
+\end{align*}
+Hiç TLB olmasaydı her erişim $2t_{m} = 200$~ns sürerdi. Kısa formülle kontrol: $20 + (2-0.98)\times100 = 122$~ns.
+\end{example}
+
+\paragraph{Modern sadeleştirme.} Günümüz işlemcilerinde TLB araması yaklaşık bir saat çevrimi sürer ve başka işlerle örtüşür; bu yüzden Silberschatz'ın 10.~baskısı onu yok sayar ($t_{\text{TLB}}\approx 0$):
+\[
+\text{EAT} = \alpha\,t_{m} + (1-\alpha)\,2t_{m}.
+\]
+$t_{m} = 100$~ns ile bu, $\alpha = 0.80$ için $120$~ns, $\alpha = 0.99$ için $101$~ns verir (Silberschatz $t_{m}=10$~ns kullanır: $12$~ns ve $10.1$~ns). Sınavda hangi uzlaşımı kullandığınızı mutlaka belirtin. Bu bölümdeki tüm sayılar \texttt{code/verify.py} ile doğrulanmıştır.
+
+\subsection{Koruma bitleri ve geçerli--geçersiz bit}
+\label{sec:protbits}
+
+Bir sayfa tablosu girdisi bir çerçeve numarasından fazlasını içerir. Her girdide saklanan koruma bitleri, MMU tarafından her erişimde çeviriyle paralel olarak denetlenir:
+\begin{itemize}
+  \item Bir \term{geçerli--geçersiz bit} (valid--invalid bit). \emph{Geçerli}, sayfanın sürecin mantıksal adres uzayına ait olduğu; \emph{geçersiz} ise ait olmadığı anlamına gelir ve her erişim işletim sistemine tuzak üretir.
+  \item \textbf{Okuma / yazma / yürütme} (read / write / execute) izinleri. Salt okunur bir sayfaya yazmak ya da yürütme yok olarak işaretlenmiş bir sayfadan komut yürütmeye çalışmak (x86-64'ün NX biti) da tuzak üretir.
+\end{itemize}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}ccccl@{}}
+\toprule
+\textbf{Sayfa} & \textbf{Çerçeve} & \textbf{Geçerli} & \textbf{İzinler} & \textbf{İçerik} \\
+\midrule
+0 & 5 & v & \texttt{r-x} & kod \\
+1 & 9 & v & \texttt{r-x} & kod \\
+2 & 1 & v & \texttt{rw-} & veri \\
+3 & 7 & v & \texttt{rw-} & öbek (heap) \\
+4 & 12 & v & \texttt{rw-} & yığıt (stack) \\
+5--15 & --- & i & --- & sürecin parçası değil \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Tabloda v geçerli, i geçersiz demektir. Bu tabloyla \texttt{0x5000} mantıksal adresi (sayfa $5$) sayfa geçersiz olduğu için tuzağa düşer; $0$.~sayfaya yazmak da kod sayfaları salt okunur olduğu için tuzağa düşer. Aynı \texttt{r}, \texttt{w}, \texttt{x} harfleri, \texttt{/proc/self/maps} çıktısında da görünür (Bölüm~\ref{sec:handson}). Gelecek hafta geçerli biti ikinci bir işlev kazanacak: bir sayfa sürece ait olup şu anda RAM'de olmayabilir (bir \emph{sayfa hatası}, page fault, 7.~hafta).
+
+\subsection{Paylaşılan sayfalar}
+
+Sayfalama kod paylaşımını kolaylaştırır. Kod \term{yeniden girilebilirse} (reentrant; kendini hiç değiştirmiyorsa), fiziksel bellekteki tek bir kopyası birçok sürecin sayfa tablosuna eşlenebilir. Tipik bir örnek C kütüphanesi \texttt{libc}'dir: bir Linux makinesindeki her süreç onu kullanır, ama kod sayfaları RAM'de yalnızca bir kez bulunur. Yalnızca her sürecin özel veri sayfaları ayrıdır.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  pg/.style={rectangle,minimum width=2.1cm,minimum height=0.5cm,font=\footnotesize\bfseries}]
+\foreach \k/\d in {0/8,1/11,2/14} {
+  \node[font=\footnotesize\bfseries] at (\k*2.5,0.55) {Süreç \the\numexpr\k+1\relax};
+  \node[pg,fill=mint] at (\k*2.5,0) {libc 0 $\to$ 3};
+  \node[pg,fill=mint] at (\k*2.5,-0.6) {libc 1 $\to$ 4};
+  \node[pg,fill=mint] at (\k*2.5,-1.2) {libc 2 $\to$ 6};
+  \node[pg,fill=gray!30] at (\k*2.5,-1.8) {veri $\to$ \d};
+}
+\node[font=\footnotesize\bfseries] at (9.3,1.0) {fiziksel çerçeveler};
+\foreach \f in {0,...,15} {
+  \pgfmathsetmacro{\yy}{0.75-\f*0.22}
+  \draw[gray!60] (8.5,\yy) rectangle (10.1,\yy-0.22);
+  \node[font=\tiny,text=muted,anchor=east] at (8.45,\yy-0.11) {\f};
+}
+\foreach \f/\t/\c in {3/libc 0/mint,4/libc 1/mint,6/libc 2/mint,8/veri P1/gray!30,11/veri P2/gray!30,14/veri P3/gray!30} {
+  \pgfmathsetmacro{\yy}{0.75-\f*0.22}
+  \fill[\c] (8.5,\yy) rectangle (10.1,\yy-0.22);
+  \node[font=\tiny\bfseries] at (9.3,\yy-0.11) {\t};
+}
+\end{tikzpicture}
+\caption{Üç süreç C kütüphanesinin üç kod sayfasını paylaşıyor; yalnızca veri sayfaları özel.}
+\end{figure}
+
+$40$ süreç ve $2$~MB'lık bir kütüphaneyle paylaşım $39 \times 2\ \text{MB} = 78$~MB kazandırır. Paylaşılan sayfalar, hiçbir süreç ortak kopyayı değiştiremesin diye salt okunur işaretlenir. Aynı mekanizma \cmd{fork()}'un ebeveyn ile çocuk arasında başlangıçta \emph{bütün} sayfaları paylaştırmasını, bir sayfayı ancak biri ona yazdığında kopyalamasını sağlar (\emph{yazınca kopyala}, copy-on-write, 7.~hafta).
+
+% =====================================================================
+\section{Bölütleme}
+
+\subsection{Belleğe kullanıcının gözüyle bakış}
+
+Programcılar programlarını $4$~KB'lık sayfaların bir dizisi olarak düşünmez. Bir ana program, bir dizi fonksiyon, bir yığıt, bir sembol tablosu, global veriler vb. düşünürler. Bunların her biri farklı boyda mantıksal bir birimdir ve her birimin içindeki konumlar, birimin başından uzaklıklarıyla belirtilir (``\cmd{sqrt()}'nin beşinci komutu'', ``yığıtın tepesi''). \term{Bölütleme} (segmentation) tam olarak bu bakışı destekleyen bir bellek yönetimi yöntemidir: mantıksal adres uzayı \term{bölütlerin} (segment) bir topluluğudur ve bir mantıksal adres bir çifttir:
+\[
+\langle \text{bölüt numarası } s,\ \text{ofset } d \rangle .
+\]
+Bölütleri derleyici oluşturur (örneğin kod, global değişkenler, öbek, her iş parçacığı için bir yığıt, standart C kütüphanesi); yükleyici de her birine fiziksel bellekte bir yer atar.
+
+\subsection{Bölüt tablosu}
+\label{sec:segtable}
+
+Eşleme bir \term{bölüt tablosu} (segment table) ile yapılır. Her girdide bir \term{bölüt tabanı} (segment base; bölütün başladığı fiziksel adres) ve bir \term{bölüt sınırı} (segment limit; bölütün uzunluğu) bulunur. Ofset $d$, $0$ ile sınır arasında olmalıdır; aksi hâlde donanım tuzak üretir:
+\[
+0 \le d < \text{sınır}[s] \text{ ise:}\quad a_{\text{fiz}} = \text{taban}[s] + d;\qquad\text{değilse: tuzak (adresleme hatası).}
+\]
+Başka bir deyişle bölütleme, Bölüm~\ref{sec:mmu}'deki taban--sınır fikrinin \emph{her bölüt için} bir yazmaç çiftiyle uygulanmasıdır.
+
+\begin{example}[Bölüt tablosuyla çeviri]
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}clrrl@{}}
+\toprule
+$s$ & \textbf{Bölüt} & \textbf{Taban} & \textbf{Sınır} & \textbf{Kapladığı alan} \\
+\midrule
+0 & ana program & 2000 & 1200 & 2000--3199 \\
+1 & \texttt{sqrt()} kütüphanesi & 6500 & 300 & 6500--6799 \\
+2 & yığıt & 4800 & 600 & 4800--5399 \\
+3 & sembol tablosu & 3400 & 900 & 3400--4299 \\
+4 & öbek / veri & 5600 & 700 & 5600--6299 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+  \item $\langle 2, 53\rangle$: $53 < 600$, dolayısıyla $a_{\text{fiz}} = 4800 + 53 = 4853$.
+  \item $\langle 3, 852\rangle$: $852 < 900$, dolayısıyla $a_{\text{fiz}} = 3400 + 852 = 4252$.
+  \item $\langle 1, 299\rangle$: $299 < 300$, dolayısıyla $a_{\text{fiz}} = 6500 + 299 = 6799$; 1.~bölütün son baytı.
+  \item $\langle 0, 1222\rangle$: $1222 \ge 1200$: \textbf{tuzak}. Program ana program bölütünün sonunun ötesine erişmeye çalıştı.
+\end{itemize}
+\end{example}
+
+Bölütler anlamı olan birimler olduğundan koruma ve paylaşım anlamlı birim başına ayarlanabilir: kod salt okunur ve paylaşılabilir, yığıt ve veri okunur-yazılır ve özel. Bedeli, bölütlerin değişken boylu olması ve her birinin bitişik olarak tahsis edilmesi gerekmesidir: Bölüm~\ref{sec:contig}'teki sorunlar (yerleştirme, dış parçalanma, sıkıştırma) geri gelir.
+
+\subsection{Sayfalama ve bölütleme}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.6cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+ & \textbf{Sayfalama} & \textbf{Bölütleme} \\
+\midrule
+Birim boyu & sabit (ör.\ $4$~KB), donanım belirler & değişken, programın yapısını izler \\
+Programcı görür mü? & hayır & evet (ana program, yığıt, veri, \dots) \\
+Mantıksal adres & tek sayı, $p \mid d$ olarak bölünür & bir çift $\langle s, d\rangle$ \\
+Dış parçalanma & yok & var \\
+İç parçalanma & var, süreç başına ortalama $\tfrac12$ sayfa & yok \\
+Koruma ve paylaşım & sayfa başına & bölüt (anlamlı birim) başına \\
+Tablo girdisi & çerçeve numarası ve bitler & taban, sınır ve bitler \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{histnote}[Sayfalardan oluşan bölütler]
+Birçok tarihsel sistem iki yöntemi birleştirdi: adres uzayı bölütlere, her bölüt de sayfalara bölünüyordu. Multics (1960'lar, UNIX'in atası) böyle çalışıyordu; Intel 80386 (1985) da öyle: 32 bitlik korumalı kipi bölütlenmiş bir adresi önce ``doğrusal'' (linear) bir adrese çeviriyor, sonra onu sayfalıyordu. Her iki mekanizma da uyumluluk için x86 işlemcilerinde hâlâ bulunur.
+\end{histnote}
+
+\subsection{x86-64 Linux gerçekte ne yapar?}
+\label{sec:x86}
+
+64 bit kipte Intel ve AMD işlemcileri bölütlemeyi fiilen devre dışı bırakır: kod, veri ve yığıt bölütlerinin tabanı zorunlu olarak $0$'dır ve tüm adres uzayını kapsarlar (\emph{düz}, flat, bellek modeli). Yalnızca FS ve GS bölüt yazmaçları sıfırdan farklı bir taban tutar; Linux bunları iş parçacığına özel verileri bulmak için kullanır. Tüm gerçek çeviri ve koruma işini \textbf{sayfalama} yapar:
+\begin{itemize}
+  \item $48$ bitlik sanal adresler için dört düzeyli sayfa tabloları ($9+9+9+9+12$ bit), yeni işlemcilerde beş düzey ($57$ bit);
+  \item $4$~KB, $2$~MB ve $1$~GB'lık sayfa boyları;
+  \item süreç başına bir sayfa tablosu takımı; \texttt{CR3} yazmacı en üst düzey tablonun fiziksel adresini tutar ve bir bağlam değişimi (3.~hafta) onu yeniden yükler.
+\end{itemize}
+ARM64 işlemcilerinde (telefonlar, Apple M serisi) bölütleme hiç yoktur. Bölüt \emph{fikri} yazılımda yaşamaya devam eder: Linux her süreç için bir bellek bölgeleri listesi (program kodu, veri, öbek, yığıt, her paylaşılan kütüphane) tutar ve \texttt{/proc/<pid>/maps} tam olarak bunu yazdırır. \emph{Segmentation fault} (bölütleme hatası) iletisi bir ad olarak yaşıyor; ama Linux'ta artık bu bölgelerin dışına bir erişimi ya da sayfa izinlerinin ihlalini bildirir.
+
+% =====================================================================
+\section{Uygulama: Linux'ta Gerçek Adresler}
+\label{sec:handson}
+
+Programlar bu notların yanındaki \texttt{code/} klasöründedir ve \cmd{gcc -Wall -O2} ile (ya da kısaca \cmd{make} ile) derlenir. Aşağıdaki tüm çıktılar Linux test makinemizde (x86-64) yakalanmıştır. Linux bölgelerin konumunu her çalıştırmada rastgele değiştirdiği için (\term{ASLR}, address-space layout randomisation, adres uzayı düzeninin rastgeleleştirilmesi; bir güvenlik önlemi) sizin adresleriniz farklı olacaktır, ama örüntü aynı kalır. Programların yorumları ve çıktıları İngilizcedir.
+
+\subsection{Örnek 1: değişkenlerim nerede duruyor?}
+
+Yardımcı fonksiyon \cmd{show\_maps()} (tam dosya için bkz.\ \texttt{code/mem\_layout.c}), \texttt{/proc/self/maps} satırlarından program dosyasına, öbeğe ve yığıta ait olanları yazdırır. Programın geri kalanı:
+
+\lstinputlisting[caption={},firstline=15,lastline=17,firstnumber=15]{../code/mem_layout.c}
+\vspace{-0.6em}
+\lstinputlisting[caption={},firstline=37,firstnumber=37]{../code/mem_layout.c}
+
+\begin{lstlisting}[style=term]
+$ ./mem_layout
+text  (code)   main()      : 0x56412f3601e0
+data  (global) initialised : 0x56412f363010
+bss   (global) zero-filled : 0x56412f363018
+heap  (malloc)             : 0x564160c6c2a0
+stack (local variable)     : 0x7ffe905b48c4
+page size                  : 4096 bytes
+
+--- my regions in /proc/self/maps ---
+56412f35f000-56412f360000 r--p mem_layout
+56412f360000-56412f361000 r-xp mem_layout
+56412f361000-56412f362000 r--p mem_layout
+56412f362000-56412f363000 r--p mem_layout
+56412f363000-56412f364000 rw-p mem_layout
+564160c6c000-564160c8d000 rw-p [heap]
+7ffe90595000-7ffe905bb000 rw-p [stack]
+\end{lstlisting}
+
+Her adresi bir bölgeyle eşleştirin: \cmd{main} ($\texttt{0x\dots3601e0}$) program dosyasının \texttt{r-xp} bölgesindedir (okunabilir ve yürütülebilir, yazılamaz: kod); iki global değişken \texttt{rw-p} bölgesindedir; \cmd{malloc} bloğu \texttt{[heap]} içindedir; yerel değişken ise kullanıcı adres uzayının tepesine yakın, \texttt{[stack]} içindedir. Her bölge $\texttt{0x1000} = 4096$'nın bir katında başlar ve biter: bölgeler tam sayfalardan oluşur. Yığın bölgesi $\texttt{0x564160c8d000} - \texttt{0x564160c6c000} = \texttt{0x21000} = 135\,168$ bayt $= 33$ sayfa; yığıt bölgesi $\texttt{0x26000} = 155\,648$ bayt $= 38$ sayfadır.
+
+\Needspace{10\baselineskip}
+\subsection{Kabuktan sayfa boyu ve bellek haritası}
+
+\begin{lstlisting}[style=term]
+$ getconf PAGESIZE
+4096
+$ grep Hugepagesize /proc/meminfo
+Hugepagesize:       2048 kB
+$ head -n 6 /proc/self/maps
+559948881000-559948883000 r--p 00000000 fe:00 270606   /usr/bin/head
+559948883000-559948889000 r-xp 00002000 fe:00 270606   /usr/bin/head
+559948889000-55994888b000 r--p 00008000 fe:00 270606   /usr/bin/head
+55994888b000-55994888c000 r--p 00009000 fe:00 270606   /usr/bin/head
+55994888c000-55994888d000 rw-p 0000a000 fe:00 270606   /usr/bin/head
+559970df7000-559970e18000 rw-p 00000000 00:00 0        [heap]
+\end{lstlisting}
+
+\texttt{/proc/self} her zaman onu okuyan süreci gösterir; burada \cmd{head}'in kendisini. Sütunlar şunlardır: sanal başlangıç--bitiş adresi, izinler (\texttt{r}, \texttt{w}, \texttt{x} ve özel için \texttt{p} ya da paylaşılan için \texttt{s}), dosya içindeki ofset, aygıt, inode ve dosya adı. Örneğin \cmd{head}'in kod bölgesi $\texttt{0x559948889000} - \texttt{0x559948883000} = \texttt{0x6000} = 24\,576$ bayt $= 6$ sayfa yer kaplar. (Son sütundaki boşluklar kısaltıldı.)
+
+\Needspace{10\baselineskip}
+\subsection{Örnek 2: aynı adres, farklı değerler}
+
+\lstinputlisting[caption={},firstline=9,firstnumber=9]{../code/fork_vaddr.c}
+
+\begin{lstlisting}[style=term]
+$ ./fork_vaddr
+child  (PID 1760): &x = 0x55bc4a29c010   x = 200
+parent (PID 1759): &x = 0x55bc4a29c010   x = 100
+\end{lstlisting}
+
+\cmd{fork()}'tan sonra çocuk ebeveynin bir kopyasıdır; bu yüzden ikisinin düzeni aynıdır ve \cmd{\&x} ikisinde de aynı sayıdır. Yine de çocuk \cmd{x}'i $200$ yaptı ve ebeveyn hâlâ $100$ görüyor. \cmd{\&x} fiziksel bir adres olsaydı bu imkânsız olurdu: RAM'in tek bir baytı iki farklı değer tutamaz. Adres \emph{mantıksaldır}; her sürecin kendi sayfa tablosu vardır ve bu tablo \cmd{x}'i içeren sayfayı farklı bir fiziksel çerçeveye eşler. (Daha kesin söylersek: \cmd{fork()}'tan hemen sonra iki sayfa tablosu da salt okunur işaretlenmiş aynı çerçeveyi gösterir; çocuk yazdığında çekirdek sayfayı kopyalar ve çocuğun girdisini günceller. Bu yazınca kopyala tekniği 7.~haftanın konusudur.) Programı birkaç kez çalıştırın: ASLR yüzünden adres her çalıştırmada değişir, ama ebeveyn ve çocuk her zaman aynı adresi görür.
+
+\Needspace{10\baselineskip}
+\subsection{Örnek 3: bit işlemleriyle sayfa numarası ve ofset}
+
+\lstinputlisting[caption={},firstline=13,firstnumber=13]{../code/page_split.c}
+
+\begin{lstlisting}[style=term]
+$ ./page_split 0x3A7F 0x1234 0x5000 0x0000
+page size = 4096 bytes, offset mask = 0xFFF
+
+0x3A7F (14975): p =  3, d = 0xA7F (2687) -> frame  7 -> 0x7A7F (31359)
+0x1234 ( 4660): p =  1, d = 0x234 ( 564) -> frame  9 -> 0x9234 (37428)
+0x5000 (20480): p =  5, d = 0x000 (   0) -> invalid: trap to OS
+0x0000 (    0): p =  0, d = 0x000 (   0) -> frame  5 -> 0x5000 (20480)
+\end{lstlisting}
+
+Program, MMU'nun donanımda yaptığını yazılımda yapar: $p$'yi elde etmek için $12$ bit sağa kaydırır, $d$'yi elde etmek için \texttt{0xFFF} ile VE işlemi uygular, çerçeveyi tabloda bulur ve \texttt{(f << 12) | d} ile birleştirir. Sonuçlar çözümlü örnekle örtüşür.
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Sekiz cümlede 6. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item İşletim sistemi RAM'i birçok sürece tahsis etmeli, onları birbirinden korumalı ve yer değiştirmeye izin vermelidir; korumayı donanım yapmalıdır.
+  \item Adres bağlama derleme, yükleme ya da yürütme zamanında yapılabilir; modern sistemler yürütme zamanında bağlar, dolayısıyla mantıksal (sanal) ve fiziksel adresler farklıdır ve aralarındaki çeviriyi MMU yapar.
+  \item En basit MMU $0 \le a < \text{sınır}$ koşulunu denetler ve bir taban (yer değiştirme) yazmacı ekler; denetim başarısız olursa tuzak üretilir.
+  \item Bütün süreçlerin takası saniyeler sürer ($50$~MB/s hızla $100$~MB: her yön için $2$~s); bu yüzden modern sistemler bunun yerine sayfaları takas eder.
+  \item İlk, en iyi ya da en kötü uyanla bitişik tahsis dış parçalanmadan muzdariptir (\%50 kuralı: belleğin üçte birine kadarı kaybolabilir); sıkıştırma yardımcı olur ama pahalıdır.
+  \item Sayfalama belleği eşit sayfalara ve çerçevelere böler; bir adres $p$ (üst bitler) ve $d$ (alt bitler) olarak bölünür; dış parçalanma yoktur, yalnızca süreç başına ortalama yarım sayfalık iç parçalanma vardır.
+  \item Sayfa tabloları büyüktür ($32$ bitlik adreslerde süreç başına $4$~MB), bu yüzden çok düzeyli tablolar kullanılır; TLB çevirileri önbellekte tutar ve bizim uzlaşımımızla $\text{EAT} = t_{\text{TLB}} + (2-\alpha)\,t_{m}$'dir.
+  \item Bölütleme $\langle s, d\rangle$ adresini bölüt başına bir taban ve sınırla çevirir; x86-64 Linux düz bölütler kullanır ve tüm işi sayfalamayla yapar.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Sözlük}
+
+\begin{description}[leftmargin=0pt,style=nextline,itemsep=0.2em]
+  \item[Adres bağlama (address binding)] Sembolik adları adreslere eşlemek; derleme, yükleme ya da yürütme zamanında yapılır.
+  \item[Bellek yönetim birimi (MMU)] Mantıksal adresleri fiziksel adreslere çeviren ve korumayı denetleyen donanım.
+  \item[Bölüt (segment)] Bir programın değişken boylu mantıksal birimi (kod, yığıt, veri, \dots).
+  \item[Bölüt tablosu (segment table)] Her bölüt için bir (taban, sınır) çiftinden oluşan tablo.
+  \item[Çerçeve (frame)] Fiziksel belleğin sabit boyutlu bir bloğu.
+  \item[Delik (hole)] Tahsis edilmiş bloklar arasındaki boş bellek bloğu.
+  \item[Dış parçalanma (external fragmentation)] Boş belleğin, her biri kullanılamayacak kadar küçük deliklere bölünmüş olması.
+  \item[Etkin erişim süresi (effective access time, EAT)] TLB isabetleri ve ıskaları hesaba katılarak bir bellek erişiminin ortalama süresi.
+  \item[Fiziksel adres (physical address)] Bellek donanımının gördüğü adres.
+  \item[Geçerli--geçersiz bit (valid--invalid bit)] Bir sayfanın sürecin adres uzayına ait olup olmadığını gösteren sayfa tablosu biti.
+  \item[İç parçalanma (internal fragmentation)] Bir bloğun içinde tahsis edilmiş ama kullanılmayan bellek (ör.\ bir sürecin son sayfasının sonu).
+  \item[İlk uyan / en iyi uyan / en kötü uyan (first-fit / best-fit / worst-fit)] Yeterince büyük ilk / en küçük / en büyük deliği tahsis etmek.
+  \item[Mantıksal (sanal) adres (logical / virtual address)] İşlemcinin ürettiği ve programın gördüğü adres.
+  \item[Sayfa (page)] Mantıksal belleğin, bir çerçeveyle aynı boydaki sabit boyutlu bloğu.
+  \item[Sayfa tablosu (page table)] Sayfa numaralarını çerçeve numaralarına eşleyen, geçerli ve koruma bitleri de taşıyan süreç başına tablo.
+  \item[Sınır yazmacı (limit register)] Sürecin mantıksal adres uzayının boyunu tutar; sınıra eşit ya da büyük adresler tuzak üretir.
+  \item[Sıkıştırma (compaction)] Tahsis edilmiş blokları bir araya taşıyarak boş belleği tek bir blokta toplamak.
+  \item[Taban (yer değiştirme) yazmacı (base / relocation register)] Sürecin fiziksel başlangıç adresini tutar; her mantıksal adrese eklenir.
+  \item[Takas (swapping)] Bir süreci (ya da bugün, bir sayfayı) ana bellek ile yardımcı bellek arasında taşımak.
+  \item[TLB (translation look-aside buffer, çeviri önbelleği)] Sayfa tablosu girdilerini tutan küçük, hızlı, ilişkisel önbellek.
+  \item[Yardımcı bellek (backing store)] Takas edilen belleği tutan hızlı ikincil depolama.
+\end{description}
+
+% =====================================================================
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Kendi makinenizde belleği keşfedin]
+\textbf{Linux} (laboratuvar bilgisayarları, WSL ya da bir sanal makine):
+\begin{lstlisting}[style=term]
+$ getconf PAGESIZE            # bayt olarak sayfa boyu
+$ cat /proc/self/maps         # cat'in kendi bellek haritası
+$ make && ./mem_layout && ./mem_layout   # iki kez çalıştırın: ASLR
+$ free -h                     # kullanılan RAM ve takas alanı
+$ cat /proc/swaps             # takas alanları
+$ vmstat 1 5                  # si/so = saniyede içeri/dışarı takas
+\end{lstlisting}
+\color{black}\textbf{Windows:} Görev Yöneticisi $\to$ \emph{Performans} $\to$ \emph{Bellek} ekranı ``Kullanımda'', ``Kaydedildi'' ve ``Disk belleğine alınan havuz'' değerlerini gösterir (adlar sürüme göre biraz değişebilir); \cmd{systeminfo} komutu disk belleği dosyasının (Windows'un takas alanı) boyunu yazdırır.
+\begin{enumerate}[leftmargin=1.4em]
+  \item Makinenizde sayfa boyu ne kadar? (Apple silicon işlemcili bir Mac'te \cmd{getconf PAGESIZE} $16384$ yazdırır.)
+  \item \cmd{cat}'in \texttt{[stack]} bölgesi kaç sayfa büyüklüğünde?
+  \item \cmd{mem\_layout}'un yazdırdığı adresler çalıştırmalar arasında değişiyor mu? Bu, saldırıları neden zorlaştırır?
+  \item Makineniz şu anda takas alanı kullanıyor mu? Ne kadar?
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item Adres bağlamanın yapılabileceği üç zamanı sayın. Hangisi özel donanım gerektirir ve modern sistemler neden onu kullanır?
+  \item Mantıksal adres ile fiziksel adres arasındaki fark nedir? Hangisini kim görür?
+  \item Taban ve sınır yazmaçlarının süreçleri birbirinden nasıl koruduğunu açıklayın. Bu yazmaçları yüklemek neden ayrıcalıklı bir komut olmalıdır?
+  \item Modern işletim sistemleri neden bütün süreçleri takas etmez?
+  \item İlk uyan, en iyi uyan ve en kötü uyanı açıklayın. Hangisi genellikle en hızlıdır? Hangisi çok küçük delikler bırakma eğilimindedir?
+  \item Dış ve iç parçalanmayı tanımlayın ve her birine bir örnek verin. Sayfalama hangisini ortadan kaldırır?
+  \item \%50 kuralını ifade edin. Belleğin ne kadarı kullanılamaz hâle gelebilir?
+  \item Sayfa boyu neden 2'nin bir kuvveti olmalıdır?
+  \item TLB hangi sorunu çözer? TLB isabet oranları neden genellikle bu kadar yüksektir?
+  \item Geçerli--geçersiz bit ne için kullanılır? Tuzağa düşecek bir erişim örneği verin.
+  \item Kod sayfaları neden süreçler arasında paylaşılabilir de veri sayfaları normalde paylaşılamaz?
+  \item Sayfalama ile bölütlemeyi üç açıdan karşılaştırın. x86-64 Linux hangisini kullanır?
+  \item \cmd{fork\_vaddr}'da ebeveyn ve çocuk aynı adresi ama farklı değerleri yazdırıyor. Açıklayın.
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item Taban $=$ \texttt{0x2000}, sınır $=$ \texttt{0x0800}. \texttt{0x07FF}, \texttt{0x0800} ve \texttt{0x0123} mantıksal adreslerini çevirin. Geçerli fiziksel aralığı verin.
+  \item $250$~MB'lık bir süreç dışarı, $150$~MB'lık bir başkası içeri takas ediliyor; disk $100$~MB/s aktarıyor. Takas ne kadar sürer (gecikmeyi yok sayın)?
+  \item Delikler (bu sırayla) $100$, $500$, $200$, $300$, $600$~KB. İstekler: $212$, $417$, $112$, $426$~KB. İlk uyan, en iyi uyan ve en kötü uyanı uygulayın. Hangi istekler karşılanamaz?
+  \item Sayfalar $4$~KB, adresler $16$ bit, sayfa tablosu $0\to5$, $1\to9$, $2\to1$, $3\to7$, $4\to12$. \texttt{0x2ABC} ve \texttt{0x4010}'u çevirin. \texttt{0x5C21}'i $p$ ve $d$ olarak bölün.
+  \item Bir sürecin $72\,766$ bayta ihtiyacı var; sayfalar $2048$ bayt. Süreç kaç çerçeve alır ve ne kadar iç parçalanma oluşur?
+  \item Mantıksal adresler $32$ bit, sayfalar $8$~KB ve sayfa tablosu girdileri $4$ bayt. Düz bir sayfa tablosunda kaç girdi vardır ve tablo ne kadar büyüktür?
+  \item $t_{\text{TLB}} = 20$~ns, $t_{m} = 100$~ns, $\alpha = 0.90$. EAT'yi bizim uzlaşımımızla ve $t_{\text{TLB}} = 0$ sadeleştirmesiyle hesaplayın. $125$~ns'lik bir EAT için (bizim uzlaşımımızla) hangi isabet oranı gerekir?
+  \item Bölüm~\ref{sec:segtable}'teki bölüt tablosunu kullanarak $\langle 4, 699\rangle$, $\langle 4, 700\rangle$ ve $\langle 3, 0\rangle$ adreslerini çevirin.
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=14]
+  \item \texttt{0x07FF} $<$ \texttt{0x0800} $\Rightarrow$ \texttt{0x27FF}; \texttt{0x0800} sınırdan küçük değil $\Rightarrow$ tuzak; \texttt{0x0123} $\Rightarrow$ \texttt{0x2123}. Geçerli fiziksel aralık \texttt{0x2000}--\texttt{0x27FF}.
+  \item $250/100 + 150/100 = 2.5 + 1.5 = 4$~s.
+  \item İlk uyan: $212\to500$ (kalan $288$), $417\to600$ (kalan $183$), $112\to288$ (kalan $176$), $426$ beklemek zorunda. En iyi uyan: $212\to300$, $417\to500$, $112\to200$, $426\to600$: hepsi sığar. En kötü uyan: $212\to600$ (kalan $388$), $417\to500$, $112\to388$, $426$ beklemek zorunda.
+  \item \texttt{0x2ABC}: $p=2$, $d=\texttt{0xABC}$, çerçeve $1$ $\Rightarrow$ \texttt{0x1ABC} $= 6844$. \texttt{0x4010}: $p=4$, $d=\texttt{0x010}$, çerçeve $12$ $\Rightarrow$ \texttt{0xC010} $= 49168$. \texttt{0x5C21}: $p=5$, $d=\texttt{0xC21} = 3105$.
+  \item $72\,766 = 35 \times 2048 + 1086$, dolayısıyla $36$ çerçeve; iç parçalanma $2048 - 1086 = 962$ bayt.
+  \item $2^{32}/2^{13} = 2^{19} = 524\,288$ girdi; $2^{19}\times 4\ \text{B} = 2^{21}\ \text{B} = 2$~MB.
+  \item Bizim uzlaşımımız: $20 + (2-0.9)\times100 = 130$~ns ($= 0.9\times120 + 0.1\times220 = 108 + 22$). Sadeleştirilmiş: $0.9\times100 + 0.1\times200 = 110$~ns. $125$~ns için: $20 + (2-\alpha)\,100 = 125 \Rightarrow \alpha = 0.95$.
+  \item $\langle 4, 699\rangle$: $699 < 700 \Rightarrow 5600 + 699 = 6299$. $\langle 4, 700\rangle$: $700 \ge 700 \Rightarrow$ tuzak. $\langle 3, 0\rangle$: $3400$.
+\end{enumerate}
+
+% =====================================================================
+\section{İleriye Bakış: 7. Hafta}
+
+\begin{itemize}
+  \item Sanal bellek: bir sürecin tamamen RAM'de olması gerekmez; isteğe bağlı sayfalama (demand paging) ve sayfa hataları (page fault).
+  \item \cmd{fork()}'tan sonra yazınca kopyala (copy-on-write).
+  \item Sayfa değiştirme algoritmaları: FIFO, en iyi (optimal, OPT) ve LRU; boşa çalışma (thrashing).
+  \item Dosya sistemleri: dosya kavramı, erişim yöntemleri ve dizin yapıları.
+\end{itemize}
+7.~hafta, 1--7.~haftaları kapsayan 8.~hafta ara sınavından önceki son derstir.
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley, Bölüm~9 (Main Memory).
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}, ücretsiz çevrim içi bölümler:
+  \begin{itemize}
+    \item \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-intro.pdf} (Bölüm~13, adres uzayları)
+    \item \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-mechanism.pdf} (Bölüm~15, taban ve sınır)
+    \item \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-segmentation.pdf} (Bölüm~16, bölütleme)
+    \item \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-freespace.pdf} (Bölüm~17, boş alan yönetimi)
+    \item \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf} (Bölüm~18, sayfalama)
+    \item \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-tlbs.pdf} (Bölüm~19, TLB'ler)
+    \item \url{https://pages.cs.wisc.edu/~remzi/OSTEP/vm-smalltables.pdf} (Bölüm~20, daha küçük sayfa tabloları)
+  \end{itemize}
+\end{itemize}
+
+\end{document}

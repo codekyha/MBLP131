@@ -1,0 +1,28 @@
+student@okan-lab:~/lab$ nice
+0
+student@okan-lab:~/lab$ nice -n 10 yes > /dev/null &
+[1] 2971
+student@okan-lab:~/lab$ ps -o pid,ni,stat,cmd
+  PID  NI STAT CMD
+ 2914   0 Ss   -bash
+ 2971  10 RN   yes
+ 2972   0 R+   ps -o pid,ni,stat,cmd
+student@okan-lab:~/lab$ renice -n 15 -p $!
+2971 (process ID) old priority 10, new priority 15
+student@okan-lab:~/lab$ renice -n 5 -p $!
+renice: failed to set priority for 2971 (process ID): Permission denied
+student@okan-lab:~/lab$ nice -n -5 sleep 1
+nice: cannot set niceness: Permission denied
+student@okan-lab:~/lab$ kill %1
+student@okan-lab:~/lab$ taskset -c 1 yes > /dev/null &
+[2] 2976
+[1]   Terminated              nice -n 10 yes > /dev/null
+student@okan-lab:~/lab$ taskset -c 1 nice -n 10 yes > /dev/null &
+[3] 2977
+student@okan-lab:~/lab$ ps -o pid,ni,stat,%cpu,cmd
+  PID  NI STAT %CPU CMD
+ 2914   0 Ss    0.0 -bash
+ 2976   0 R    89.3 yes
+ 2977  10 RN    9.6 yes
+ 2978   0 R+    0.0 ps -o pid,ni,stat,%cpu,cmd
+student@okan-lab:~/lab$ kill %2 %3

@@ -1,0 +1,18 @@
+student@okan-lab:~$ cd ~/lab
+student@okan-lab:~/lab$ strace -e trace=execve,getdents64,write ls docs > /dev/null
+execve("/usr/bin/ls", ["ls", "docs"], 0x7ffc5b53bce8 /* 13 vars */) = 0
+getdents64(3, 0x55fd38daa8e0 /* 9 entries */, 32768) = 288
+getdents64(3, 0x55fd38daa8e0 /* 0 entries */, 32768) = 0
+write(1, "final report.txt\nlinux_quotes.tx"..., 86) = 86
++++ exited with 0 +++
+student@okan-lab:~/lab$ /bin/pwd
+/home/student/lab
+student@okan-lab:~/lab$ strace -e trace=getcwd /bin/pwd
+getcwd("/home/student/lab", 4096)       = 18
+/home/student/lab
++++ exited with 0 +++
+student@okan-lab:~/lab$ strace -e trace=chdir bash -c 'cd /tmp'
+chdir("/tmp")                           = 0
++++ exited with 0 +++
+student@okan-lab:~/lab$ pwd
+/home/student/lab

@@ -1,0 +1,2 @@
+student@okan-lab:~/lab$ sort data/cities.txt | uniq -c | sort -rn | head -1
+      6 Antalya

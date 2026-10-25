@@ -1,0 +1,11 @@
+student@okan-lab:~/lab$ pwd
+/home/student/lab
+student@okan-lab:~/lab$ ls
+README.txt  backup  data  docs  logs  photos  projects  scripts  src
+student@okan-lab:~/lab$ cd projects/alpha/src
+student@okan-lab:~/lab/projects/alpha/src$ pwd
+/home/student/lab/projects/alpha/src
+student@okan-lab:~/lab/projects/alpha/src$ cd ../../beta/docs
+student@okan-lab:~/lab/projects/beta/docs$ pwd
+/home/student/lab/projects/beta/docs
+student@okan-lab:~/lab/projects/beta/docs$ cd ~/lab

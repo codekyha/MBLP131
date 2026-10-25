@@ -1,0 +1,4 @@
+student@okan-lab:~/lab$ cd projects/alpha/src
+student@okan-lab:~/lab/projects/alpha/src$ cd ../../beta/docs
+student@okan-lab:~/lab/projects/beta/docs$ pwd
+/home/student/lab/projects/beta/docs

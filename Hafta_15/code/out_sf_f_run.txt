@@ -1,0 +1,9 @@
+student@okan-lab:~/lab$ chmod +x scripts/passfail.sh
+student@okan-lab:~/lab$ ./scripts/passfail.sh 50
+threshold 50: 30 passed, 10 failed
+student@okan-lab:~/lab$ ./scripts/passfail.sh 90
+threshold 90: 7 passed, 33 failed
+student@okan-lab:~/lab$ ./scripts/passfail.sh
+usage: ./scripts/passfail.sh THRESHOLD
+student@okan-lab:~/lab$ echo $?
+1

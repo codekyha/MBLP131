@@ -1,0 +1,20 @@
+student@okan-lab:~/lab$ whoami
+student
+student@okan-lab:~/lab$ id
+uid=1011(student) gid=1013(student) groups=1013(student)
+student@okan-lab:~/lab$ groups
+student
+student@okan-lab:~/lab$ grep "^root:" /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+student@okan-lab:~/lab$ grep "^$USER:" /etc/passwd
+student:x:1011:1013::/home/student:/bin/bash
+student@okan-lab:~/lab$ grep "^$USER:" /etc/group
+student:x:1013:
+student@okan-lab:~/lab$ getent group students
+students:x:1010:
+student@okan-lab:~/lab$ ls -l /etc/passwd /etc/group /etc/shadow
+-rw-r--r-- 1 root root    809 Oct 12 11:50 /etc/group
+-rw-r--r-- 1 root root   1598 Oct 12 11:50 /etc/passwd
+-rw-r----- 1 root shadow  884 Oct 12 11:50 /etc/shadow
+student@okan-lab:~/lab$ cat /etc/shadow
+cat: /etc/shadow: Permission denied

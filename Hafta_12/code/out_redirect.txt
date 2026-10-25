@@ -1,0 +1,44 @@
+student@okan-lab:~/lab$ echo "first line" > notes.txt
+student@okan-lab:~/lab$ cat notes.txt
+first line
+student@okan-lab:~/lab$ echo "second line" >> notes.txt
+student@okan-lab:~/lab$ cat notes.txt
+first line
+second line
+student@okan-lab:~/lab$ echo "oops" > notes.txt
+student@okan-lab:~/lab$ cat notes.txt
+oops
+student@okan-lab:~/lab$ wc -l logs/access.log
+300 logs/access.log
+student@okan-lab:~/lab$ wc -l < logs/access.log
+300
+student@okan-lab:~/lab$ ls data nosuch > out.txt
+ls: cannot access 'nosuch': No such file or directory
+student@okan-lab:~/lab$ cat out.txt
+data:
+cities.txt
+numbers.txt
+students.csv
+student@okan-lab:~/lab$ ls data nosuch 2> err.txt
+data:
+cities.txt  numbers.txt  students.csv
+student@okan-lab:~/lab$ cat err.txt
+ls: cannot access 'nosuch': No such file or directory
+student@okan-lab:~/lab$ ls data nosuch > all.txt 2>&1
+student@okan-lab:~/lab$ cat all.txt
+ls: cannot access 'nosuch': No such file or directory
+data:
+cities.txt
+numbers.txt
+students.csv
+student@okan-lab:~/lab$ ls data nosuch 2>&1 > out2.txt
+ls: cannot access 'nosuch': No such file or directory
+student@okan-lab:~/lab$ cat out2.txt
+data:
+cities.txt
+numbers.txt
+students.csv
+student@okan-lab:~/lab$ ls data nosuch &> all.txt
+student@okan-lab:~/lab$ ls data nosuch 2> /dev/null
+data:
+cities.txt  numbers.txt  students.csv

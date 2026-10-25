@@ -1,0 +1,18 @@
+student@okan-lab:~/lab$ head -n 2 logs/access.log
+10.0.1.10 - - [12/Oct/2026:08:00:00 +0300] "GET /about.html HTTP/1.1" 404 442
+10.0.1.10 - - [12/Oct/2026:08:07:13 +0300] "GET /api/grades HTTP/1.1" 200 3235
+student@okan-lab:~/lab$ tail -n 2 logs/system.log
+2026-10-12 14:38:00 INFO  backup finished
+2026-10-12 14:49:00 INFO  network link up
+student@okan-lab:~/lab$ tail -n +2 data/students.csv | head -n 2
+2026001,Elif Yilmaz,ECT,96,99
+2026002,Zeynep Dogan,ME,95,36
+student@okan-lab:~/lab$ head -n 120 logs/access.log | tail -n 1
+10.0.3.24 - - [12/Oct/2026:12:53:47 +0300] "GET /index.html HTTP/1.1" 404 4270
+student@okan-lab:~/lab$ grep " 500 " logs/access.log | tee errors_500.txt | wc -l
+24
+student@okan-lab:~/lab$ head -n 2 errors_500.txt
+10.0.5.38 - - [12/Oct/2026:08:14:26 +0300] "GET /index.html HTTP/1.1" 500 4583
+10.0.5.38 - - [12/Oct/2026:08:21:39 +0300] "GET /images/logo.png HTTP/1.1" 500 4233
+student@okan-lab:~/lab$ wc -l errors_500.txt
+24 errors_500.txt

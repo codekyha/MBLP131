@@ -1,0 +1,20 @@
+student@okan-lab:~/lab$ ls docs
+'final report.txt'   notes_01.txt   notes_03.txt
+ linux_quotes.txt    notes_02.txt   syllabus.txt
+student@okan-lab:~/lab$ cat docs/final report.txt
+cat: docs/final: No such file or directory
+cat: report.txt: No such file or directory
+student@okan-lab:~/lab$ cat "docs/final report.txt"
+Final report draft.
+This file name contains a space.
+student@okan-lab:~/lab$ cat 'docs/final report.txt'
+Final report draft.
+This file name contains a space.
+student@okan-lab:~/lab$ cat docs/final\ report.txt
+Final report draft.
+This file name contains a space.
+student@okan-lab:~/lab$ mkdir my photos
+mkdir: cannot create directory ‘photos’: File exists
+student@okan-lab:~/lab$ mkdir "my photos"
+student@okan-lab:~/lab$ ls -d my*
+ my  'my photos'

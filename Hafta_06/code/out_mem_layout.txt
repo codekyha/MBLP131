@@ -1,0 +1,15 @@
+text  (code)   main()      : 0x56412f3601e0
+data  (global) initialised : 0x56412f363010
+bss   (global) zero-filled : 0x56412f363018
+heap  (malloc)             : 0x564160c6c2a0
+stack (local variable)     : 0x7ffe905b48c4
+page size                  : 4096 bytes
+
+--- my regions in /proc/self/maps ---
+56412f35f000-56412f360000 r--p mem_layout
+56412f360000-56412f361000 r-xp mem_layout
+56412f361000-56412f362000 r--p mem_layout
+56412f362000-56412f363000 r--p mem_layout
+56412f363000-56412f364000 rw-p mem_layout
+564160c6c000-564160c8d000 rw-p [heap]
+7ffe90595000-7ffe905bb000 rw-p [stack]

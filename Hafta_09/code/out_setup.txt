@@ -1,0 +1,12 @@
+student@okan-lab:~$ cd
+student@okan-lab:~$ pwd
+/home/student
+student@okan-lab:~$ ls
+lab  mcmp117_lab_setup.sh
+student@okan-lab:~$ bash mcmp117_lab_setup.sh
+Lab folder ready: /home/student/lab
+README.txt  backup  data  docs  logs  photos  projects  scripts  src
+student@okan-lab:~$ ls
+lab  mcmp117_lab_setup.sh
+student@okan-lab:~$ ls lab
+README.txt  backup  data  docs  logs  photos  projects  scripts  src

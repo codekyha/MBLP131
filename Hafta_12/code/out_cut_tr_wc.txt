@@ -1,0 +1,38 @@
+student@okan-lab:~/lab$ head -n 3 data/students.csv | cut -d, -f2
+name
+Elif Yilmaz
+Zeynep Dogan
+student@okan-lab:~/lab$ head -n 3 data/students.csv | cut -d, -f2,5
+name,final
+Elif Yilmaz,99
+Zeynep Dogan,36
+student@okan-lab:~/lab$ head -n 2 logs/access.log | cut -d" " -f1,7,9
+10.0.1.10 /about.html 404
+10.0.1.10 /api/grades 200
+student@okan-lab:~/lab$ head -n 3 logs/system.log | cut -c12-16
+09:00
+09:11
+09:22
+student@okan-lab:~/lab$ head -n 3 logs/system.log | cut -d" " -f4
+
+
+
+student@okan-lab:~/lab$ head -n 3 logs/system.log | tr -s " " | cut -d" " -f4-
+network link up
+high memory usage
+high memory usage
+student@okan-lab:~/lab$ wc logs/system.log
+ 120  669 5207 logs/system.log
+student@okan-lab:~/lab$ wc -l data/*
+  30 data/cities.txt
+  20 data/numbers.txt
+  41 data/students.csv
+  91 total
+student@okan-lab:~/lab$ head -n 2 docs/linux_quotes.txt | tr a-z A-Z
+TALK IS CHEAP. SHOW ME THE CODE.
+GIVEN ENOUGH EYEBALLS, ALL BUGS ARE SHALLOW.
+student@okan-lab:~/lab$ head -n 2 data/students.csv | tr "," ";"
+id;name;department;midterm;final
+2026001;Elif Yilmaz;ECT;96;99
+student@okan-lab:~/lab$ echo "Hello, World!" | tr -d ",!"
+Hello World

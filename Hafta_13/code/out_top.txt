@@ -1,0 +1,24 @@
+student@okan-lab:~/lab$ yes > /dev/null &
+[1] 2260
+student@okan-lab:~/lab$ sleep 200 &
+[2] 2261
+student@okan-lab:~/lab$ cat /proc/loadavg
+0.59 0.34 0.23 3/98 2262
+student@okan-lab:~/lab$ nproc
+2
+student@okan-lab:~/lab$ top -b -n 1 -u student | head -15
+top - 16:58:44 up 41 min,  0 user,  load average: 0.59, 0.34, 0.23
+Tasks:  71 total,   2 running,  69 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 28.6 us, 23.8 sy,  0.0 ni, 42.9 id,  0.0 wa,  0.0 hi,  0.0 si,  4.8 st 
+MiB Mem :   8029.6 total,   7294.2 free,    598.8 used,    357.6 buff/cache     
+MiB Swap:      0.0 total,      0.0 free,      0.0 used.   7430.8 avail Mem 
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+ 2260 student   20   0    3132   1876   1760 R 100.0   0.0   0:30.83 yes
+ 2204 student   20   0    8436   7528   3552 S   0.0   0.1   0:00.01 bash
+ 2261 student   20   0    3132   2004   1892 S   0.0   0.0   0:00.00 sleep
+ 2264 student   20   0    9380   5436   3308 R   0.0   0.1   0:00.00 top
+ 2265 student   20   0    3144   1956   1840 S   0.0   0.0   0:00.00 head
+student@okan-lab:~/lab$ uptime
+ 16:58:45 up 41 min,  0 user,  load average: 0.59, 0.34, 0.23
+student@okan-lab:~/lab$ kill %1 %2

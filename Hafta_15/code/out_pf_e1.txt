@@ -1,0 +1,2 @@
+student@okan-lab:~/lab$ grep -c ERROR logs/system.log
+13

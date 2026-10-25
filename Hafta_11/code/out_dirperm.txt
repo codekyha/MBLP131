@@ -1,0 +1,38 @@
+student@okan-lab:~/lab$ mkdir box
+student@okan-lab:~/lab$ echo "top secret" > box/secret.txt
+student@okan-lab:~/lab$ ls -ld box
+drwxrwxr-x 2 student student 4096 Oct 12 19:38 box
+student@okan-lab:~/lab$ chmod u-x box
+student@okan-lab:~/lab$ ls -ld box
+drw-rwxr-x 2 student student 4096 Oct 12 19:38 box
+student@okan-lab:~/lab$ ls box
+secret.txt
+student@okan-lab:~/lab$ ls -l box
+ls: cannot access 'box/secret.txt': Permission denied
+total 0
+-????????? ? ? ? ?            ? secret.txt
+student@okan-lab:~/lab$ cd box
+bash: cd: box: Permission denied
+student@okan-lab:~/lab$ cat box/secret.txt
+cat: box/secret.txt: Permission denied
+student@okan-lab:~/lab$ chmod u-r,u+x box
+student@okan-lab:~/lab$ ls -ld box
+d-wxrwxr-x 2 student student 4096 Oct 12 19:38 box
+student@okan-lab:~/lab$ ls box
+ls: cannot open directory 'box': Permission denied
+student@okan-lab:~/lab$ cat box/secret.txt
+top secret
+student@okan-lab:~/lab$ chmod 755 box
+student@okan-lab:~/lab$ chmod 444 box/secret.txt
+student@okan-lab:~/lab$ ls -l box
+total 4
+-r--r--r-- 1 student student 11 Oct 12 19:38 secret.txt
+student@okan-lab:~/lab$ echo "more" >> box/secret.txt
+bash: box/secret.txt: Permission denied
+student@okan-lab:~/lab$ rm box/secret.txt
+rm: remove write-protected regular file 'box/secret.txt'? y
+student@okan-lab:~/lab$ ls box
+student@okan-lab:~/lab$ chmod 555 box
+student@okan-lab:~/lab$ touch box/new.txt
+touch: cannot touch 'box/new.txt': Permission denied
+student@okan-lab:~/lab$ chmod 755 box

@@ -1,0 +1,4 @@
+student@okan-lab:~/lab$ tail -n 3 logs/system.log
+2026-10-12 14:27:00 INFO  user login
+2026-10-12 14:38:00 INFO  backup finished
+2026-10-12 14:49:00 INFO  network link up

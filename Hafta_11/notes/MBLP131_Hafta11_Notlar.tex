@@ -1,0 +1,792 @@
+% =====================================================================
+%  MBLP131 -- İşletim Sistemleri Temelleri
+%  Hafta 11 Ders Notları: İzinler, Sahiplik ve Kullanıcılar
+%  XeLaTeX ile iki kez derleyin:  xelatex MBLP131_Hafta11_Notlar.tex
+%  ./figures/ ve ../code/ klasörlerine ihtiyaç duyar.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\newcommand{\weeknum}{11}
+% ---------- Page & fonts ---------------------------------------------
+\usepackage[a4paper,margin=2.3cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{turkish}
+\IfFontExistsTF{Calibri}{\setmainfont{Calibri}}{\setmainfont{Carlito}}
+\IfFontExistsTF{Cambria}{\newfontfamily\headfont{Cambria}}{\newfontfamily\headfont{Caladea}}
+\IfFontExistsTF{Consolas}{\setmonofont[Scale=0.95]{Consolas}}{\setmonofont[Scale=0.88]{DejaVu Sans Mono}}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\linespread{1.12}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+% ---------- Colours (course design system) ----------------------------
+\usepackage{xcolor}
+\definecolor{dark}{HTML}{212121}
+\definecolor{charcoal}{HTML}{36454F}
+\definecolor{slate}{HTML}{50808E}
+\definecolor{mint}{HTML}{02C39A}
+\definecolor{mintdeep}{HTML}{028090}
+\definecolor{light}{HTML}{F2F2F2}
+\definecolor{muted}{HTML}{6B7679}
+
+% ---------- Packages ---------------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{needspace}
+\graphicspath{{figures/}}
+\usepackage[font=small,labelfont={bf,color=mintdeep},justification=centering]{caption}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\setlist{itemsep=0.25em,topsep=0.3em}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=mintdeep,urlcolor=mintdeep,citecolor=mintdeep]{hyperref}
+
+% ---------- Headings ----------------------------------------------------
+\titleformat{\section}{\headfont\Large\bfseries\color{charcoal}}{\color{mint}\thesection}{0.7em}{}
+\titleformat{\subsection}{\headfont\large\bfseries\color{charcoal}}{\color{mintdeep}\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\headfont\normalsize\bfseries\color{mintdeep}}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+
+% ---------- Header / footer -----------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}MBLP131 --- İşletim Sistemleri Temelleri}
+\fancyhead[R]{\small\color{muted}Hafta \weeknum{} Ders Notları}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% ---------- Boxes ---------------------------------------------------------
+\newtcolorbox{keyidea}[1][Key idea]{enhanced,breakable,colback=charcoal,colframe=charcoal,
+  coltext=white,fonttitle=\headfont\bfseries\color{mint},title={#1},
+  attach title to upper={\par\smallskip},boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{example}[1][Worked example]{enhanced,colback=light,colframe=light,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{tryit}[1][Try it yourself]{enhanced,breakable,colback=white,colframe=mint,
+  fonttitle=\headfont\bfseries\color{mintdeep},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.8pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt}
+\newtcolorbox{histnote}[1][Historical note]{enhanced,breakable,colback=white,colframe=slate!40,
+  fonttitle=\headfont\bfseries\color{slate},title={#1},attach title to upper={\par\smallskip},
+  boxrule=0.5pt,arc=3pt,left=10pt,right=10pt,top=8pt,bottom=8pt,fontupper=\small}
+
+% Photo helper: fits image inside a box, never distorted (keepaspectratio)
+\newcommand{\photo}[3]{\includegraphics[width=#1,height=#2,keepaspectratio]{#3}}
+
+\newcommand{\term}[1]{\textbf{\color{mintdeep}#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+
+% ---------- Code listings ----------------------------------------------------
+\usepackage{listings}
+\lstdefinestyle{course}{
+  basicstyle=\ttfamily\small, columns=fullflexible, keepspaces=true,
+  backgroundcolor=\color{dark}, rulecolor=\color{dark}, frame=single, framesep=6pt,
+  xleftmargin=8pt, xrightmargin=8pt, aboveskip=0.8em, belowskip=0.6em,
+  basicstyle=\ttfamily\small\color{light},
+  keywordstyle=\color{mint}\bfseries, commentstyle=\color{white!60}\itshape,
+  stringstyle=\color{orange!70!yellow}, numberstyle=\tiny\color{muted},
+  numbers=left, numbersep=10pt, showstringspaces=false, breaklines=true,
+  tabsize=4, upquote=true}
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}}
+\lstset{style=course,language=C}
+\usepackage{textcomp}
+
+% listings 1.9 + XeLaTeX: Turkish letters above U+00FF (ı İ ğ Ğ ş Ş) must be declared as letters
+\makeatletter
+\lst@CCPut \lst@ProcessLetter {"130}{"131}{"11E}{"11F}{"15E}{"15F}\z@
+\lst@AddToHook{SelectCharTable}{\catcode"130=13 \catcode"131=13 \catcode"11E=13
+  \catcode"11F=13 \catcode"15E=13 \catcode"15F=13 }
+\makeatother
+
+\begin{document}
+% ============================ Hafta 11 gövdesi ============================
+% bu haftanın terminal dökümleri uzun: bir boy küçük basılır
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}, basicstyle=\ttfamily\footnotesize\color{light}}
+% Türkçe uzun sözcükler için satır kırmada biraz esneklik
+\setlength{\emergencystretch}{3em}
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 11 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large İzinler, Sahiplik ve Kullanıcılar}\par\smallskip
+{\small\itshape\color{white!70} Dosyalarınızı kim okuyabilir, değiştirebilir, çalıştırabilir --- ve Linux buna nasıl karar verir?}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Bir işletim sisteminin neden dosya izinlerine ihtiyaç duyduğunu ve çekirdeğin bunları nasıl uyguladığını açıklamak (2.\ ve 7.\ haftalarla bağlantı).
+  \item Kullanıcı adınızı, UID'nizi, GID'nizi ve gruplarınızı \cmd{whoami}, \cmd{id} ve \cmd{groups} ile bulmak; \texttt{/etc/passwd} ve \texttt{/etc/group} alanlarını okumak.
+  \item \texttt{-rwxr-x---} gibi bir mod dizgesini çözmek, sekizliye ($750$) ve geri dönüştürmek.
+  \item $r$, $w$ ve $x$'in dosyalar \emph{ve} dizinler için ne anlama geldiğini; sahip, grup ve diğerleri sınıflarından hangisinin bir sürece uygulandığını açıklamak.
+  \item İzinleri \cmd{chmod} ile sembolik (\texttt{u+x}, \texttt{go-w}) ve sekizli (\texttt{640}) biçimde değiştirmek; bir betiği çalıştırılabilir yapmak.
+  \item Varsayılan izinleri \cmd{umask} değerinden doğru hesaplamak (çıkarmayla değil, bit düzeyinde).
+  \item \cmd{chown}, \cmd{chgrp}, \cmd{sudo}, \cmd{passwd}'nin setuid bitini ve \texttt{/tmp}'nin yapışkan bitini açıklamak; ilgili hata iletilerini okumak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section{10. Haftadan 11. Haftaya}
+
+Geçen hafta dosya oluşturdunuz, kopyaladınız, taşıdınız ve sildiniz (\cmd{mkdir}, \cmd{touch}, \cmd{cp}, \cmd{mv}, \cmd{rm}); joker karakterleri kabuğa genişlettiniz ve dosyaların içine \cmd{cat}, \cmd{less}, \cmd{head}, \cmd{tail} ve \cmd{stat} ile baktınız. Her \cmd{ls -l} ve \cmd{stat} çıktısında, bir sahip ve bir grup adıyla birlikte \texttt{-rw-rw-r--} ve \texttt{Access: (0664/-rw-rw-r--)} gibi bir şey göründü. Bu hafta bu alanları okumayı, değiştirmeyi ve arkalarındaki kullanıcıları ve grupları anlamayı öğreniyoruz.
+
+\paragraph{Örnekleri nasıl izlemeli?} Önce alıştırma klasörünü yeniden oluşturun (betik yalnızca \texttt{\textasciitilde/lab} klasörünü silip yeniden oluşturur):
+\begin{lstlisting}[style=term]
+$ bash mcmp117_lab_setup.sh
+\end{lstlisting}
+Bu notlardaki her komut, bir Linux makinesinde \texttt{student} adlı \emph{sıradan} bir kullanıcıyla (makine adı \texttt{okan-lab}) çalıştırıldı; \texttt{code/demo\_*.sh} betikleri komutların tam hâlini, \texttt{code/out\_*.txt} dosyaları ise yakalanan çıktıyı içerir. Kendi makinenizde tarihler, boyutlar, kullanıcı ve grup \emph{numaraları} ve adları farklı olacaktır; \cmd{ls} çıktısının sırası da yerel ayara (locale) bağlı olabilir (biz \texttt{LC\_ALL=C.UTF-8} kullandık). Türkçe yerel ayarlı bir sistemde (\texttt{LANG=tr\_TR.UTF-8}) hata iletilerinin çoğu Türkçe görünür (örneğin \emph{Permission denied} yerine \emph{Erişim engellendi}) ve sıralama farklı olabilir; ders çıktıları bu yüzden İngilizcedir. Yalnızca konu \cmd{sudo} ya da \texttt{root} olduğunda bir yöneticinin bir şeyi önceden hazırladığını açıkça belirtiyoruz.
+
+% =====================================================================
+\section{Neden İzinler? Korumaya Yeniden Bakış}
+
+\subsection{Arkasındaki kuram}
+
+\textbf{2.~haftada} \term{ikili mod} (dual-mode operation) çalışmasını gördük: işlemci kullanıcı programlarını, doğrudan G/Ç gibi ayrıcalıklı komutların yasak olduğu \emph{kullanıcı modunda} çalıştırır. Bir dosyayı okumak isteyen program diskle kendisi konuşamaz; çekirdek moduna geçiren \cmd{open()} gibi bir \term{sistem çağrısı} (system call) yapmak zorundadır. \textbf{7.~haftada} \emph{korumayı} (protection) bir dosyanın öznitelikleri arasında saydık ve Linux'un bunu sahip, grup, boyut ve zaman damgalarıyla birlikte dosyanın \term{düğümünde} (inode) sakladığını gördük.
+
+Bu iki olguyu bir araya getirdiğinizde bütün düzenek ortaya çıkar:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[b/.style={rectangle,rounded corners=2pt,minimum height=1.2cm,align=center,font=\small,text width=3.2cm},
+  arr/.style={-{Stealth[length=2.5mm]},thick}]
+\node[b,fill=light] (p) at (0,0) {\textbf{Süreç} (kullanıcı modu)\\[-1pt]{\footnotesize \texttt{student} olarak çalışıyor, UID 1011}};
+\node[b,fill=charcoal,text=white] (k) at (6.0,0) {\textbf{Çekirdek} (çekirdek modu)\\[-1pt]{\footnotesize UID/GID'leri düğümdekilerle karşılaştırır}};
+\node[b,fill=mint!25] (i) at (12.0,0) {\texttt{notes.txt} dosyasının \textbf{düğümü}\\[-1pt]{\footnotesize sahip, grup, mod}};
+\draw[arr,mintdeep] (p) -- node[above,font=\scriptsize,align=center]{sistem çağrısı\\\texttt{open("notes.txt")}} (k);
+\draw[arr,slate] (i) -- node[above,font=\scriptsize\itshape,align=center]{sahip, grup,\\mod} (k);
+\node[b,fill=mint,text width=3.0cm,minimum height=0.8cm] (ok) at (4.0,-2.1) {izin var: dosya tanımlayıcısı};
+\node[b,fill=red!15,text=red!60!black,text width=3.6cm,minimum height=0.8cm] (no) at (8.2,-2.1) {izin yok: \texttt{EACCES}\\[-1pt]{\footnotesize ``Permission denied''}};
+\draw[arr,mintdeep] (k.south) -- (ok.north);
+\draw[arr,red!60!black] (k.south) -- (no.north);
+\end{tikzpicture}
+\caption{Her erişim bir sistem çağrısından geçer; bu yüzden çekirdek onu denetleyebilir ve denetim atlanamaz.}
+\end{figure}
+
+Program çekirdekten \emph{istemek zorunda} olduğu için çekirdek reddedebilir. Denetim başarısız olursa sistem çağrısı $-1$ döndürür ve hata kodunu \texttt{EACCES} yapar; programlar bunu \emph{Permission denied} (izin reddedildi) olarak yazdırır. Aynı denetim bir program çalıştırdığınızda (\cmd{exec}), bir dizine girdiğinizde (\cmd{chdir}) ya da bir adı sildiğinizde (\cmd{unlink}) de yapılır. Denetimin dosya \emph{açılırken} yapıldığına dikkat edin: bir dosyayı zaten açmış olan süreç, izinler sonradan değişse bile erişimini korur.
+
+
+\begin{histnote}[Tarihsel not]
+1969'dan itibaren Bell Laboratuvarları'nda tasarlanan UNIX, en başından çok kullanıcılı bir zaman paylaşımlı sistemdi (1.~hafta); bu yüzden ucuz bir koruma düzenine ihtiyaç duyuyordu. Ken Thompson ve Dennis Ritchie, her dosya için kullanıcıların tam bir listesi (bir \emph{erişim denetim listesi}, access control list) yerine her biri üç bitlik üç sınıf seçti --- sahip, grup, diğerleri: düğümde dokuz bit. Bu düzen o kadar basit ve etkiliydi ki Linux'ta ve macOS'ta değişmeden yaşıyor. (Günümüz Linux'u \cmd{getfacl}/\cmd{setfacl} ile ACL'leri de destekler, ama temel hâlâ dokuz bittir.)
+\end{histnote}
+
+% =====================================================================
+\section{Kullanıcılar ve Gruplar}
+
+\subsection{Ben kimim?}
+\label{sec:who}
+
+Linux iki tür kimlik tanır:
+\begin{itemize}
+  \item Bir \term{kullanıcının} (user) bir oturum adı ve bir numarası, yani \term{UID}'si (user ID, kullanıcı kimliği) vardır. Çekirdek yalnızca numarayı saklar ve karşılaştırır. \texttt{root} kullanıcısının UID'si $0$'dır ve o \term{süper kullanıcıdır} (superuser). Birçok \emph{sistem kullanıcısı} (örneğin \texttt{daemon} ya da \texttt{www-data}) yalnızca hizmetleri sınırlı haklarla çalıştırmak için vardır.
+  \item Bir \term{grup} (group), numarası (\term{GID}, group ID) olan, adlandırılmış bir kullanıcı kümesidir. Her kullanıcının tam olarak bir \emph{birincil grubu} (primary group) vardır ve birkaç \emph{ek gruba} (supplementary groups) üye olabilir. Ubuntu her kullanıcı için aynı adlı özel bir grup oluşturur.
+\end{itemize}
+Her süreç, onu başlatan kullanıcının UID ve GID'lerini (\emph{kimlik bilgilerini}, credentials) taşır; oluşturduğu bir dosyanın sahibi bu UID, grubu da birincil GID olur.
+
+\lstinputlisting[style=term,firstline=1,lastline=6]{../code/out_users.txt}
+
+Burada \texttt{uid=1011(student)} kullanıcı numarası ve adı, \texttt{gid=1013(student)} birincil grup, \texttt{groups=} ise bütün gruplardır. Yeni kurulmuş bir Ubuntu'da ilk kullanıcının UID'si genellikle $1000$'dir; laboratuvar makinemizde daha çok hesap vardır.
+
+\subsection{Hesap dosyaları \texttt{/etc/passwd} ve \texttt{/etc/group}}
+
+\lstinputlisting[style=term,firstline=7,lastline=20]{../code/out_users.txt}
+
+\texttt{/etc/passwd} dosyasının bir satırında iki nokta üst üste ile ayrılmış yedi alan vardır:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[f/.style={rectangle,rounded corners=1.5pt,fill=mint!25,minimum height=0.6cm,font=\ttfamily\small,inner sep=3pt},
+  l/.style={font=\scriptsize,align=center,text width=2.0cm,anchor=north}]
+\node[f,fill=charcoal,text=white] (a) at (0,0) {student};
+\node[f] (b) at (1.9,0) {x};
+\node[f] (c) at (3.5,0) {1011};
+\node[f] (d) at (5.2,0) {1013};
+\node[f,text=muted] (e) at (7.0,0) {(boş)};
+\node[f] (g) at (9.6,0) {/home/student};
+\node[f] (h) at (12.6,0) {/bin/bash};
+\foreach \x in {0.95,2.7,4.35,6.1,8.0,11.25} \node[font=\bfseries\ttfamily,text=red!70!black] at (\x,0) {:};
+\node[l] at (a.south) {1 kullanıcı adı};
+\node[l,text width=1.6cm] at (b.south) {2 parola: bkz. \texttt{/etc/shadow}};
+\node[l,text width=1.2cm] at (c.south) {3 UID};
+\node[l,text width=1.3cm] at (d.south) {4 GID (birincil grup)};
+\node[l,text width=1.5cm] at (e.south) {5 açıklama (tam ad)};
+\node[l] at (g.south) {6 ev dizini};
+\node[l] at (h.south) {7 oturum kabuğu};
+\end{tikzpicture}
+\caption{\texttt{/etc/passwd} satırının yedi alanı.}
+\end{figure}
+
+\texttt{/etc/group} satırında dört alan vardır: grup adı, parola (kullanılmaz, \texttt{x}), GID ve üyelerin virgülle ayrılmış listesi. \texttt{students} grubunun henüz üyesi yoktur (dördüncü alan boş).
+
+Parola neden \texttt{/etc/passwd} içinde değil? Her program \texttt{/etc/passwd} dosyasını \emph{okuyabilmelidir} --- \cmd{ls}, UID'leri adlara çevirmek için ona ihtiyaç duyar. Bu yüzden parola \emph{özetleri} (hash), modu \texttt{-rw-r-----} olan ve yalnızca \texttt{root} ile \texttt{shadow} grubunun okuyabildiği \texttt{/etc/shadow} dosyasında tutulur. \cmd{cat /etc/shadow} komutunun bizim için başarısız olmasının nedeni budur. Yöneticiler bu dosyaları asla elle düzenlemez; \cmd{useradd}, \cmd{usermod}, \cmd{groupadd} ve \cmd{passwd} komutlarını kullanırlar.
+
+% =====================================================================
+\section{İzinleri Okumak}
+
+\subsection{\cmd{ls -l} çıktısının sütunları}
+
+\lstinputlisting[style=term,firstline=12,lastline=21]{../code/out_ls.txt}
+
+Sütunlar şunlardır: (1) dosya türü ve izinler, (2) bağlantı sayısı (7.\ ve 10.\ haftalar), (3) sahip, (4) grup, (5) bayt cinsinden boyut, (6) değişiklik zamanı ve (7) ad. Ad dışındaki her şey düğümden gelir; ad ise dizin girdisinden gelir. Düğüm sahip ve grup için \emph{numaraları} saklar; \cmd{ls} adları \texttt{/etc/passwd} ve \texttt{/etc/group} içinde arayarak gösterir. \cmd{ls -l docs} (\texttt{docs} \emph{içindeki} dosyalar) ile \cmd{ls -ld docs} (dizinin kendisi) arasındaki farka dikkat edin.
+
+\subsection{Mod dizgesini çözmek}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[bt/.style={rectangle,rounded corners=1.5pt,minimum width=0.85cm,minimum height=0.85cm,font=\ttfamily\Large\bfseries}]
+\def\bw{0.95}
+\node[bt,fill=charcoal,text=white] at (0,0) {-};
+\foreach \i/\c/\col in {0/r/mint,1/w/mint,2/x/mint,3/r/slate!50,4/-/light,5/x/slate!50,6/-/light,7/-/light,8/-/light} {
+  \pgfmathsetmacro{\xx}{1.3+\i*\bw+floor(\i/3)*0.35}
+  \node[bt,fill=\col] at (\xx,0) {\c};
+  \pgfmathsetmacro{\w}{int(mod(\i,3)==0 ? 4 : (mod(\i,3)==1 ? 2 : 1))}
+  \node[font=\footnotesize,text=muted] at (\xx,-0.75) {$\times\w$};
+}
+\node[font=\small\bfseries] at (0,0.85) {tür};
+\node[font=\small\bfseries] at (2.25,0.85) {kullanıcı (u) = sahip};
+\node[font=\small\bfseries] at (5.45,0.85) {grup (g)};
+\node[font=\small\bfseries] at (8.6,0.85) {diğerleri (o)};
+\node[font=\small] at (2.25,-1.35) {$4+2+1=7$};
+\node[font=\small] at (5.45,-1.35) {$4+0+1=5$};
+\node[font=\small] at (8.6,-1.35) {$0+0+0=0$};
+\node[font=\small\bfseries,text=mintdeep] at (5.45,-2.0) {\texttt{-rwxr-x---} $= 750$};
+\end{tikzpicture}
+\caption{İlk karakter türdür; ardından kullanıcı, grup ve diğerleri için üç üçlü gelir; her bitin ağırlığı $4$, $2$ ya da $1$'dir.}
+\label{fig:mode}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{1.\ karakter, tür:} \texttt{-} normal dosya, \texttt{d} dizin, \texttt{l} sembolik bağlantı, \texttt{c}/\texttt{b} karakter/blok aygıtı.
+  \item \textbf{2--10.\ karakterler:} her zaman kullanıcı (sahip), grup, diğerleri sırasıyla üç \emph{üçlü} (triplet); her üçlünün içinde her zaman $r$, $w$, $x$. Harf iznin verildiğini, tire verilmediğini gösterir.
+\end{itemize}
+Her üçlüde $3$ bit vardır, dolayısıyla $2^3 = 8$ olası üçlü vardır --- tam olarak sekiz sekizli (octal) basamak, $0$--$7$. $r = 4$, $w = 2$, $x = 1$ ağırlıklarıyla her üçlü tek bir basamaktır ve dokuz bit üç sekizli basamakla yazılır: \texttt{-rwxr-x---}, $750$'dir. \cmd{stat} komutu iki biçimi de gösterir; \cmd{stat -c} ile alanları siz seçersiniz:
+
+\lstinputlisting[style=term,firstline=31,lastline=34]{../code/out_ls.txt}
+
+\subsection{r, w ve x ne anlama gelir?}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X X@{}}
+\toprule
+\textbf{Bit} & \textbf{Normal bir dosyada} & \textbf{Bir dizinde} \\
+\midrule
+$r$ ($4$) & içeriği okumak (\cmd{cat}, \cmd{less}, \cmd{cp}) & içindeki adları listelemek (\cmd{ls}) \\
+$w$ ($2$) & içeriği değiştirmek (düzenleyici, \texttt{>>}) & girdi oluşturmak, silmek ve yeniden adlandırmak ($x$ ile birlikte) \\
+$x$ ($1$) & program ya da betik olarak çalıştırmak & içine girmek ve içindekilere ulaşmak (\cmd{cd}, içinden geçen yollar) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+7.~haftadan hatırlayın: dizin, (ad, düğüm numarası) çiftlerinden oluşan bir tablodur. Tabloyu okumak adları listelemek, tabloya yazmak girdi eklemek ya da kaldırmak demektir; $x$ (``arama'', search) ise tablo üzerinden bir yolu izlemektir. Bunun yeni başlayanların çoğunu şaşırtan iki sonucu vardır: bir dosyayı silmek \emph{dizinde} yapılan bir değişikliktir, dolayısıyla dizinde $w$ gerektirir ve dosyanın kendi $w$ bitine bağlı değildir; bir dizinde $x$ yoksa, dosyaların kendi izinleri ne kadar cömert olursa olsun, altındaki hiçbir şeye ulaşılamaz. Kısım~\ref{sec:dirs} ikisini de gösteriyor.
+
+\subsection{Hangi sınıf uygulanır? Yalnızca biri}
+
+Bir süreç bir dosyaya eriştiğinde çekirdek üç üçlüyü birleştirmez; tam olarak birini seçer:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[q/.style={rectangle,rounded corners=2pt,fill=charcoal,text=white,minimum width=4.6cm,minimum height=0.7cm,font=\small},
+  a/.style={rectangle,rounded corners=2pt,fill=mint!25,minimum width=5.0cm,minimum height=0.7cm,font=\small},
+  arr/.style={-{Stealth[length=2mm]},thick}]
+\node[q] (q1) at (0,0) {Süreç root mu (UID 0)?};
+\node[q] (q2) at (0,-1.2) {UID'si dosyanın sahibi mi?};
+\node[q] (q3) at (0,-2.4) {Dosyanın grubu, sürecin gruplarından biri mi?};
+\node[q,fill=light,text=charcoal] (q4) at (0,-3.6) {Hiçbiri değilse};
+\node[a,fill=light] (a1) at (6.6,0) {izin var (okuma/yazma her zaman)};
+\node[a] (a2) at (6.6,-1.2) {sahip bitleri \texttt{rwx------}};
+\node[a] (a3) at (6.6,-2.4) {grup bitleri \texttt{---rwx---}};
+\node[a] (a4) at (6.6,-3.6) {diğerleri bitleri \texttt{------rwx}};
+\foreach \i in {1,2,3} \draw[arr,mintdeep] (q\i) -- node[above,font=\scriptsize]{evet} (a\i);
+\draw[arr,mintdeep] (q4) -- (a4);
+\foreach \i/\j in {1/2,2/3,3/4} \draw[arr,slate] (q\i) -- node[right,font=\scriptsize]{hayır} (q\j);
+\end{tikzpicture}
+\caption{Çekirdeğin erişim denetimi eşleşen ilk sınıfta durur.}
+\end{figure}
+
+Yani sahip, diğerleri üçlüsü daha cömert olsa bile \emph{yalnızca} sahip üçlüsüne göre değerlendirilir. Gösterimimiz (\cmd{code/demo\_order.sh}):
+
+\lstinputlisting[style=term]{../code/out_order.txt}
+
+$074$ = \texttt{----rwxr--} modunda geri kalan herkes okuyabilir, ama sahip okuyamaz. Sahip durumu yine de düzeltebilir, çünkü modu değiştirmek $r$ ya da $w$ değil, \emph{sahiplik} gerektirir. (\texttt{root} için okuma ve yazmaya her zaman izin verilir; çalıştırmaya ise en az bir $x$ biti kuruluysa izin verilir.)
+
+% =====================================================================
+\section{İzinleri \cmd{chmod} ile Değiştirmek}
+
+Bir dosyanın modunu yalnızca sahibi (ya da \texttt{root}) değiştirebilir. \cmd{chmod} (\emph{change mode}, modu değiştir) iki gösterim kabul eder.
+
+\subsection{Sembolik mod}
+
+Biçim şöyledir: \texttt{chmod} \emph{kim işleç izinler} \emph{dosya\dots}:
+\begin{itemize}
+  \item \textbf{kim:} \texttt{u} (user, kullanıcı = sahip), \texttt{g} (group, grup), \texttt{o} (others, diğerleri), \texttt{a} (all, üçü birden);
+  \item \textbf{işleç:} \texttt{+} ekle, \texttt{-} kaldır, \texttt{=} tam olarak ata (o sınıfın adı verilmeyen bitleri temizlenir);
+  \item \textbf{izinler:} \texttt{r}, \texttt{w}, \texttt{x} harflerinden herhangi biri.
+\end{itemize}
+Birden çok ifade \emph{boşluksuz} virgülle ayrılır: \texttt{u=rw,g=r,o=} (boş \texttt{o=}, ``diğerlerine hiçbir hak yok'' demektir). Aşağıdaki oturum (\cmd{code/demo\_chmod\_sym.sh}) \texttt{docs/syllabus.txt} dosyasını adım adım değiştiriyor:
+
+\lstinputlisting[style=term]{../code/out_chmod_sym.txt}
+
+\cmd{chmod} başarılı olduğunda hiçbir şey yazdırmaz (``haber olmaması iyi haberdir''); her zaman \cmd{ls -l} ya da \cmd{stat} ile denetleyin. \texttt{+} ve \texttt{-} öbür bitlere dokunmaz; bu da sembolik modu ``grup da yazabilsin'' (\texttt{chmod g+w}) gibi küçük değişiklikler için ideal kılar. Sınıf belirtmeden \cmd{chmod +x file} yazmak, $x$'i \emph{umask'ın engellemediği} her sınıfa ekler (Kısım~\ref{sec:umask}); \texttt{u+x} daha açıktır.
+
+\subsection{Sekizli mod}
+
+Sekizli modda dokuz bitin hepsini birden, sınıf başına bir basamakla verirsiniz:
+
+\begin{center}
+\small
+\begin{tabular}{@{}c c c l@{}}
+\toprule
+\textbf{Sekizli} & \textbf{İkili} $r\,w\,x$ & \textbf{Sembolik} & \textbf{Anlamı} \\
+\midrule
+$0$ & $000$ & \texttt{---} & erişim yok \\
+$1$ & $001$ & \texttt{--x} & yalnızca çalıştırma \\
+$2$ & $010$ & \texttt{-w-} & yalnızca yazma (nadir) \\
+$3$ & $011$ & \texttt{-wx} & yazma ve çalıştırma (nadir) \\
+$4$ & $100$ & \texttt{r--} & yalnızca okuma \\
+$5$ & $101$ & \texttt{r-x} & okuma ve çalıştırma \\
+$6$ & $110$ & \texttt{rw-} & okuma ve yazma \\
+$7$ & $111$ & \texttt{rwx} & her şey \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+$4$, $2$ ve $1$ ikinin kuvvetleri olduğundan $0$'dan $7$'ye kadar her basamak bunların \emph{tek bir biçimde} toplamıdır: bu, üçer bitlik ikili sayıdan başka bir şey değildir. İki hızlı denetim: tek bir basamak her zaman $x$ içerir; $4$ ya da daha büyük bir basamak her zaman $r$ içerir.
+
+\begin{example}[Çözümlü örnek: iki yönde dönüştürmek]
+\textbf{Sembolik $\to$ sekizli.} \texttt{rwxr-xr--}: $\texttt{rwx} = 4+2+1 = 7$, $\texttt{r-x} = 4+0+1 = 5$, $\texttt{r--} = 4+0+0 = 4$; mod $754$'tür. Benzer biçimde \texttt{rw-rw-r--} $= 664$ ve \texttt{rw-r-----} $= 640$.
+
+\textbf{Sekizli $\to$ sembolik.} $711$: $7 = 4+2+1 \to$ \texttt{rwx}, $1 \to$ \texttt{--x}, $1 \to$ \texttt{--x}; yani \texttt{rwx--x--x}. $640$: $6 = 4+2 \to$ \texttt{rw-}, $4 \to$ \texttt{r--}, $0 \to$ \texttt{---}: \texttt{rw-r-----}.
+
+(Bu notlardaki bütün dönüşümler \cmd{code/perm\_check.py} ile denetlendi.)
+\end{example}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\toprule
+\textbf{Sekizli} & \textbf{Sembolik} & \textbf{Tipik kullanım} \\
+\midrule
+$644$ & \texttt{rw-r--r--} & sıradan dosyalar: herkes okur, yalnızca sahip yazar \\
+$755$ & \texttt{rwxr-xr-x} & başkalarının da kullanabileceği programlar, betikler ve dizinler \\
+$600$ & \texttt{rw-------} & özel dosyalar (parolalar, SSH anahtarları --- \cmd{ssh} başkalarının okuyabildiği bir anahtarı reddeder) \\
+$700$ & \texttt{rwx------} & özel dizinler (\texttt{\textasciitilde/.ssh}) \\
+$640$ / $750$ & \texttt{rw-r-----} / \texttt{rwxr-x---} & grupla paylaşılan, diğerlerinden gizlenen \\
+$777$ & \texttt{rwxrwxrwx} & herkes değiştirebilir ya da silebilir: neredeyse hiçbir zaman doğru değildir \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{keyidea}[Güvenlik: bir hatayı asla \texttt{chmod 777} ile ``düzeltmeyin'']
+\texttt{chmod 777} (ya da daha kötüsü \texttt{chmod -R 777}), makinedeki \emph{her} kullanıcının ve ele geçirilmiş her programın dosyayı değiştirmesine ya da yerine başkasını koymasına izin vererek bir Permission-denied iletisini ortadan kaldırır. Eksik olan tek biti bulun ve yalnızca onu ekleyin, örneğin \texttt{chmod u+x script.sh}. Bu, \emph{en az ayrıcalık ilkesidir} (principle of least privilege).
+\end{keyidea}
+
+Sekizli oturum (\cmd{code/demo\_chmod\_oct.sh}) iki tipik hatayı da gösteriyor:
+
+\lstinputlisting[style=term]{../code/out_chmod_oct.txt}
+
+Sekizli sistemde $8$ ve $9$ basamakları yoktur; \texttt{rw} ise ne bir sayıdır ne de geçerli bir sembolik ifade (\emph{kim} ve işleç eksik: \texttt{u+rw}). Özyinelemeli \cmd{chmod -R} aynı modu dosyalara \emph{ve} dizinlere uygular; \texttt{chmod -R 644 dir} her alt dizinden $x$'i kaldırır ve sizi dışarıda bırakır. \texttt{-R} ile yalnızca hak kaldıran sembolik modu (\texttt{chmod -R go-rwx dir}) ya da $x$'i yalnızca dizinlere (ve zaten $x$'i olan dosyalara) ekleyen büyük \texttt{X}'i tercih edin.
+
+\subsection{Bir betiği çalıştırılabilir yapmak}
+\label{sec:script}
+
+Yeni oluşturulan bir dosya asla çalıştırılabilir değildir (nedenini Kısım~\ref{sec:umask} açıklıyor). \cmd{code/demo\_script.sh} oturumu:
+
+\lstinputlisting[style=term]{../code/out_script.txt}
+
+\begin{itemize}
+  \item \cmd{./hello.sh} yazmak, çekirdekten dosyayı \emph{çalıştırmasını} ister (\cmd{execve} sistem çağrısı); bunun için $x$ gerekir. \cmd{bash hello.sh} ise \cmd{bash}'i çalıştırır ve o da dosyayı yalnızca \emph{okur} --- $r$ yeterlidir.
+  \item \texttt{./} olmadan \cmd{hello.sh} ``command not found'' (komut bulunamadı) verir: kabuk komutları yalnızca \texttt{PATH} içinde listelenen dizinlerde arar ve çalışma dizini (güvenlik nedeniyle) bunlar arasında değildir. Bu bir izin sorunu değildir.
+  \item İlk satır \texttt{\#!/bin/bash} (\emph{shebang}), betiği hangi yorumlayıcının çalıştıracağını çekirdeğe söyler. 14.~hafta bunun üzerine kurulacak.
+  \item \cmd{gcc} $x$ bitlerini kendisi koyar: programı $777$ ile oluşturur, umask $002$ bunu $775$'e indirir.
+\end{itemize}
+
+% =====================================================================
+\section{Varsayılan İzinler: \cmd{umask}}
+\label{sec:umask}
+
+Yeni dosyalar neden $664$, yeni dizinler neden $775$? Bir dosya oluşturan program, \cmd{open()} ya da \cmd{mkdir()} çağrısında bir mod ister: düzenleyiciler, \cmd{touch} ve kabuk dosyalar için $666$ (\texttt{rw-rw-rw-}), dizinler için $777$ ister. Çekirdek ardından sürecin \term{umask} değerinde (user file-creation mask, kullanıcı dosya oluşturma maskesi) kurulu olan her biti \emph{kaldırır}. umask, çocuk süreçlere aktarılan, süreç başına bir ayardır; oturum açılırken ayarlanır (Ubuntu'da normal kullanıcılar için $002$, root için $022$) ve kabuğun yerleşik \cmd{umask} komutuyla değiştirilebilir.
+
+\subsection{Bitleri temizler, çıkarma yapmaz}
+
+Biçimsel olarak, bit bit uygulanan
+\[
+\text{yeni mod} = \text{istenen mod} \;\mathbin{\text{AND}}\; (\text{NOT umask})
+\]
+işlemidir. Alışılmış $022$ umask'ı için bu bir çıkarma gibi görünür, $666 - 022 = 644$:
+\[
+\begin{array}{lrl}
+\text{istenen} & 666 = & 110\;110\;110 \\
+\text{umask}     & 022 = & 000\;010\;010 \\
+\text{NOT umask} &       & 111\;101\;101 \\ \hline
+\text{AND}       &       & 110\;100\;100 = 644 = \texttt{rw-r--r--}
+\end{array}
+\]
+
+\begin{example}[Çözümlü örnek: çıkarmanın yanıldığı yer, umask $033$]
+$033$ umask'ı şu demektir: gruptan ve diğerlerinden $w$ ve $x$'i al. Bir \emph{dosya} için:
+\[
+\begin{array}{lrl}
+\text{istenen} & 666 = & 110\;110\;110 \\
+\text{NOT } 033  &       & 111\;100\;100 \\ \hline
+\text{AND}       &       & 110\;100\;100 = 644 = \texttt{rw-r--r--}
+\end{array}
+\]
+Düz çıkarma $666 - 033 = 633 = \texttt{rw--wx-wx}$ verirdi: okuma olmadan yazma ve çalıştırma, üstelik hiç istenmemiş $x$ bitleriyle. Anlamsız! Her basamakta $6 - 3 = 3$ hiç kurulmamış bir $x$ bitini ``ödünç alır''; bit işlemi ise olmayan biti olmadığı gibi bırakır: $6 \mathbin{\text{AND}} \text{NOT}\,3 = 110 \mathbin{\text{AND}} 100 = 100 = 4$.
+
+Bir \emph{dizin} için $777$'nin her biti kuruludur, dolayısıyla çıkarma tesadüfen aynı sonucu verir: $777 - 033 = 744$. Genel olarak çıkarma, umask'ın her biti istenen modda da kuruluysa ve yalnızca o zaman doğrudur. Dosyalarda ($666$, $x$ biti yok) bu yüzden $x$ biti içeren her umask için yanılır; örneğin $027$: $666 - 027 = 637$ (yanlış), doğrusu $640$; ve $077$: $666 - 077 = 567$ (yanlış), doğrusu $600$.
+\end{example}
+
+\begin{center}
+\small
+\begin{tabular}{@{}c l l l@{}}
+\toprule
+\textbf{umask} & \textbf{yeni dosya} ($666$) & \textbf{yeni dizin} ($777$) & \textbf{tipik kullanım} \\
+\midrule
+$002$ & $664$ \texttt{rw-rw-r--} & $775$ \texttt{rwxrwxr-x} & Ubuntu kullanıcıları (özel gruplar) \\
+$022$ & $644$ \texttt{rw-r--r--} & $755$ \texttt{rwxr-xr-x} & root, birçok sunucu \\
+$027$ & $640$ \texttt{rw-r-----} & $750$ \texttt{rwxr-x---} & grup okur, diğerleri hiçbir şey \\
+$077$ & $600$ \texttt{rw-------} & $700$ \texttt{rwx------} & tamamen özel \\
+$033$ & $644$ \texttt{rw-r--r--} & $744$ \texttt{rwxr--r--} & çıkarma tuzağı \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Gerçek oturum (\cmd{code/demo\_umask.sh}) her satırı doğruluyor:
+
+\lstinputlisting[style=term]{../code/out_umask.txt}
+
+\cmd{umask -S} tümleyeni sembolik biçimde, yani \emph{izin verileni} yazdırır. Dosyalar $x$ olmadan istendiği için hiçbir umask yeni bir dosyayı çalıştırılabilir yapamaz: bunun için her zaman bir \cmd{chmod} gerekir. umask kabuk sürecinin bir özelliğidir; \cmd{umask} komutunun (tıpkı \cmd{cd} gibi) kabuğun içine yerleşik olmasının nedeni budur. Bir değişiklik kabuktan çıkılana kadar sürer; kalıcı yapmak için örneğin \texttt{umask 027} satırını \texttt{\textasciitilde/.bashrc} dosyasına ekleyin. Var olan dosyalar hiçbir zaman etkilenmez.
+
+% =====================================================================
+\section{Uygulamada Dizin İzinleri}
+\label{sec:dirs}
+
+\cmd{code/demo\_dirperm.sh} oturumu içinde tek bir dosya olan \texttt{box} adlı bir dizin oluşturur ve ondan bitler kaldırır:
+
+\lstinputlisting[style=term,firstline=1,lastline=24]{../code/out_dirperm.txt}
+
+\begin{itemize}
+  \item \textbf{$r$ var, $x$ yok:} \cmd{ls} ad listesini okuyabilir, ama \cmd{ls -l} düğümlere dizin üzerinden bakamaz --- soru işaretlerinin nedeni budur --- ve \cmd{cd} ile \cmd{cat} başarısız olur.
+  \item \textbf{$x$ var, $r$ yok:} dizin listelenemez, ama adını bildiğiniz bir dosya açılabilir. (Her odanın anahtarı elinizde olan ama odaların listesi olmayan bir bina gibi.)
+\end{itemize}
+Uygulamada dizinlerde $r$ ve $x$ birlikte bulunur: \texttt{r-x} ya da \texttt{rwx}.
+
+\lstinputlisting[style=term,firstline=25,lastline=38]{../code/out_dirperm.txt}
+
+Dosya salt okunurdur ($444$), bu yüzden sonuna ekleme başarısız olur --- ama \cmd{rm} yalnızca bir soru sorar ve dosyayı siler, çünkü silmek yazılabilir olan \emph{dizini} (\texttt{box}) değiştirir. Ancak dizinin kendisi $555$ olduğunda hiçbir şey eklenemez ya da kaldırılamaz.
+
+\begin{keyidea}[Güvenlik: \texttt{rm} ve salt okunur dosyalar]
+Salt okunur bir dosya silinmeye karşı korunmuş \emph{değildir}. \texttt{rm -f} soruyu bile atlar; \texttt{rm -r} ise bütün ağaçları geri dönüşüm kutusu olmadan siler (10.~hafta). Dosyaları silinmeye karşı korumak için onları içeren dizinden $w$'yi kaldırın.
+\end{keyidea}
+
+% =====================================================================
+\section{Sahiplik: \cmd{chown} ve \cmd{chgrp}}
+\label{sec:own}
+
+\cmd{chown user file} sahibi (\cmd{chown user:group file} ikisini birden), \cmd{chgrp group file} grubu değiştirir; ikisi de \texttt{-R} kabul eder. Linux'taki kurallar:
+\begin{itemize}
+  \item Sahibi yalnızca \texttt{root} değiştirebilir. Aksi hâlde bir kullanıcı disk kotasından kaçmak için dosyalarını başkasına ``devredebilir'' ya da bir dosyayı başkasınınmış gibi gösterebilirdi.
+  \item Sahip grubu değiştirebilir, ama yalnızca üyesi olduğu bir gruba.
+\end{itemize}
+
+\lstinputlisting[style=term]{../code/out_owner.txt}
+
+İletinin farklı olduğuna dikkat edin: \emph{Operation not permitted} (işleme izin verilmedi, \texttt{EPERM}), izin bitleri ne olursa olsun işlemin bir ayrıcalık gerektirdiği anlamına gelir; \emph{Permission denied} (\texttt{EACCES}) ise bir izin bitinin eksik olduğu anlamına gelir.
+
+\subsection{Bir klasörü bir grupla paylaşmak}
+
+Bir sonraki oturum için yönetici \cmd{sudo usermod -aG students student} komutunu çalıştırdı (\texttt{students} ek grubuna, \texttt{-G}, ekle, \texttt{-a}) ve öğrenci yeniden oturum açtı --- grup üyeliği oturum açılırken okunur. (\texttt{-a} olmadan \cmd{usermod -G}, kullanıcının ek gruplarını \emph{değiştirir}: klasik bir yönetici hatası.)
+
+\lstinputlisting[style=term]{../code/out_group.txt}
+
+Artık \cmd{chgrp} çalışıyor. $2770$ modunun başta dördüncü bir basamağı vardır: $2$, grubun $x$ konumunda \texttt{s} olarak görünen \term{setgid} bitidir. Bir dizinde, yeni dosyaların dizinin grubunu devralmasını sağlar: \texttt{plan.txt}, oluşturanın birincil grubuna değil, \texttt{students} grubuna aittir. Bu yüzden bir ekip klasörü üç adım ister: ortak bir grup, klasörü \cmd{chgrp} ile bu gruba vermek ve \cmd{chmod 2770}.
+
+% =====================================================================
+\section{root ve \cmd{sudo}}
+
+\texttt{root} (UID $0$) okuma ve yazma denetimlerine tabi değildir; sahipleri değiştirebilir, yazılım kurabilir ve sistemi yeniden yapılandırabilir. Sürekli root olarak çalışmak tehlikelidir: tek bir yazım hatası sistemi yok edebilir. Bu yüzden Ubuntu'da varsayılan olarak root parolası yoktur; yöneticiler bunun yerine tek tek komutları \cmd{sudo} (\emph{substitute user do}) ile çalıştırır:
+\begin{itemize}
+  \item \cmd{sudo komut}, \emph{tek} bir komutu root olarak çalıştırır;
+  \item root'un değil, \emph{sizin} parolanızı sorar ve onu terminal başına yaklaşık $15$ dakika hatırlar (\cmd{sudo -k} unutturur);
+  \item yalnızca \texttt{/etc/sudoers} dosyasında izin verilen kullanıcılar kullanabilir --- Ubuntu'da \texttt{sudo} grubunun üyeleri;
+  \item her kullanım günlüğe kaydedilir.
+\end{itemize}
+
+Yönetici yapılmadan önce öğrencimiz (parola yazılır ama gösterilmez):
+
+\lstinputlisting[style=term]{../code/out_sudo_denied.txt}
+
+Yönetici öğrenciyi \texttt{sudo} grubuna ekledikten sonra (root'un yaptığı bir hazırlık adımı):
+
+\lstinputlisting[style=term]{../code/out_sudo.txt}
+
+Bu notlarda bir komutun root ayrıcalıklarıyla çalıştığı tek çıktı budur ve öyle olduğu belirtilmiştir. \cmd{sudo chown root:root} sonrasında mod hâlâ $664$'tür, ama \texttt{student} artık yalnızca $r$ hakkı olan \emph{diğerleri} sınıfına düşer: sonuna ekleme başarısız olur.
+
+\begin{keyidea}[Güvenlik: \texttt{sudo}]
+Her \texttt{sudo} komutunu Enter'a basmadan önce iki kez okuyun. Root olarak \texttt{sudo rm -r / home/x} (\texttt{/} işaretinden sonraki boşluğa dikkat) bütün sistemi silmeye çalışır. Anlamadığınız \texttt{sudo} komutlarını internetten asla yapıştırmayın ve \texttt{sudo}'yu asla kendi dosyalarınızdaki bir Permission-denied iletisinden kurtulmak için kullanmayın --- bunun yerine izinleri düzeltin.
+\end{keyidea}
+
+% =====================================================================
+\section{Özel Bitler: setuid ve Yapışkan Bit}
+\label{sec:special}
+
+Modda dokuz izin bitinin yanında, başta dördüncü bir sekizli basamak olarak yazılan üç özel bit daha vardır: setuid $= 4000$, setgid $= 2000$ (yukarıda gördük), yapışkan bit (sticky bit) $= 1000$. Toplamda bu, $2^{12} = 4096$ olası mod eder.
+
+\subsection{setuid: \cmd{passwd} \texttt{/etc/shadow}'a nasıl yazabilir?}
+
+\lstinputlisting[style=term,firstline=1,lastline=6]{../code/out_special.txt}
+
+Kullanıcılar kendi parolalarını değiştirebilmelidir, ama \texttt{/etc/shadow} dosyasına yalnızca root yazabilir. Bu yüzden \texttt{/usr/bin/passwd} programının sahibi root'tur ve \term{setuid} biti kuruludur (sahibin $x$ konumundaki \texttt{s}, $4755$). setuid bir dosyadan başlatılan süreç, dosya sahibinin --- burada root'un --- \emph{etkin} (effective) UID'siyle çalışır; \emph{gerçek} (real) UID'si ise \texttt{student} olarak kalır, böylece \cmd{passwd} kimin parolasını değiştireceğini bilir. Bu, küçük bir güvenilir kod parçasına verilen ayrıcalıktır; 2.~haftadaki sistem çağrısıyla aynı fikirdir. setuid-root bir programdaki bir hata saldırgana root yetkisi verir; bu yüzden bu programlar çok azdır (\cmd{passwd}, \cmd{su}, \cmd{sudo}, \dots) ve kendi betiklerinizi asla setuid yapmamalısınız (Linux betiklerde setuid'i zaten yok sayar).
+
+\subsection{\texttt{/tmp} üzerindeki yapışkan bit}
+
+\lstinputlisting[style=term,firstline=7,lastline=19]{../code/out_special.txt}
+
+\texttt{/tmp} dizininin modu $1777$ = \texttt{rwxrwxrwt}'dir: herkes orada dosya oluşturabilir. Başka bir kural olmasaydı, dizindeki $w$ herkesin başkalarının dosyalarını silmesine izin verirdi (Kısım~\ref{sec:dirs}). \term{Yapışkan bit} (sticky bit; diğerlerinin $x$ konumundaki \texttt{t}) şu kuralı ekler: böyle bir dizinde bir dosyayı yalnızca dosyanın (ya da dizinin) sahibi veya root silebilir ya da yeniden adlandırabilir. Bu gösterim için root herkese yazılabilir bir \texttt{/tmp/w11\_admin.txt} dosyası oluşturmuştu; öğrencimiz onu yine de silemez, ama kendi dosyasını silebilir.
+
+% =====================================================================
+\section{Komut Başvuru Tablosu}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X l@{}}
+\toprule
+\textbf{Komut} & \textbf{Amaç} & \textbf{Örnek} \\
+\midrule
+\cmd{whoami}, \cmd{id}, \cmd{groups} & kullanıcı adı; UID, GID, gruplar & \cmd{id} \\
+\cmd{getent group G} & grup veritabanından bir satır & \cmd{getent group students} \\
+\cmd{ls -l}, \cmd{ls -ld} & mod, sahip, grup (\texttt{-d} ile dizinin kendisininki) & \cmd{ls -ld docs} \\
+\cmd{stat -c FORMAT} & \texttt{\%a} sekizli, \texttt{\%A} sembolik, \texttt{\%U}/\texttt{\%G} sahip/grup, \texttt{\%n} ad & \cmd{stat -c '\%a \%A \%n' *} \\
+\cmd{chmod who±=perm} & bitleri sembolik olarak değiştir & \cmd{chmod u+x,go-w f} \\
+\cmd{chmod NNN} & dokuz bitin hepsini sekizli olarak ata & \cmd{chmod 640 f} \\
+\cmd{chmod -R} & özyinelemeli (sembolik tercih edin) & \cmd{chmod -R go-rwx dir} \\
+\cmd{umask}, \cmd{umask -S} & oluşturma maskesini göster ya da ayarla & \cmd{umask 027} \\
+\cmd{chown U[:G]} & sahibi değiştir (yalnızca root) & \cmd{sudo chown root:root f} \\
+\cmd{chgrp G} & grubu değiştir (gruplarınızdan birine) & \cmd{chgrp students dir} \\
+\cmd{sudo CMD} & tek bir komutu root olarak çalıştır & \cmd{sudo whoami} \\
+\cmd{sudo -k} & önbellekteki sudo parolasını unut & \cmd{sudo -k} \\
+\cmd{usermod -aG G U} & bir kullanıcıyı bir gruba ekle (yönetici) & \cmd{sudo usermod -aG students ali} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Ayrıntılar \cmd{man} sayfalarındadır (\cmd{man chmod}; NAME, SYNOPSIS, DESCRIPTION bölümleri; \texttt{/sözcük} arar, \texttt{q} çıkar); \cmd{chmod --help} kısa bir özet yazdırır.
+
+% =====================================================================
+\section{Sık Görülen Hatalar ve Anlamları}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily\raggedright\arraybackslash}p{5.3cm} X@{}}
+\toprule
+\textbf{\normalfont İleti} & \textbf{Nedeni ve çözümü} \\
+\midrule
+bash: ./hello.sh: Permission denied & Dosyanın $x$ biti yok. \cmd{chmod u+x hello.sh} (ya da \cmd{bash hello.sh} ile çalıştırın). \\
+bash: hello.sh: command not found & İzin sorunu değil: \texttt{.} \texttt{PATH} içinde değil. \cmd{./hello.sh} yazın. \\
+cat: /etc/shadow: Permission denied & Diğerleri sınıfındasınız ve bu sınıfın $r$'si yok. Sistem dosyaları için doğru davranış. \\
+bash: cd: box: Permission denied & Dizinde sizin için $x$ yok. \cmd{chmod u+x box}. \\
+ls: cannot open directory 'box': Permission denied & Dizinde $r$ yok. \cmd{chmod u+r box}. \\
+-????????? ? ? ? ? ? secret.txt & $r$'si olup $x$'i olmayan bir dizinde \cmd{ls -l}: adlar görünür, düğümler görünmez. \\
+chown: \dots: Operation not permitted & Sahibi yalnızca root değiştirebilir; yöneticiye başvurun (\cmd{sudo chown}). \\
+chgrp: \dots: Operation not permitted & O grubun üyesi değilsiniz (ya da dosyanın sahibi değilsiniz). \\
+chmod: invalid mode: '854' & $8$ ve $9$ sekizli basamak değildir; ya da \emph{kim}/işleç içermeyen bir sembolik mod (\texttt{rw}). \\
+rm: remove write-protected regular file? & Dosya salt okunur, ama dizin yazılabilir: \texttt{y} yanıtı dosyayı siler. \\
+rm: cannot remove '/tmp/\dots': Operation not permitted & Yapışkan bit: dosya sizin değil. \\
+student is not in the sudoers file. & Yönetici değilsiniz; \cmd{sudo} reddedilir (ve günlüğe kaydedilir). \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Sekiz cümlede 11. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item Her dosya erişimi bir sistem çağrısıdır; bu yüzden çekirdek (2.~hafta) sürecin UID ve GID'lerini düğümde saklanan sahip, grup ve modla (7.~hafta) karşılaştırabilir.
+  \item Kullanıcıların ve grupların adları ve numaraları vardır; \cmd{id} bunları gösterir, \texttt{/etc/passwd} ve \texttt{/etc/group} saklar, \texttt{/etc/shadow} parola özetlerini tutar.
+  \item Mod dizgesi bir tür karakteri ile $r$, $w$, $x$'ten oluşan üç üçlüdür (kullanıcı, grup, diğerleri); $4$, $2$, $1$ ağırlıklarıyla her üçlü bir sekizli basamaktır, örneğin \texttt{-rwxr-x---} $= 750$.
+  \item Tam olarak bir sınıf uygulanır: sahip, değilse grup, değilse diğerleri.
+  \item Dizinlerde $r$ listeler, $w$ girdi oluşturur ve siler, $x$ içeri girer; bir dosyayı silmek dosyada değil, dizinde $w$ gerektirir.
+  \item \cmd{chmod} sembolik (\texttt{u+x}, \texttt{go-w}, \texttt{a=r}) ya da sekizli (\texttt{644}, \texttt{755}, \texttt{600}) çalışır; asla \texttt{777}.
+  \item umask $666$/$777$'den bit temizler: $002 \to 664/775$, $022 \to 644/755$; dosyalar için $033 \to 644$ (bit işlemi, $633$ değil).
+  \item Sahipleri yalnızca root değiştirir; \cmd{sudo} tek bir komutu root olarak çalıştırır; setuid (\cmd{passwd}) ve yapışkan bit (\texttt{/tmp}) özel bitlerdir.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{12\baselineskip}
+\section{Sözlük}
+
+\begin{description}[leftmargin=0pt,itemsep=0.15em]
+  \item[EACCES / EPERM] ``Permission denied'' (bir bit eksik) ve ``Operation not permitted'' (bir ayrıcalık eksik) iletilerinin arkasındaki hata kodları.
+  \item[GID (group ID)] Bir grubun numarası; her kullanıcının bir birincil ve olası ek grupları vardır.
+  \item[Mod (mode)] Bir dosyanın türü ve düğümde saklanan $12$ izin biti (dokuz $rwx$ biti ile setuid, setgid ve yapışkan bit).
+  \item[root] Süper kullanıcı, UID $0$.
+  \item[Sekizli gösterim (octal notation)] Her üçlüyü $r=4$, $w=2$, $x=1$ ile $0$--$7$ arasında tek bir basamak olarak yazmak.
+  \item[setgid] Bir dizinde: yeni dosyalar dizinin grubunu devralır ($2000$).
+  \item[setuid] Bir program, sahibinin etkin UID'siyle çalışır ($4000$); örneğin \cmd{passwd}.
+  \item[sudo] \texttt{/etc/sudoers} dosyasında izin verilen kullanıcılar için tek bir komutu root olarak çalıştırır.
+  \item[UID (user ID)] Çekirdeğin bir kullanıcıyı tanıdığı numara.
+  \item[umask] Yeni oluşturulan her dosya ya da dizinin modundan temizlenen bitlerin, süreç başına tutulan maskesi.
+  \item[Yapışkan bit (sticky bit)] Paylaşılan bir dizinde bir dosyayı yalnızca sahibi silebilir ya da yeniden adlandırabilir ($1000$); örneğin \texttt{/tmp}.
+\end{description}
+
+% =====================================================================
+\section{Laboratuvar Föyü: Bir Proje Klasörünü Güvenli Hâle Getirmek}
+\label{sec:lab}
+
+\cmd{bash mcmp117\_lab\_setup.sh} komutunu çalıştırdıktan sonra \texttt{\textasciitilde/lab} içinde çalışın. Her alıştırma için kullandığınız komut(lar)ı \emph{ve} sonucu kanıtlayan \cmd{ls -l} ya da \cmd{stat} satırını teslim edin. Toplam: $100$ puan (A~bölümü $20$, B~bölümü $48$, C~bölümü $32$). Örnek çözümler için bkz.\ Kısım~\ref{sec:sol}. Ek alıştırma: \cmd{ls -l /usr/bin | grep rws} makinenizdeki setuid programlarını listeler; \cmd{python3 code/perm\_check.py} ise yanıtlarınızı denetlemeniz için bir dönüşüm tablosu yazdırır.
+
+\subsection*{A bölümü --- Ben kimim? (temel)}
+\begin{enumerate}[leftmargin=1.8em,label=\textbf{\arabic*.}]
+  \item \textbf{(4 puan)} \cmd{whoami}, \cmd{id} ve \cmd{groups} komutlarını çalıştırın. UID'nizi, birincil grubunuzu ve üyesi olduğunuz grup sayısını yazın.
+  \item \textbf{(5 puan)} \texttt{/etc/passwd} içindeki kendi satırınızı gösterin (\cmd{grep "\^{}\$USER:" /etc/passwd}). Yedi alanın hepsini adlandırın. Ev dizininiz ve oturum kabuğunuz nedir?
+  \item \textbf{(5 puan)} \cmd{ls -l docs/syllabus.txt} komutunu çalıştırın. Dosyayı kim okuyabilir, kim yazabilir? Modunu sekizli olarak verin ve \cmd{stat -c '\%a \%A'} ile denetleyin.
+  \item \textbf{(6 puan)} Kâğıt üzerinde: \texttt{rwxr-x---}, \texttt{rw-r--r--} ve \texttt{rwx------} modlarını sekizliye; $640$, $711$, $775$'i sembolik gösterime çevirin.
+\end{enumerate}
+
+\subsection*{B bölümü --- chmod ve umask (orta)}
+\begin{enumerate}[leftmargin=1.8em,label=\textbf{\arabic*.},resume]
+  \item \textbf{(6 puan)} \texttt{scripts/hello.sh} betiğini, Kısım~\ref{sec:script} içindeki iki \cmd{echo} komutuyla bu dosyaya yazarak oluşturun. Onu \emph{yalnızca sahip} için çalıştırılabilir yapın ve \cmd{./scripts/hello.sh} olarak çalıştırın.
+  \item \textbf{(6 puan)} Yalnızca \emph{sembolik} mod kullanarak \texttt{docs/notes\_01.txt} dosyasını \texttt{rw-rw-r--}'dan \texttt{rw-r-----}'ya değiştirin.
+  \item \textbf{(6 puan)} Yalnızca \emph{sekizli} mod kullanarak \texttt{docs/notes\_02.txt} dosyasını sahibi tarafından okunabilir ve yazılabilir, başka hiç kimse tarafından erişilemez yapın. \cmd{stat} ile doğrulayın.
+  \item \textbf{(6 puan)} \texttt{projects/alpha} dizinini özel yapın: yalnızca siz listeleyebilir, girebilir ya da değiştirebilirsiniz. İçindeki dosyaları da değiştirmeniz gerekir mi? Neden (gerekmez)?
+  \item \textbf{(6 puan)} \texttt{projects/beta}: grup onu listeleyip içine girebilsin ama değiştiremesin; diğerleri hiçbir şey alamasın. \texttt{projects/beta/README.md} dosyasına \texttt{rw-r-----} modunu verin.
+  \item \textbf{(6 puan)} \texttt{umask 027} ile yeni bir dosyanın ve yeni bir dizinin modlarını tahmin edin. Doğrulayın, sonra \texttt{umask 002}'ye geri dönün.
+  \item \textbf{(6 puan)} Aynısını \texttt{umask 033} ile yapın. Dosyanın neden $633$ olmadığını $666$ ve $033$'ün ikili gösterimiyle açıklayın.
+  \item \textbf{(6 puan)} İçinde \texttt{a.txt} dosyası bulunan \texttt{t12} adlı bir dizin oluşturun. \texttt{t12}'den sahibin $x$ hakkını kaldırın. \cmd{ls t12}, \cmd{cd t12}, \cmd{cat t12/a.txt} komutlarından hangileri hâlâ çalışır? Açıklayın, sonra biti geri koyun.
+\end{enumerate}
+
+\subsection*{C bölümü --- Zorlu}
+\begin{enumerate}[leftmargin=1.8em,label=\textbf{\arabic*.},resume]
+  \item \textbf{(7 puan)} \texttt{docs/notes\_03.txt} dosyasını salt okunur ($444$) yapın ve silin. Bu neden işe yarıyor? Sonra \texttt{docs/linux\_quotes.txt} dosyasını salt okunur yapın, \texttt{docs}'u $555$ yapın ve \cmd{rm -f} ile yeniden deneyin. Farkı açıklayın ve \texttt{docs}'u $775$'e geri getirin.
+  \item \textbf{(7 puan)} \texttt{src/hello.c} dosyasını \cmd{chown} ile \texttt{root}'a, \cmd{chgrp} ile \texttt{students} grubuna vermeyi deneyin. İki hata iletisini de açıklayın. Bir yönetici hangi komutu kullanırdı?
+  \item \textbf{(8 puan)} \texttt{/usr/bin/passwd}, \texttt{/etc/shadow} ve \texttt{/tmp}'nin modlarını gösterin. \texttt{s}'yi ve \texttt{t}'yi açıklayın. \texttt{/tmp} içinde bir dosya oluşturun, listeleyin ve silin.
+  \item \textbf{(10 puan)} \textbf{Ekip klasörü.} İçinde \texttt{deploy.sh} (\texttt{deploying...} yazdıran iki satırlık bir betik), \texttt{secret.txt} ve \texttt{notes.txt} bulunan \texttt{projects/team} klasörünü oluşturun. Gereksinimler: klasöre grup girebilmeli ve onu listeleyebilmeli ama değiştirememeli; \texttt{deploy.sh}'yi siz ve grup çalıştırabilmeli; \texttt{notes.txt}'yi grup okuyabilmeli; \texttt{secret.txt}'yi yalnızca siz. Diğerleri hiçbir yerde hiçbir şey alamaz. Sekizli modları verin, ayarlayın, dördünü de tek bir \cmd{stat} komutuyla gösterin ve betiği çalıştırın.
+\end{enumerate}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item Bir kullanıcı programı dosya izinlerini neden kolayca atlayamaz? \emph{Sistem çağrısı} ve \emph{çekirdek modu} kavramlarını kullanın.
+  \item UID ile kullanıcı adı arasındaki fark nedir? Düğüm hangisini saklar?
+  \item Parola özetleri neden \texttt{/etc/passwd} içinde değil de \texttt{/etc/shadow} içinde saklanır?
+  \item Bir dizinde $r$, $w$ ve $x$'in anlamını açıklayın. Salt okunur bir dosyayı silmek neden mümkündür?
+  \item Bir dosyanın modu \texttt{----rw-rw-} ve sahibi sizsiniz. Onu okuyabilir misiniz? Kendiniz için okunabilir yapabilir misiniz?
+  \item Sembolik modu ne zaman, sekizli modu ne zaman kullanırsınız? Bir dizin ağacında \texttt{chmod -R 644} neden kötü bir fikirdir?
+  \item ``Permission denied'' ile ``Operation not permitted'' arasındaki fark nedir?
+  \item \cmd{passwd} neden setuid root'tur ve setuid programlar neden bir güvenlik riskidir?
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item Sekizliye çevirin: \texttt{rwxrwx---}, \texttt{r-xr-xr-x}, \texttt{rw-------}, \texttt{rwxr-xr--}.
+  \item Sembolik gösterime çevirin: $604$, $751$, $440$, $2770$.
+  \item Bir dosyanın modu $664$. \texttt{chmod o-r,g-w} sonrasında modu nedir? Özgün moddan başlayarak \texttt{chmod a+x} sonrasında?
+  \item $007$, $011$ ve $077$ umask değerleri için yeni bir dosyanın ve yeni bir dizinin modlarını hesaplayın. Bunlardan hangilerinde düz çıkarma dosya için yanlış sonuç verir?
+  \item Bir sınıf için kaç farklı izin bileşimi vardır? Dokuz bitin hepsi için? Üç özel bit de dâhil?
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=9]
+  \item $\texttt{rwxrwx---} = 770$; $\texttt{r-xr-xr-x} = 555$; $\texttt{rw-------} = 600$; $\texttt{rwxr-xr--} = 754$.
+  \item $604 = \texttt{rw----r--}$; $751 = \texttt{rwxr-x--x}$; $440 = \texttt{r--r-----}$; $2770 = \texttt{rwxrws---}$ (setgid \texttt{s} olarak görünür).
+  \item \texttt{o-r,g-w}: $\texttt{rw-rw-r--} \to \texttt{rw-r-----} = 640$. \texttt{a+x}: $\texttt{rwxrwxr-x} = 775$ (her basamak $+1$, çünkü $x$ hiçbir yerde yoktu).
+  \item umask $007$: dosya $666 \mathbin{\text{AND}} 770 = 660$, dizin $770$; çıkarma $666-007 = 657$ verir (yanlış). umask $011$: dosya $666$ (temizlenecek $x$ yok), dizin $766$; çıkarma $655$ verir (yanlış). umask $077$: dosya $600$, dizin $700$; çıkarma $567$ verir (yanlış). $777$ her biti içerdiğinden dizinlerde çıkarma her zaman doğrudur. (\cmd{code/perm\_check.py} ile denetlendi.)
+  \item Bir sınıf: $2^3 = 8$. Dokuz bit: $2^9 = 512$. setuid, setgid ve yapışkan bit ile: $2^{12} = 4096$.
+\end{enumerate}
+
+% =====================================================================
+\section{İleriye Bakış: 12. Hafta}
+
+Gelecek hafta, \textbf{Metin İşleme, Yönlendirme ve Borular}, komutları birbirine bağlıyor. Her süreç üç açık dosya tanımlayıcısıyla başlar: $0$ (standart girdi), $1$ (standart çıktı) ve $2$ (standart hata) --- 2.\ ve 3.~haftalardaki \cmd{write(1, \dots)} çağrılarıyla aynı numaralar. Bunları dosyalara yönlendirecek (redirection: \texttt{>}, \texttt{>>}, \texttt{2>}, \texttt{2>\&1}), süreçleri borularla (pipes, \texttt{|}) bağlayacak ve \texttt{\textasciitilde/lab/logs/access.log} web sunucusu günlüğünü \cmd{grep}, \cmd{sort}, \cmd{uniq}, \cmd{cut} ve \cmd{wc} ile çözümleyeceğiz. İzinler hemen geri dönüyor: yazamadığınız bir dosyaya çıktı yönlendirmek, bu haftanın ``Permission denied'' iletisinin aynısını verir.
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley: Kısım~13.4 (Protection, File-System Interface bölümünde), Bölüm~17 (Protection) ve Bölüm~20'nin (The Linux System) güvenlik kısmı.
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}:
+  \begin{itemize}
+    \item Bölüm~39, ``Interlude: Files and Directories'' (izin bitleri ve erişim denetim listeleri kısmı): \url{https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf}
+    \item Güvenlik bölümü ``Access Control'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/security-access.pdf}
+  \end{itemize}
+  \item D.\,M.\ Ritchie ve K.\ Thompson, ``The UNIX Time-Sharing System'', \emph{Communications of the ACM} 17(7), 1974, s.~365--375 (Kısım~3.5 koruma bitlerini ve set-user-ID bitini anlatır).
+\end{itemize}
+
+% =====================================================================
+\section{Laboratuvar Föyü Çözümleri}
+\label{sec:sol}
+
+\lstdefinestyle{term}{style=course, numbers=none, keywordstyle=\color{light},
+  commentstyle=\color{white!60}, stringstyle=\color{light}, basicstyle=\ttfamily\scriptsize\color{light},
+  aboveskip=0.4em, belowskip=0.3em}
+Bütün çıktılar gerçektir (\cmd{code/lab\_solutions.sh}, \cmd{code/out\_lab\_solutions.txt} içinde yakalandı); tarihler ve numaralar sizin makinenizde farklı olacaktır.
+
+\paragraph{1.} \cmd{whoami; id; groups} --- çıktı tam olarak Kısım~\ref{sec:who} içindeki gibidir: UID $1011$ (sizinki farklı olacaktır), birincil grup \texttt{student}, tek grup.
+
+\paragraph{2.} \cmd{grep "\^{}\$USER:" /etc/passwd} komutu\\ \texttt{student:x:1011:1013::/home/student:/bin/bash} yazdırır. Alanlar: kullanıcı adı, parola yer tutucusu \texttt{x}, UID, GID, açıklama (boş), ev dizini \texttt{/home/student}, kabuk \texttt{/bin/bash}.
+
+\paragraph{3.} Sahip ve grup okuyup yazabilir, diğerleri yalnızca okuyabilir: $664$.
+\lstinputlisting[style=term,firstline=12,lastline=15]{../code/out_lab_solutions.txt}
+
+\paragraph{4.} $\texttt{rwxr-x---} = 750$, $\texttt{rw-r--r--} = 644$, $\texttt{rwx------} = 700$; $640 = \texttt{rw-r-----}$, $711 = \texttt{rwx--x--x}$, $775 = \texttt{rwxrwxr-x}$.
+
+\paragraph{5.} \texttt{u+x} yalnızca sahibe çalıştırma ekler (özgün mod $644$ olsaydı \texttt{chmod 744} de kabul edilirdi; burada $664$'tü).
+\lstinputlisting[style=term,firstline=17,lastline=23]{../code/out_lab_solutions.txt}
+
+\paragraph{6.} Gruptan $w$'yi, diğerlerinden $r$'yi kaldırın (\texttt{chmod u=rw,g=r,o=} de doğrudur).
+\lstinputlisting[style=term,firstline=25,lastline=27]{../code/out_lab_solutions.txt}
+
+\paragraph{7.} $600 = \texttt{rw-------}$.
+\lstinputlisting[style=term,firstline=29,lastline=31]{../code/out_lab_solutions.txt}
+
+\paragraph{8.} $700$. İçerideki dosyaların değişmesi gerekmez: \texttt{alpha}'da $x$ olmadan başka kimse onlara ulaşamaz.
+\lstinputlisting[style=term,firstline=33,lastline=35]{../code/out_lab_solutions.txt}
+
+\paragraph{9.} Dizin $750$ (grup \texttt{r-x}), dosya $640$. (Alt dizinler hâlâ $775$'tir, ama diğerleri \texttt{beta}'yı geçemez.)
+\lstinputlisting[style=term,firstline=37,lastline=45]{../code/out_lab_solutions.txt}
+
+\paragraph{10.} Tahmin: $666 \mathbin{\text{AND}} \text{NOT}\,027 = 640$, $777 \mathbin{\text{AND}} \text{NOT}\,027 = 750$.
+\lstinputlisting[style=term,firstline=47,lastline=53]{../code/out_lab_solutions.txt}
+
+\paragraph{11.} Dosya $644$, dizin $744$. Bit düzeyinde: $666 = 110\,110\,110$, $\text{NOT}\,033 = 111\,100\,100$, AND $= 110\,100\,100 = 644$. Dosyanın hiç $x$ biti yoktu; bu yüzden gruptan ve diğerlerinden yalnızca $w$ kaldırılır; $633$ yanlışlıkla $x$ bitlerini ``ödünç alırdı''.
+\lstinputlisting[style=term,firstline=55,lastline=61]{../code/out_lab_solutions.txt}
+
+\paragraph{12.} \cmd{ls} adları hâlâ listeler ($r$ var), ama \cmd{cd} ve \cmd{cat} dizinden geçmek için $x$'e ihtiyaç duyar.
+\lstinputlisting[style=term,firstline=63,lastline=74]{../code/out_lab_solutions.txt}
+
+\paragraph{13.} Silmek dizini değiştirir: \texttt{docs} $775$ iken salt okunur dosya (bir sorudan sonra) silinebilir. \texttt{docs} $555$ iken dizin değiştirilemez, bu yüzden \cmd{rm -f} bile başarısız olur.
+\lstinputlisting[style=term,firstline=76,lastline=85]{../code/out_lab_solutions.txt}
+
+\paragraph{14.} Çıktı Kısım~\ref{sec:own} içindeki gibidir (burada \texttt{src/hello.c} için). \cmd{chown} root gerektirir; \cmd{chgrp} \texttt{students}'a başarısız olur, çünkü kullanıcı o grubun üyesi değildir. Bir yönetici \cmd{sudo chown root src/hello.c} ya da \cmd{sudo chgrp students src/hello.c} kullanırdı (ya da kullanıcıyı gruba eklerdi).
+
+\paragraph{15.} Çıktı Kısım~\ref{sec:special} içindeki iki dökümle aynıdır (buradaki kendi dosya: \texttt{/tmp/w11\_ex15.txt}). \texttt{s}: setuid; \cmd{passwd} root'un etkin UID'siyle çalışır, böylece \texttt{/etc/shadow}'u güncelleyebilir. \texttt{t}: yapışkan bit; \texttt{/tmp}'de bir dosyayı yalnızca sahibi silebilir.
+
+\paragraph{16.} Klasör $750$, \texttt{deploy.sh} $750$, \texttt{notes.txt} $640$, \texttt{secret.txt} $600$. Klasörü ve üç dosyayı 5.~alıştırmadaki gibi \cmd{mkdir} ve \cmd{echo} ile oluşturun, ardından:
+\lstinputlisting[style=term,firstline=107,lastline=116]{../code/out_lab_solutions.txt}
+
+\end{document}

@@ -1,0 +1,144 @@
+% ===================== MBLP131 Final Sınavı -- ÖRNEK KÂĞIT (öğrenci sürümü) =====================
+% Dersin önsözüyle derlenir:  python3 ../../lib/assemble_notes.py tr 15 final_ornek_body.tex MBLP131_Final_Ornek.tex "Final Sınavı Örnek Kâğıdı"
+% Her yanıt ../code içinde doğrulandı (theory_check.py, answers_sample.sh); bkz. MBLP131_Final_CevapAnahtari.
+\setlength{\emergencystretch}{3em}\sloppy
+\fancyhead[R]{\small\color{muted}Final Sınavı --- Örnek Kâğıt}
+\setlength{\parskip}{0.35em}
+\newcommand{\pts}[1]{\hfill\textcolor{mintdeep}{\textbf{[#1~puan]}}}
+\newcommand{\ans}[1]{\par\smallskip\noindent\begin{tikzpicture}\draw[muted!60,rounded corners=2pt] (0,0) rectangle (\linewidth,#1);\end{tikzpicture}\par\medskip}
+% Gantt şeması için boş zaman ekseni, 0..#1 ms
+\newcommand{\ganttgrid}[2]{\par\noindent\begin{tikzpicture}[x=0.7cm]
+\node[anchor=east,font=\small\bfseries] at (-0.2,0.31) {#2};
+\draw[muted!70] (0,0) rectangle (#1,0.62);
+\foreach \t in {0,...,#1} {\draw[muted!70] (\t,0) -- (\t,-0.1) node[below,font=\scriptsize,text=muted,inner sep=1pt] {\t};}
+\end{tikzpicture}\par\smallskip}
+% boş çerçeve tablosu: 12 başvuru, 3 çerçeve
+\newcommand{\frametable}[1]{\begin{tabular}{@{}l|*{12}{>{\centering\arraybackslash}p{0.6cm}|}@{}}
+\multicolumn{13}{@{}l}{\textbf{#1}}\\ \hline
+başv. & 5 & 4 & 1 & 5 & 0 & 5 & 4 & 0 & 2 & 1 & 0 & 1 \\ \hline
+çr.\ 0 &&&&&&&&&&&& \\ \hline
+çr.\ 1 &&&&&&&&&&&& \\ \hline
+çr.\ 2 &&&&&&&&&&&& \\ \hline
+hata &&&&&&&&&&&& \\ \hline
+\end{tabular}}
+
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=14pt,bottom=14pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, İşletim Sistemleri Temelleri}}\par\smallskip
+{\headfont\fontsize{22}{26}\selectfont\bfseries Final Sınavı (Yarıyıl Sonu) --- Örnek Kâğıt}\par\smallskip
+{\small İstanbul Okan Üniversitesi \,·\, Meslek Yüksekokulu \,·\, Elektronik Haberleşme Teknolojisi Programı}\par
+{\small Öğretim üyesi: Dr.\ Öğr.\ Üyesi Hasan Oğuz \quad Tarih: [duyurulacak] \quad Süre: [90] dakika}
+\end{tcolorbox}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabularx}{\linewidth}{@{}lX lX@{}}
+\textbf{Ad, soyad:} & \hrulefill & \textbf{Öğrenci no:} & \hrulefill \\
+\textbf{İmza:} & \hrulefill & \textbf{Sıra / salon:} & \hrulefill \\
+\end{tabularx}
+
+\vspace{0.4em}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Bölüm} & A & B & C & D & E & F & \textbf{Toplam} \\ \hline
+\textbf{Puan} & 20 & 12 & 36 & 14 & 9 & 9 & \textbf{100} \\ \hline
+\textbf{Alınan} & & & & & & & \\[0.4em] \hline
+\end{tabular}
+\end{center}
+
+\textbf{Kurallar.} Kitap kapalı [kesinleşecek]. [Basit, programlanamayan hesap makinesi serbesttir --- kesinleşecek.] Telefonlar kapalı. Yanıtlarınızı kutulara yazın; her hesabın tüm adımlarını gösterin (formül $\to$ sayılar $\to$ birimiyle sonuç). Dersin zamanlama uzlaşımları: bağlam değişimi süresi $0$; eşitlikler önce varış zamanına, sonra ada göre bozulur; küçük öncelik numarası yüksek öncelik demektir; Round Robin'de bir zaman diliminin dolduğu anda gelen süreç kuyruğa kesilen süreçten önce girer. TLB: $\text{EAT} = t_{\text{TLB}} + (2-\alpha)\,t_m$ formülünü kullanın. Linux soruları \texttt{\textasciitilde/lab} alıştırma klasörüne (\texttt{mcmp117\_lab\_setup.sh} ile oluşturulur) göredir; aksi belirtilmedikçe çalışma dizininiz \texttt{\textasciitilde/lab}'dır.
+
+% ---------------------------------------------------------------------
+\section*{Bölüm A --- Çoktan seçmeli \hfill (10 $\times$ 2 = 20 puan)}
+\emph{Bir} yanıtı daire içine alın.
+\begin{enumerate}[leftmargin=1.8em,label=A\arabic*.,itemsep=0.35em]
+  \item UNIX, Bell Labs'ta hangi yıl geliştirildi? \quad (a) 1956 \quad (b) 1969 \quad (c) 1981 \quad (d) 1991
+  \item Hangi işletim sistemi yapısında çekirdek modunda yalnızca küçük bir çekirdek çalışır, hizmetlerin çoğu kullanıcı alanındadır? \quad (a) monolitik \quad (b) basit \quad (c) mikroçekirdek \quad (d) modüler
+  \item Hangisi süreç denetim bloğunda (PCB) \emph{saklanmaz}? \quad (a) süreç durumu \quad (b) program sayacı \quad (c) açık dosyaların listesi \quad (d) programın kaynak kodu
+  \item Bir sürecin varışından işlemciyi ilk aldığı ana kadar geçen süre onun \quad (a) dönüş süresi \quad (b) bekleme süresi \quad (c) yanıt süresi \quad (d) patlama süresidir
+  \item Hangi semafor işlemi çağıran iş parçacığını bloklayabilir? \quad (a) \texttt{signal(S)} \quad (b) \texttt{wait(S)} \quad (c) ikisi de \quad (d) hiçbiri
+  \item Bir program çalışırken işlemcinin ürettiği adresler \quad (a) fiziksel \quad (b) mantıksal \quad (c) disk blok numaraları \quad (d) düğüm (inode) numaralarıdır
+  \item Boşa çalışma (thrashing) ne demektir? \quad (a) çok yüksek işlemci kullanımı \quad (b) sürekli sayfa hataları ve düşük işlemci kullanımı \quad (c) \%100 TLB isabet oranı \quad (d) dolu bir disk
+  \item \texttt{chmod 754 f} sonrasında \texttt{ls -l f} ne gösterir? \quad (a) \texttt{-rwxr-xr--} \quad (b) \texttt{-rwxr-x---} \quad (c) \texttt{-rwxrw-r--} \quad (d) \texttt{-rw-r-xr--}
+  \item \texttt{cmd 2> /dev/null} \quad (a) normal çıktıyı atar \quad (b) hata iletilerini atar \quad (c) hataları \texttt{2} adlı bir dosyaya yazar \quad (d) çıktıyı sona ekler
+  \item Hangi komut geçerli kabuğun arka plan işlerini listeler? \quad (a) \texttt{ps} \quad (b) \texttt{top} \quad (c) \texttt{jobs} \quad (d) \texttt{bg}
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\section*{Bölüm B --- Kısa yanıt \hfill (3 $\times$ 4 = 12 puan)}
+\begin{enumerate}[leftmargin=1.8em,label=B\arabic*.]
+  \item Bir program \texttt{write()} çağırıyor. Çağrının çekirdeğe nasıl ulaştığını ve nasıl geri döndüğünü adım adım anlatın (API/sarmalayıcı, sistem çağrısı numarası, tuzak, mod biti, sistem çağrısı tablosu). \pts{4}
+  \ans{3.2cm}
+  \item Yarış durumu nedir? Örnek olarak \texttt{counter++}'ı kullanın ve kritik bölge problemine bir çözümün sağlaması gereken üç koşulu yazın. \pts{4}
+  \ans{3.2cm}
+  \item Boşa çalışma (thrashing) nedir ve çalışma kümesi modeli işletim sisteminin bunu önlemesine nasıl yardım eder? \pts{4}
+  \ans{3.2cm}
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\newpage
+\section*{Bölüm C --- Sayısal problemler \hfill (36 puan)}
+\begin{enumerate}[leftmargin=1.8em,label=C\arabic*.]
+  \item Dört süreç (süreler ms):
+  \begin{center}
+  \begin{tabular}{lcccc}
+  \toprule
+  Süreç & P1 & P2 & P3 & P4 \\ \midrule
+  Varış & 0 & 2 & 3 & 5 \\
+  Patlama & 6 & 2 & 7 & 3 \\
+  Öncelik & 3 & 1 & 4 & 2 \\ \bottomrule
+  \end{tabular}
+  \end{center}
+  Her algoritma için Gantt şemasını çizin, ortalama bekleme süresini ve ortalama dönüş süresini hesaplayın: (a) FCFS, (b) kesintili Öncelik, (c) $q = 2$ ile Round Robin. \pts{12}
+  \ganttgrid{18}{FCFS}
+  \ganttgrid{18}{Öncelik}
+  \ganttgrid{18}{RR, $q=2$}
+  \ans{4.6cm}
+  \item Sayfalar $2$~KB. Sayfa tablosu: sayfa $0 \to$ çerçeve $3$, $1 \to 8$, $2 \to 6$, $3 \to 1$ (dört girdi).
+  (a) $5000$ mantıksal adresini fiziksel adrese çevirin. \pts{3}\\
+  (b) $9000$ mantıksal adresi için ne olur? \pts{1}\\
+  (c) $t_{\text{TLB}} = 10$~ns, $t_m = 90$~ns, $\alpha = 0.8$: etkin erişim süresini hesaplayın. \pts{2}\\
+  (d) Boş delikler (bu sırayla) $200$, $450$, $100$, $300$, $500$~KB. İlk uyan, en iyi uyan ve en kötü uyan ile $280$~KB'lık bir isteği hangi delik alır? \pts{2}
+  \ans{5.2cm}
+  \Needspace{20\baselineskip}
+  \item $3$ çerçeveyle $5, 4, 1, 5, 0, 5, 4, 0, 2, 1, 0, 1$ başvuru dizisi. FIFO, OPT ve LRU için çerçeve tablolarını doldurun ve sayfa hatası sayısını verin. \pts{8}
+  \begin{center}
+  \small\renewcommand{\arraystretch}{1.2}
+  \frametable{FIFO}\quad hata: \underline{\hspace{1.2cm}}\\[0.5em]
+  \frametable{OPT}\quad hata: \underline{\hspace{1.2cm}}\\[0.5em]
+  \frametable{LRU}\quad hata: \underline{\hspace{1.2cm}}
+  \end{center}
+  \item (a) $t_m = 100$~ns, $t_{\text{fault}} = 5$~ms, sayfa hatası oranı $p = 0.0005$: etkin erişim süresini hesaplayın. RAM'den kaç kat yavaştır? \pts{3}\\
+  (b) Bir dosyanın kayıtları $50$ bayt, blokları $512$ bayttır; ikisi de $0$'dan numaralanır. Kayıt $100$ hangi blokta ve hangi konumda başlar? Kayıt o bloğa sığar mı? \pts{3}\\
+  (c) İşler zamanın yarısında G/Ç bekliyor ($p = 0.5$): $U(4)$'ü hesaplayın. Bir programın \%25'i seridir: Amdahl yasası $3$ çekirdekte ne kadar hızlanmaya izin verir, çok sayıda çekirdek için sınır nedir? \pts{2}
+  \ans{6.0cm}
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\newpage
+\section*{Bölüm D --- Komutu yazın \hfill (7 $\times$ 2 = 14 puan)}
+Her görev için \emph{tek} bir komut satırı yazın.
+\begin{enumerate}[leftmargin=1.8em,label=D\arabic*.]
+  \item \texttt{docs} dizininin gizli dosyalar dahil, okunabilir boyutlarla uzun listesi. \ans{0.9cm}
+  \item \texttt{docs/notes\_01.txt} dosyasının adını \texttt{docs/meeting\_01.txt} olarak değiştirin. \ans{0.9cm}
+  \item \texttt{report1.txt} \dots\ \texttt{report5.txt} boş dosyalarını kısa tek bir komutla oluşturun. \ans{0.9cm}
+  \item Çalışma dizininde \texttt{logs/access.log} dosyasını gösteren \texttt{latest.log} adlı bir sembolik bağlantı oluşturun. \ans{0.9cm}
+  \item \texttt{scripts/backup.sh} için (yalnızca) sahibine çalıştırma izni ekleyin; sembolik gösterimle. \ans{0.9cm}
+  \item PID'i $4321$ olan süreç SIGTERM'i yok sayıyor. Onu yine de durdurun. \ans{0.9cm}
+  \item \texttt{logs} dizininin ne kadar disk alanı kullandığını okunabilir biçimde gösterin. \ans{0.9cm}
+\end{enumerate}
+
+\section*{Bölüm E --- Boru hattını yazın \hfill (3 $\times$ 3 = 9 puan)}
+\begin{enumerate}[leftmargin=1.8em,label=E\arabic*.]
+  \item \texttt{data/cities.txt} dosyasında her satırda bir şehir var. En sık geçen şehri sayısıyla birlikte yazdırın. \ans{1.1cm}
+  \item \texttt{logs/access.log} içindeki isteklerin kaçı \texttt{/login} sayfası içindi? (Bir satır şöyle görünür:\\ \texttt{10.0.1.10 - - [12/Oct/2026:08:00:00 +0300] "GET /about.html HTTP/1.1" 404 442}.) \ans{1.1cm}
+  \item \texttt{data/students.csv} dosyasının başlığı \texttt{id,name,department,midterm,final}'dır. Final notu en yüksek üç öğrencinin adını ve final notunu (\texttt{name,final}) en iyiden başlayarak yazdırın. \ans{1.1cm}
+\end{enumerate}
+
+\section*{Bölüm F --- Bir betik yazın \hfill (9 puan)}
+\texttt{passfail.sh} betiğini yazın. Betik tam olarak bir argüman, bir eşik değeri alır. Tam olarak bir argüman verilmezse standart hataya bir kullanım iletisi yazar ve $1$ durumuyla çıkar. Aksi hâlde \texttt{data/students.csv} içinde final notu eşiğe eşit ya da eşikten büyük olan (``passed'') ve eşikten küçük olan (``failed'') öğrencileri sayar ve örneğin \texttt{threshold 50: 30 passed, 10 failed} biçiminde yazdırır.
+\ans{9.0cm}
+
+\begin{center}\itshape --- Kâğıdın sonu. Yanıtlarınızı kontrol edin. Başarılar! ---\end{center}

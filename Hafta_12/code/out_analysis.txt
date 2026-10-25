@@ -1,0 +1,62 @@
+student@okan-lab:~/lab$ head -n 1 logs/access.log
+10.0.1.10 - - [12/Oct/2026:08:00:00 +0300] "GET /about.html HTTP/1.1" 404 442
+student@okan-lab:~/lab$ cut -d" " -f9 logs/access.log | head -n 3
+404
+200
+500
+student@okan-lab:~/lab$ cut -d" " -f9 logs/access.log | sort | head -n 3
+200
+200
+200
+student@okan-lab:~/lab$ cut -d" " -f9 logs/access.log | sort | uniq -c
+    148 200
+     20 301
+     34 304
+     17 403
+     57 404
+     24 500
+student@okan-lab:~/lab$ cut -d" " -f9 logs/access.log | sort | uniq -c | sort -rn
+    148 200
+     57 404
+     34 304
+     24 500
+     20 301
+     17 403
+student@okan-lab:~/lab$ cut -d" " -f7 logs/access.log | sort | uniq -c | sort -rn | head -n 5
+     41 /courses/mcmp117
+     37 /about.html
+     33 /index.html
+     33 /images/logo.png
+     32 /api/grades
+student@okan-lab:~/lab$ cut -d" " -f1 logs/access.log | sort | uniq -c | sort -rn | head -n 3
+     58 10.0.2.17
+     56 10.0.4.31
+     52 10.0.6.45
+student@okan-lab:~/lab$ grep " 404 " logs/access.log | cut -d" " -f7 | sort | uniq -c | sort -rn | head -n 3
+      9 /images/logo.png
+      7 /index.html
+      7 /about.html
+student@okan-lab:~/lab$ grep -c ERROR logs/system.log
+13
+student@okan-lab:~/lab$ grep ERROR logs/system.log | cut -c12-13 | uniq -c
+      3 09
+      4 10
+      1 12
+      3 13
+      2 14
+student@okan-lab:~/lab$ grep WARN logs/system.log | cut -c27- | sort | uniq -c
+     11 high memory usage
+     17 temperature 71C
+student@okan-lab:~/lab$ tail -n +2 data/students.csv | cut -d, -f3 | sort | uniq -c | sort -rn
+     17 ECT
+     11 ME
+     10 CS
+      2 EE
+student@okan-lab:~/lab$ tail -n +2 data/students.csv | sort -t, -k5 -nr | head -n 3 | cut -d, -f2,3,5
+Onur Dogan,ME,100
+Elif Yilmaz,ECT,99
+Emre Dogan,ME,98
+student@okan-lab:~/lab$ grep ",ECT," data/students.csv | sort -t, -k4 -nr | head -n 3
+2026017,Ipek Yilmaz,ECT,100,36
+2026012,Arda Celik,ECT,98,63
+2026006,Mehmet Aydin,ECT,98,85

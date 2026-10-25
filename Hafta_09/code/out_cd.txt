@@ -1,0 +1,30 @@
+student@okan-lab:~$ cd ~/lab
+student@okan-lab:~/lab$ pwd
+/home/student/lab
+student@okan-lab:~/lab$ cd projects/alpha/src
+student@okan-lab:~/lab/projects/alpha/src$ pwd
+/home/student/lab/projects/alpha/src
+student@okan-lab:~/lab/projects/alpha/src$ cd ..
+student@okan-lab:~/lab/projects/alpha$ pwd
+/home/student/lab/projects/alpha
+student@okan-lab:~/lab/projects/alpha$ cd ../../docs
+student@okan-lab:~/lab/docs$ pwd
+/home/student/lab/docs
+student@okan-lab:~/lab/docs$ cd /home/student/lab/projects/beta
+student@okan-lab:~/lab/projects/beta$ pwd
+/home/student/lab/projects/beta
+student@okan-lab:~/lab/projects/beta$ cd -
+/home/student/lab/docs
+student@okan-lab:~/lab/docs$ cd -
+/home/student/lab/projects/beta
+student@okan-lab:~/lab/projects/beta$ cd
+student@okan-lab:~$ pwd
+/home/student
+student@okan-lab:~$ cd /
+student@okan-lab:/$ pwd
+/
+student@okan-lab:/$ cd ~/lab/projects/alpha/docs
+student@okan-lab:~/lab/projects/alpha/docs$ cd ../../beta/src
+student@okan-lab:~/lab/projects/beta/src$ pwd
+/home/student/lab/projects/beta/src
+student@okan-lab:~/lab/projects/beta/src$ cd ~/lab

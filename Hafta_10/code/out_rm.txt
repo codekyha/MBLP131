@@ -1,0 +1,33 @@
+student@okan-lab:~/lab$ touch junk1.txt junk2.txt junk3.txt
+student@okan-lab:~/lab$ rm junk1.txt
+student@okan-lab:~/lab$ rm -i junk2.txt
+rm: remove regular empty file 'junk2.txt'? y
+student@okan-lab:~/lab$ rm -v junk3.txt
+removed 'junk3.txt'
+student@okan-lab:~/lab$ ls junk*
+ls: cannot access 'junk*': No such file or directory
+student@okan-lab:~/lab$ mkdir empty_dir
+student@okan-lab:~/lab$ rmdir empty_dir
+student@okan-lab:~/lab$ rmdir projects/beta
+rmdir: failed to remove 'projects/beta': Directory not empty
+student@okan-lab:~/lab$ rm projects/beta
+rm: cannot remove 'projects/beta': Is a directory
+student@okan-lab:~/lab$ cp -r projects/beta beta_copy
+student@okan-lab:~/lab$ tree beta_copy
+beta_copy
+├── README.md
+├── docs
+│   └── design.txt
+└── src
+    └── main.c
+
+3 directories, 3 files
+student@okan-lab:~/lab$ rm -rv beta_copy
+removed 'beta_copy/src/main.c'
+removed directory 'beta_copy/src'
+removed 'beta_copy/README.md'
+removed 'beta_copy/docs/design.txt'
+removed directory 'beta_copy/docs'
+removed directory 'beta_copy'
+student@okan-lab:~/lab$ ls
+README.txt  backup  data  docs  logs  photos  projects  scripts  src

@@ -1,0 +1,28 @@
+student@okan-lab:~/lab$ cd src
+student@okan-lab:~/lab/src$ gcc -Wall -O2 -o zombie zombie.c
+student@okan-lab:~/lab/src$ ./zombie 25 &
+[1] 3119
+student@okan-lab:~/lab/src$ parent 3119: child is 3120, sleeping 25 s without wait()
+child  3120: exiting now with status 7
+ps -o pid,ppid,stat,cmd
+  PID  PPID STAT CMD
+ 3057  3056 Ss   -bash
+ 3119  3057 S    ./zombie 25
+ 3120  3119 Z    [zombie] <defunct>
+ 3121  3057 R+   ps -o pid,ppid,stat,cmd
+student@okan-lab:~/lab/src$ grep State /proc/$(pgrep -u student -n zombie)/status
+State:	Z (zombie)
+student@okan-lab:~/lab/src$ kill -9 $(pgrep -u student -n zombie)
+student@okan-lab:~/lab/src$ ps -o pid,ppid,stat,cmd
+  PID  PPID STAT CMD
+ 3057  3056 Ss   -bash
+ 3119  3057 S    ./zombie 25
+ 3120  3119 Z    [zombie] <defunct>
+ 3125  3057 R+   ps -o pid,ppid,stat,cmd
+student@okan-lab:~/lab/src$ wait
+parent 3119: reaped child 3120, exit status 7
+[1]+  Done                    ./zombie 25
+student@okan-lab:~/lab/src$ ps -o pid,ppid,stat,cmd
+  PID  PPID STAT CMD
+ 3057  3056 Ss   -bash
+ 3128  3057 R+   ps -o pid,ppid,stat,cmd

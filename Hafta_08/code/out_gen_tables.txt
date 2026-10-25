@@ -1,0 +1,43 @@
+wrote tex/rv_gantt_fcfs.tex
+wrote tex/rv_sched_fcfs.tex
+wrote tex/rv_gantt_sjf.tex
+wrote tex/rv_sched_sjf.tex
+wrote tex/rv_gantt_srtf.tex
+wrote tex/rv_sched_srtf.tex
+wrote tex/rv_gantt_prio.tex
+wrote tex/rv_sched_prio.tex
+wrote tex/rv_gantt_rr3.tex
+wrote tex/rv_sched_rr3.tex
+wrote tex/rv_frames_FIFO.tex
+   rv FIFO: 11 faults
+wrote tex/rv_frames_LRU.tex
+   rv LRU: 9 faults
+wrote tex/rv_frames_OPT.tex
+   rv OPT: 7 faults
+wrote tex/rv_fits.tex
+wrote tex/pr_gantt_fcfs.tex
+wrote tex/pr_sched_fcfs.tex
+wrote tex/pr_gantt_srtf.tex
+wrote tex/pr_sched_srtf.tex
+wrote tex/pr_gantt_rr4.tex
+wrote tex/pr_sched_rr4.tex
+wrote tex/pr_frames_FIFO.tex
+   pr FIFO: 10 faults
+wrote tex/pr_frames_LRU.tex
+   pr LRU: 9 faults
+wrote tex/pr_frames_OPT.tex
+   pr OPT: 7 faults
+wrote tex/pr_fits.tex
+wrote tex/sa_gantt_sjf.tex
+wrote tex/sa_sched_sjf.tex
+wrote tex/sa_gantt_prio.tex
+wrote tex/sa_sched_prio.tex
+wrote tex/sa_gantt_rr3.tex
+wrote tex/sa_sched_rr3.tex
+wrote tex/sa_frames_FIFO.tex
+   sa FIFO: 8 faults
+wrote tex/sa_frames_LRU.tex
+   sa LRU: 7 faults
+wrote tex/sa_frames_OPT.tex
+   sa OPT: 5 faults
+wrote tex/sa_fits.tex

@@ -1,0 +1,7 @@
+student@okan-lab:~/lab$ cut -d' ' -f9 logs/access.log | sort | uniq -c | sort -rn
+    148 200
+     57 404
+     34 304
+     24 500
+     20 301
+     17 403

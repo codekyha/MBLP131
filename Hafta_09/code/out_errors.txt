@@ -1,0 +1,27 @@
+student@okan-lab:~$ cd ~/lab
+student@okan-lab:~/lab$ LS
+bash: LS: command not found
+student@okan-lab:~/lab$ sl
+bash: sl: command not found
+student@okan-lab:~/lab$ ls -z
+ls: invalid option -- 'z'
+Try 'ls --help' for more information.
+student@okan-lab:~/lab$ ls Docs
+ls: cannot access 'Docs': No such file or directory
+student@okan-lab:~/lab$ cd nowhere
+bash: cd: nowhere: No such file or directory
+student@okan-lab:~/lab$ cd README.txt
+bash: cd: README.txt: Not a directory
+student@okan-lab:~/lab$ ls docs/final report.txt
+ls: cannot access 'docs/final': No such file or directory
+ls: cannot access 'report.txt': No such file or directory
+student@okan-lab:~/lab$ ls "docs/final report.txt"
+'docs/final report.txt'
+student@okan-lab:~/lab$ ls docs/final\ report.txt
+'docs/final report.txt'
+student@okan-lab:~/lab$ cd docs/final report.txt
+bash: cd: too many arguments
+student@okan-lab:~/lab$ cd /root
+bash: cd: /root: Permission denied
+student@okan-lab:~/lab$ pwd
+/home/student/lab

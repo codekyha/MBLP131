@@ -1,0 +1,840 @@
+% ============================ Hafta 3 gövdesi ============================
+% İngilizce referans: ../week03/notes_body.tex (aynı bölümler, aynı sayılar)
+\setlength{\emergencystretch}{3em}
+\tcbset{breakable}
+\lstset{style=course,language=C,basicstyle=\ttfamily\footnotesize\color{light}}
+\thispagestyle{empty}
+\begin{tcolorbox}[enhanced,colback=dark,colframe=dark,arc=0pt,boxrule=0pt,
+  left=18pt,right=18pt,top=20pt,bottom=20pt,coltext=white]
+{\small\color{mint}\textsc{MBLP131 \,·\, Hafta 3 \,·\, Ders Notları}}\par\medskip
+{\headfont\fontsize{26}{30}\selectfont\bfseries İşletim Sistemleri Temelleri}\par\medskip
+{\large İşletim Sistemi Hizmetleri, Sistem Çağrıları ve Süreçler}\par\smallskip
+{\small\itshape\color{white!70} İşletim sistemi bir program için ne yapar ve çalışan bir program tam olarak nedir?}
+\end{tcolorbox}
+
+\vspace{0.4em}
+\begin{minipage}[t]{0.70\linewidth}
+\small
+\textbf{Öğretim üyesi:} Dr.\ Öğr.\ Üyesi Hasan Oğuz\\
+Elektronik Haberleşme Teknolojisi Program Başkanı, Meslek Yüksekokulu\\
+İstanbul Okan Üniversitesi
+\end{minipage}
+
+\vspace{0.8em}
+\begin{keyidea}[Bu haftanın sonunda yapabilmeniz gerekenler]
+\begin{enumerate}[leftmargin=1.4em]
+  \item İşletim sisteminin kullanıcılara ve programlara sunduğu hizmetleri ve kendi verimli çalışması için ihtiyaç duyduğu hizmetleri saymak.
+  \item Bir API fonksiyonunu, bir kütüphane sarmalayıcısını ve bir sistem çağrısını birbirinden ayırmak; bir C programındaki tek bir \cmd{write()} çağrısını çekirdeğe kadar ve geri izlemek.
+  \item Sistem çağrısı tablosunu, parametre aktarmanın üç yolunu ve sistem çağrılarının altı kategorisini açıklamak.
+  \item Program ile süreç arasındaki farkı açıklamak ve bir sürecin bellek düzenini (text, data, bss, heap, stack) çizmek.
+  \item Beş durumlu süreç diyagramını çizmek, her geçişi neyin tetiklediğini söylemek ve bir süreç denetim bloğunun (process control block, PCB) içeriğini saymak.
+  \item Bağlam değişimini anlatıp ek yükünü hesaplamak; \cmd{fork()}, \cmd{exec()} ve \cmd{wait()} çağrılarını, zombileri ve yetimleri açıklamak; bir döngü içindeki \cmd{fork()} çağrılarının kaç süreç yarattığını saymak.
+\end{enumerate}
+\end{keyidea}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================
+\section*{Nerede kalmıştık?}
+2.~haftada \term{ikili mod çalışması} (dual-mode operation) ile tanıştık ve \cmd{strace} ile ilk \term{sistem çağrısını} (system call) izledik: \cmd{printf()} sonunda \cmd{write(1, \dots)} oldu ve en küçük bir sistem çağrısı yaklaşık $116$~ns, yani bir fonksiyon çağrısının kabaca $76$ katı sürdü. Bu hafta önce sistem çağrısı kapısının ardında hangi hizmetlerin bulunduğunu (Kısım~\ref{sec:services}) ve bir isteğin bu kapıdan nasıl geçtiğini (Kısım~\ref{sec:syscalls}) soruyoruz; ardından \term{sürece} (process) geçiyoruz (Kısım~\ref{sec:process}--\ref{sec:creation}).
+
+% =====================================================================
+\section{İşletim Sistemi Hizmetleri}
+\label{sec:services}
+
+İşletim sistemi, programların içinde çalıştığı bir ortam sağlar. Sunulan hizmetler işletim sisteminden işletim sistemine değişir, ama yaygın olanlar iki gruba ayrılır: \emph{kullanıcıya} (ve kullanıcının programlarına) yardım eden hizmetler ve birçok kullanıcı ve program sistemi paylaşırken \emph{sistemin kendisini} verimli ve güvenli biçimde çalışır tutan hizmetler.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  b/.style={rectangle,rounded corners=2pt,minimum height=0.6cm,align=center,font=\footnotesize},
+  wide/.style={b,minimum width=12cm}]
+\node[wide,fill=light] at (0,3.6) {\textbf{Kullanıcı ve diğer sistem programları}};
+\foreach \x/\t in {-4/Grafik arayüz, 0/Dokunmatik ekran, 4/Komut satırı} \node[b,fill=mint!25,minimum width=3.8cm] at (\x,2.75) {\t};
+\node[font=\scriptsize\itshape,text=muted,anchor=east] at (6,2.25) {kullanıcı arayüzleri};
+\node[wide,fill=slate,text=white] at (0,1.75) {\textbf{Sistem çağrıları}};
+\fill[charcoal,rounded corners=3pt] (-6,-1.25) rectangle (6,1.25);
+\node[font=\scriptsize\bfseries,text=mint,anchor=west] at (-5.9,1.0) {İŞLETİM SİSTEMİ};
+\foreach \i/\t in {0/{Program\\yürütme},1/{G/Ç\\işlemleri},2/{Dosya\\sistemleri},3/{İletişim},4/{Hata\\algılama}}
+  \node[b,fill=mint,minimum width=2.1cm,minimum height=0.85cm] at (-4.6+\i*2.3,0.3) {\t};
+\foreach \i/\t in {0/{Kaynak tahsisi},1/{Hesap tutma},2/{Koruma ve güvenlik}}
+  \node[b,fill=slate,text=white,minimum width=3.6cm,minimum height=0.7cm] at (-3.85+\i*3.85,-0.75) {\t};
+\node[wide,fill=dark,text=white] at (0,-1.75) {\textbf{Donanım}};
+\end{tikzpicture}
+\caption{İşletim sistemi hizmetlerine genel bakış (Silberschatz vd., Şekil~2.1'den uyarlanmıştır). Nane yeşili: kullanıcıya yönelik hizmetler; gri: sistemin kendisine yönelik hizmetler.}
+\end{figure}
+
+\subsection{Kullanıcıya yardım eden hizmetler}
+
+\begin{itemize}
+  \item \textbf{Kullanıcı arayüzü.} Neredeyse her işletim sisteminde bulunur. \term{Komut satırı arayüzü} (command-line interface, CLI) yazılan komutları okur; \term{grafik kullanıcı arayüzü} (graphical user interface, GUI) pencereler, simgeler ve bir işaretçi kullanır; telefonlar ve tabletler \emph{dokunmatik ekran} arayüzü kullanır; \emph{toplu iş} (batch) arayüzü ise komutları bir dosyadan okur.
+  \item \textbf{Program yürütme.} İşletim sistemi bir programı belleğe yükler, çalıştırır ve sonlandırır: ya normal biçimde ya da olağan dışı biçimde (bir hata koduyla).
+  \item \textbf{G/Ç (giriş/çıkış, I/O) işlemleri.} Çalışan bir program bir dosyaya ya da bir aygıta ihtiyaç duyabilir. İkili mod nedeniyle programlar aygıtları kendileri süremez; G/Ç'yi onlar adına işletim sistemi yapar.
+  \item \textbf{Dosya sistemi işlemleri.} Programlar dosya ve dizin oluşturur, siler, okur, yazar, arar ve bunların izinlerini yönetir.
+  \item \textbf{İletişim.} Süreçler aynı bilgisayarda ya da ağ üzerinden farklı bilgisayarlar arasında bilgi alışverişi yapar. Bu, \term{paylaşımlı bellek} (shared memory; iki süreç aynı bellek alanını okur ve yazar) ya da \term{mesaj geçirme} (message passing; işletim sistemi veri paketlerini süreçler arasında taşır, ör.\ borular ve soketler) ile yapılır.
+  \item \textbf{Hata algılama.} Hatalar işlemcide ve bellekte, aygıtlarda (bir disk okuması başarısız olur, bir ağ bağlantısı kopar, yazıcının kâğıdı biter) ve kullanıcı programlarında (sıfıra bölme, yasak bir adrese erişim) ortaya çıkabilir. İşletim sistemi her hata türü için doğru eylemi seçmelidir: yeniden denemek, bildirmek ya da programı sonlandırmak.
+\end{itemize}
+
+\subsection{Sistemin kendisi için hizmetler}
+
+\begin{itemize}
+  \item \textbf{Kaynak tahsisi.} Birden çok kullanıcı ya da iş aynı anda çalışırken her biri işlemciden, bellekten, dosyalardan ve aygıtlardan payını almalıdır. Bu işi işlemci zamanlayıcıları (4--5.~haftalar) ve bellek ayırıcıları (6--7.~haftalar) yapar. Linux'ta \cmd{ulimit -a}, işletim sisteminin uyguladığı süreç başına sınırları gösterir.
+  \item \textbf{Hesap tutma ve günlük kaydı.} İşletim sistemi hangi kullanıcıların ve programların hangi kaynaktan ne kadar kullandığını faturalama, istatistik ve ayar için izler. Linux'ta \cmd{ps}, \cmd{top} ve sistem günlüğü (\cmd{journalctl}), Windows'ta Olay Görüntüleyicisi bu bilgiyi gösterir.
+  \item \textbf{Koruma ve güvenlik.} \emph{Koruma} (protection), süreçlerin kaynaklara erişimini denetlemek demektir: bir süreç başka bir sürecin belleğini okuyamamalı ve üzerine yazamamalıdır. \emph{Güvenlik} (security), sistemi dışarıdan ve içeriden gelen saldırılara karşı savunmak demektir: kullanıcılar kimliklerini doğrulamalıdır (genellikle bir parolayla) ve izinsiz giriş denemeleri kaydedilir.
+\end{itemize}
+
+Zincir en zayıf halkası kadar güçlüdür: bir saldırgan yöneticinin parolasını tahmin edebiliyorsa 2.~haftadaki bütün koruma donanımı bir işe yaramaz.
+
+\subsection{Kullanıcı arayüzleri: komut satırı ve GUI}
+
+Yazılan komutları okuyup yürüten programa \term{komut yorumlayıcısı} (command interpreter) ya da \term{kabuk} (shell) denir. Linux ve macOS'ta yaygın kabuklar \cmd{bash} ve \cmd{zsh}, Windows'ta \cmd{cmd.exe} ve PowerShell'dir. İki nokta önemlidir:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item Kabuk çekirdeğin parçası \emph{değildir}. Kullanıcı modunda çalışan sıradan bir sistem programıdır ve diğer her program gibi tam olarak aynı sistem çağrılarını kullanır.
+  \item Komutların çoğu kendi başına ayrı programlardır. \cmd{ls} yazdığınızda kabuk program dosyasını (\texttt{/usr/\allowbreak bin/\allowbreak ls}) bulur ve işletim sisteminden onu yeni bir süreç olarak çalıştırmasını ister (nasıl olduğunu Kısım~\ref{sec:creation} gösterir).
+\end{enumerate}
+
+Komut satırı deneyimli kullanıcılar için hızlıdır ve betiklerle kolayca otomatikleştirilir; grafik arayüzün öğrenilmesi daha kolaydır. 9.~haftadan itibaren Linux kabuğunda çalışacağız.
+
+% =====================================================================
+\section{Ayrıntılı Sistem Çağrıları}
+\label{sec:syscalls}
+
+\subsection{API, kütüphane sarmalayıcısı ve sistem çağrısı}
+
+Programcılar neredeyse hiçbir zaman bir sistem çağrısını doğrudan yürütmez. \cmd{printf("x = \%d\textbackslash n", x);} gibi bir satır ile donanım arasında birkaç katman vardır.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  l/.style={rectangle,rounded corners=2pt,minimum width=11cm,minimum height=0.8cm,align=center,font=\small},
+  arr/.style={-{Stealth[length=2.5mm]},color=slate,thick}]
+\node[l,fill=light] (p) at (0,4.0) {\textbf{Sizin programınız}: \texttt{printf("x = \%d\textbackslash n", x);}};
+\node[l,fill=mint!25] (a) at (0,3.0) {\textbf{C kütüphanesi, API fonksiyonu}: \texttt{printf} metni bir tampona biçimlendirir};
+\node[l,fill=mint!25] (w) at (0,2.0) {\textbf{Sarmalayıcı}: \texttt{write(1, buf, n)}: numara $\to$ \texttt{rax}, argümanlar $\to$ yazmaçlar};
+\node[l,fill=charcoal,text=white] (h) at (0,0.3) {\textbf{Sistem çağrısı işleyicisi}: sistem çağrısı tablosunda 1 numaralı girişe bakar};
+\node[l,fill=charcoal,text=white] (k) at (0,-0.7) {\textbf{Çekirdek fonksiyonu}: \texttt{sys\_write()} $\to$ terminal sürücüsü $\to$ ekran};
+\draw[arr] (p) -- (a); \draw[arr] (a) -- (w); \draw[arr] (w) -- (h); \draw[arr] (h) -- (k);
+\draw[dashed,red!60!black,thick] (-5.6,1.3) -- (5.6,1.3);
+\node[font=\scriptsize\itshape,text=red!60!black,anchor=north west] at (-5.6,1.26) {\texttt{syscall}: kullanıcı modu $\to$ çekirdek modu};
+\end{tikzpicture}
+\caption{\cmd{printf()}'ten ekrana. Kesikli çizginin üstü: kullanıcı modu; altı: çekirdek modu.}
+\end{figure}
+
+Üç sözcük kolayca karıştırılır:
+
+\begin{itemize}
+  \item \term{API} (application programming interface, uygulama programlama arayüzü), bir programcının çağırabileceği, parametreleri ve dönüş değerleriyle birlikte belgelenmiş fonksiyonlar kümesidir. Örnekler: \emph{POSIX} API (Linux, macOS, BSD'ler), \emph{Windows API} ve \emph{Java API}.
+  \item \term{Sarmalayıcı} (wrapper), genellikle sistem çağrısıyla aynı adı taşıyan (\cmd{write}, \cmd{read}, \cmd{fork}) minik bir kütüphane fonksiyonudur; tek işi argümanları çekirdeğin beklediği yere koymak ve tuzak (trap) komutunu yürütmektir.
+  \item \term{Sistem çağrısı} ise çekirdeğe yapılan asıl, denetimli giriştir.
+\end{itemize}
+
+Her API fonksiyonu bir sistem çağrısı yapmaz. \cmd{strlen()} ve \cmd{sqrt()} hiçbir zaman yapmaz: sonuçlarını kullanıcı modunda hesaplarlar. \cmd{printf()} yalnızca tamponu boşaltıldığında sistem çağrısı yapar; bu yüzden on \cmd{printf()} çağrısı tek bir \cmd{write} üretebilir. Linux'ta C kütüphanesi genellikle \emph{glibc}'dir; Windows'ta \texttt{kernel32.dll} içindeki Windows API fonksiyonları, asıl çekirdek çağrılarını yürüten \texttt{ntdll.dll} içindeki yerel arayüzü çağırır (ör.\ \cmd{CreateProcess()} sonunda \cmd{NtCreateUserProcess}'i çağırır).
+
+\subsection{Neden bir API'ye göre programlanır?}
+
+Asıl neden \textbf{taşınabilirliktir} (portability). POSIX API'sine göre yazılmış bir program her POSIX sisteminde derlenir; oysa sistem çağrısı \emph{numaraları} ve ayrıntıları işletim sistemleri arasında, hatta aynı işletim sisteminin farklı işlemci mimarileri arasında bile değişir: \cmd{write}, 64 bit x86 Linux'ta $1$, 32 bit x86 Linux'ta $4$, 64 bit ARM Linux'ta $64$ numaralı sistem çağrısıdır; API adı \cmd{write()} ise üçünde de aynıdır. İkinci neden \textbf{kolaylıktır}: API fonksiyonlarını kullanmak daha kolaydır ve çoğu zaman \cmd{printf()}'in biçimlendirme ve tamponlaması gibi yararlı ek işler yaparlar.
+
+\subsection{Sistem çağrısı numarası ve sistem çağrısı tablosu}
+
+Her sistem çağrısı küçük bir tamsayıyla, \term{sistem çağrısı numarasıyla} tanımlanır. Çekirdek bir \term{sistem çağrısı tablosu} (system-call table) tutar: bu numarayla indekslenen ve işi yapan çekirdek fonksiyonlarına işaret eden işaretçilerden oluşan bir dizi.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  c/.style={rectangle,minimum height=0.48cm,font=\footnotesize\ttfamily,draw=white,fill=light},
+  arr/.style={-{Stealth[length=2.5mm]},color=mintdeep,very thick}]
+\node[rectangle,rounded corners=2pt,fill=mint,minimum width=2cm,minimum height=0.8cm,font=\ttfamily] (r) at (-3.6,0.6) {rax = 1};
+\foreach \i/\n/\f/\c in {0/0/sys\_read/light, 1/1/sys\_write/mint, 2/2/sys\_open/light, 3/3/sys\_close/light, 4/\dots/\dots/light, 5/39/sys\_getpid/light, 6/57/sys\_fork/light, 7/59/sys\_execve/light, 8/60/sys\_exit/light, 9/61/sys\_wait4/light} {
+  \node[c,minimum width=0.9cm,fill=\c] (n\i) at (0,2.0-\i*0.48) {\n};
+  \node[c,minimum width=2.4cm,anchor=west,fill=\c] (f\i) at (n\i.east) {\f};
+}
+\node[rectangle,rounded corners=2pt,fill=charcoal,text=white,minimum width=2.3cm,minimum height=0.9cm,align=center,font=\footnotesize] (k) at (5.4,1.52) {\texttt{sys\_write()}\\çekirdek kodu};
+\draw[arr] (r.east) -- (n1.west);
+\draw[arr] (f1.east) -- (k.west);
+\node[font=\scriptsize\itshape,text=muted] at (1.2,-2.85) {sistem çağrısı tablosu (x86-64 Linux)};
+\end{tikzpicture}
+\caption{\texttt{rax} içindeki numara, sistem çağrısı tablosunun bir girişini seçer. Numaralar gerçek x86-64 Linux numaralarıdır.}
+\end{figure}
+
+Neden bir tablo da doğrudan \cmd{sys\_write}'ın adresine bir atlama değil? Çünkü bir kullanıcı programının rastgele bir çekirdek adresine atlamasına \emph{asla} izin verilmemelidir: böylece bir çekirdek fonksiyonunun başındaki izin denetimlerini atlayabilirdi. Bu yüzden tuzak komutu çekirdeğe her zaman \emph{tek} bir sabit giriş noktasından girer. Çekirdek numaranın geçerli olup olmadığını denetler (geçersiz bir numara \texttt{ENOSYS} hatasını döndürür) ve ancak ondan sonra tablodaki fonksiyonu çağırır. Bunu 2.~haftadaki kesme vektörüyle karşılaştırın: ikisi de bir numarayla indekslenen işleyici adresleri tablosudur. Test sistemimizde (çekirdek~6.8 için Linux başlık dosyaları, x86-64) $0$'dan $461$'e numaralanmış yaklaşık $370$ sistem çağrısı tanımlıdır.
+
+\subsection{Adım adım tuzak}
+
+64 bit x86 Linux'ta bir program \cmd{write(1, msg, 26)} çağırdığında olanlar şunlardır:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Yazmaçları doldur} (kullanıcı modu). C kütüphanesindeki \cmd{write()} sarmalayıcısı sistem çağrısı numarası $1$'i \texttt{rax} yazmacına, üç parametreyi de \texttt{rdi}, \texttt{rsi} ve \texttt{rdx} yazmaçlarına koyar.
+  \item \textbf{Tuzak.} Sarmalayıcı \texttt{syscall} komutunu yürütür. İşlemci mod bitini çekirdek moduna çevirir, dönüş adresini ve bayrakları kaydeder ve çekirdeğin tek sistem çağrısı giriş noktasına atlar.
+  \item \textbf{Kaydet ve denetle} (çekirdek modu). Çekirdek kullanıcının yazmaçlarını kaydeder ve $1$'in geçerli bir sistem çağrısı numarası olduğunu denetler.
+  \item \textbf{Yönlendirme} (dispatch). Çekirdek tablo üzerinden \cmd{sys\_write()}'ı çağırır. \cmd{sys\_write()}, $1$ numaralı dosya tanımlayıcısının açık olduğunu ve tampon adresinin gerçekten çağıran sürece ait olduğunu denetler, sonra baytları terminal sürücüsüne iletir.
+  \item \textbf{Sonuç.} Dönüş değeri, yani yazılan bayt sayısı ($26$) ya da negatif bir hata kodu \texttt{rax}'e konur.
+  \item \textbf{Dönüş.} \texttt{sysret} komutu kullanıcı durumunu geri yükler ve kullanıcı moduna geri döner. Sarmalayıcı programa $26$ döndürür.
+\end{enumerate}
+
+4.~adımdaki denetim önemlidir: o olmasaydı bir program, çekirdekten bir çekirdek adresindeki baytları ekrana ``yazmasını'' isteyerek çekirdeğin sırlarını okuyabilirdi. Sistem çağrısı bir istektir ve çekirdek bu istekteki hiçbir şeye güvenmez.
+
+\subsection{Parametre aktarmanın üç yolu}
+
+Bir sistem çağrısı genellikle numarasından daha fazla bilgiye ihtiyaç duyar: hangi dosya, hangi tampon, kaç bayt. Bu parametreleri işletim sistemine aktarmanın üç genel yöntemi vardır.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  r/.style={rectangle,rounded corners=1pt,minimum width=0.9cm,minimum height=0.5cm,font=\footnotesize\ttfamily,fill=slate,text=white},
+  v/.style={rectangle,rounded corners=1pt,minimum width=1.0cm,minimum height=0.5cm,font=\footnotesize\ttfamily,fill=light},
+  p/.style={rectangle,rounded corners=1pt,minimum width=1.3cm,minimum height=0.42cm,font=\scriptsize,fill=mint!25},
+  k/.style={rectangle,rounded corners=2pt,minimum width=1.1cm,minimum height=1.1cm,font=\footnotesize,fill=charcoal,text=white},
+  arr/.style={-{Stealth[length=2mm]},color=slate,thick}]
+% 1 yazmaçlar
+\node[font=\small\bfseries,text=mintdeep] at (1.0,2.2) {1. Yazmaçlar};
+\foreach \i/\a/\b in {0/rdi/1,1/rsi/msg,2/rdx/26} {\node[r] at (0,1.3-\i*0.62) {\a}; \node[v] at (1.05,1.3-\i*0.62) {\b};}
+\node[k] (k1) at (2.75,0.68) {çekirdek};
+\draw[arr] (1.6,0.68) -- (k1.west);
+% 2 blok
+\node[font=\small\bfseries,text=mintdeep] at (6.0,2.2) {2. Bellek bloğu};
+\node[r] at (4.6,0.9) {rdi}; \node[v,minimum width=1.3cm] (ax) at (5.85,0.9) {adres X};
+\foreach \i/\t in {0/param 1,1/param 2,2/\dots,3/param n} \node[p] (b\i) at (7.7,1.5-\i*0.47) {\t};
+\node[font=\scriptsize\itshape,text=muted] at (7.7,-0.35) {X'teki blok};
+\draw[arr] (ax.east) -- (b0.west);
+% 3 yığıt
+\node[font=\small\bfseries,text=mintdeep] at (11.0,2.2) {3. Yığıt};
+\foreach \i/\t in {0/param 3,1/param 2,2/param 1} \node[p] at (10.1,1.3-\i*0.5) {\t};
+\node[font=\scriptsize\itshape,text=muted] at (10.1,-0.15) {program iter (push)};
+\node[k] (k3) at (13.0,0.8) {çekirdek};
+\draw[arr] (10.85,0.8) -- node[above,font=\scriptsize\itshape,text=muted]{çeker (pop)} (k3.west);
+\end{tikzpicture}
+\caption{Bir sistem çağrısına parametre aktarmanın üç yolu.}
+\end{figure}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Yazmaçlarda.} En hızlı yöntemdir: hiçbir bellek erişimi gerekmez. Sınırı, kullanılabilir yazmaç sayısıdır; x86-64 Linux altı parametreye izin verir.
+  \item \textbf{Bellekte bir blokta (tabloda).} Program parametreleri bir bellek bloğuna yazar ve bir yazmaçta yalnızca bloğun \emph{adresini} aktarır. İstenen sayıda parametre mümkündür. Linux bunu çok seçenekli sistem çağrıları için kullanır; örneğin \cmd{clone3()} bir \texttt{struct clone\_args} yapısına işaretçi alır.
+  \item \textbf{Yığıtta} (stack). Program parametreleri yığıtına \emph{iter} (push); işletim sistemi onları oradan \emph{çeker} (pop, yani okur). Bu yöntemi örneğin x86 üzerinde 32 bit FreeBSD kullanıyordu.
+\end{enumerate}
+
+2. ve 3.~yöntemlerin gizli bir maliyeti vardır: çekirdek parametreleri kullanıcı belleğinden çekirdek belleğine kopyalamalı ve adreslerin gerçekten çağıran sürece ait olduğunu denetlemelidir. Linux 1. ve 2.~yöntemleri birleştirir: altı parametreye kadar yazmaçlarda, daha büyük her şey (bir tampon, bir yapı) bir yazmaçta adres olarak aktarılır. Dikkat edin: 1.~yöntemde bile mesajın $26$ baytı kullanıcı belleğinde kalır; yazmaçta yalnızca adresleri taşınır.
+
+\subsection{Somut örnek: x86-64 Linux kuralı}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\ttfamily}l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+\textrm{\textbf{Yazmaç}} & \textbf{Sistem çağrısındaki rolü} & \textbf{\texttt{write(1, msg, 26)} için} \\
+\midrule
+rax & sistem çağrısı numarası (giriş), dönüş değeri (çıkış) & girişte $1$, çıkışta $26$ (yazılan bayt) \\
+rdi & 1. parametre & $1$ (dosya tanımlayıcısı: standart çıktı) \\
+rsi & 2. parametre & \texttt{msg}'nin adresi \\
+rdx & 3. parametre & $26$ (bayt sayısı) \\
+r10, r8, r9 & 4., 5., 6. parametre & \cmd{write} kullanmaz \\
+rcx, r11 & \texttt{syscall} komutu bunların üzerine yazar & işlemci dönüş adresini ve bayrakları buraya kaydeder \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+x86-64'te sıradan C fonksiyon çağrıları dördüncü argümanı \texttt{rcx}'te aktarır; sistem çağrısı kuralı ise onun yerine \texttt{r10}'u kullanır, çünkü \texttt{syscall} komutunun kendisi \texttt{rcx}'in üzerine yazar. $-4095$ ile $-1$ arasındaki bir dönüş değeri hata demektir: sarmalayıcı pozitif hata numarasını \texttt{errno} global değişkenine yazar ve programa $-1$ döndürür. Yazmaçları ezberlemeniz gerekmez; önemli olan, parametrelerin yazmaçlarda taşındığı fikridir.
+
+\subsection{Örnek 1: aynı mesaj, üç düzey derinlikte}
+
+Bu kısımdaki programlar, bu notların yanındaki \texttt{code/} klasöründe bir \texttt{Makefile} ile birlikte bulunur (\cmd{make} yazın). Linux için C ile yazılmışlardır; 2.~haftada olduğu gibi sizden C yazmanız beklenmez, yalnızca açıklamaları okuyup ne olduğunu anlamanız beklenir. İlk program üç mesaj yazdırır: \cmd{printf()} ile, \cmd{write()} sarmalayıcısı ile ve \texttt{syscall} komutunu, sarmalayıcının yaptığını aynen yapan birkaç satırlık satır içi assembly ile elle yürüterek.
+
+\lstinputlisting[caption={}]{../code/raw_write.c}
+
+\begin{lstlisting}[style=term]
+$ make raw_write && strace ./raw_write
+...
+write(1, "1) printf  -> libc -> write\n", 28) = 28
+write(1, "2) write() -> libc wrapper\n", 27) = 27
+write(1, "3) syscall instruction!!!\n", 26) = 26
+write(1, "kernel returned 26 (bytes writte"..., 35) = 35
+exit_group(0)                           = ?
+\end{lstlisting}
+
+İki gözlem. Birincisi, \cmd{strace} üç düzeyi birbirinden ayıramaz: çekirdek için üçü de üç parametreli aynı $1$ numaralı sistem çağrısıdır. İkincisi, çekirdek \texttt{rax}'te $26$ döndürdü; bu, yazmasını istediğimiz bayt sayısının ta kendisidir. Satır içi assembly yalnızca gösterim içindir ve yalnızca x86-64 Linux'ta çalışır; ARM işlemcilerde tuzak komutu \texttt{svc}'dir ve farklı yazmaçlar kullanılır.
+
+\subsection{Sistem çağrılarının altı kategorisi}
+
+Sistem çağrıları altı kategoride toplanabilir. Tablo tipik örnekler veriyor; Windows sütunu, her biri bir ya da daha fazla yerel sistem çağrısını çağıran Windows API fonksiyonlarını listeler.
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}p{3.3cm} >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Kategori} & \textbf{Tipik istekler} & \textbf{Linux (POSIX)} & \textbf{Windows API} \\
+\midrule
+Süreç denetimi & oluştur, sonlandır, yükle, bekle & \cmd{fork()}, \cmd{execve()}, \cmd{exit()}, \cmd{wait4()} & \cmd{CreateProcess()}, \cmd{ExitProcess()}, \cmd{WaitForSingleObject()} \\
+Dosya yönetimi & oluştur, aç, oku, yaz, kapat & \cmd{open()}, \cmd{read()}, \cmd{write()}, \cmd{close()} & \cmd{CreateFile()}, \cmd{ReadFile()}, \cmd{WriteFile()}, \cmd{CloseHandle()} \\
+Aygıt yönetimi & iste, oku, yaz, yapılandır & \cmd{ioctl()}, \cmd{read()}, \cmd{write()} & \cmd{SetConsoleMode()}, \cmd{ReadConsole()}, \cmd{WriteConsole()} \\
+Bilgi bakımı & saat, tarih, kimlikler, sistem verisi & \cmd{getpid()}, \cmd{uname()}, \cmd{clock\_gettime()} & \cmd{GetCurrentProcessId()}, \cmd{GetSystemTime()} \\
+İletişim & boru, paylaşımlı bellek, ağ & \cmd{pipe()}, \cmd{mmap()}, \cmd{socket()} & \cmd{CreatePipe()}, \cmd{MapViewOfFile()} \\
+Koruma & izinler, sahiplik & \cmd{chmod()}, \cmd{chown()}, \cmd{umask()} & \cmd{SetFileSecurity()}, \cmd{SetSecurityDescriptorGroup()} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\cmd{read()} ve \cmd{write()}'ın hem dosya hem aygıt yönetiminde göründüğüne dikkat edin. UNIX'te bir aygıt özel bir dosya gibi görünür (örneğin terminal için \texttt{/dev/tty}); bu yüzden aynı sistem çağrıları ikisine de hizmet eder. Bu, 2.~haftadaki genişletilmiş makine bakışının iş başındaki hâlidir: tek bir soyutlama, birçok donanım türü.
+
+\begin{example}[Bir dosyayı kopyalamak kaç sistem çağrısı gerektirir?]
+Bir dosyayı başka bir dosyaya kopyalayan bir program, klasik ders kitabı anlatımında şunlara ihtiyaç duyar:
+\begin{enumerate}[leftmargin=1.4em]
+  \item İki dosya adını istemek (G/Ç sistem çağrıları ya da adları komut satırından okumak).
+  \item Girdi dosyasını açmak; dosya yoksa bir hata mesajı yazdırıp çıkmak (dosya yönetimi, süreç denetimi).
+  \item Çıktı dosyasını oluşturmak.
+  \item Döngü: \cmd{read()} $0$ döndürene (dosya sonu) kadar girdiden bir blok okuyup çıktıya yazmak.
+  \item İki dosyayı da kapatmak, başarıyı bildirmek ve çıkmak.
+\end{enumerate}
+$B$ baytlık bir tampon ve $S$ baytlık bir dosyayla yalnızca döngü, veri döndüren $\lceil S/B \rceil$ okuma, $0$ döndüren bir son okuma ve $\lceil S/B \rceil$ yazma yapar. $S = 1\ \text{MiB} = 2^{20}$ bayt ve $B = 4096 = 2^{12}$ bayt için bu, $2\cdot 2^{8} + 1 = 513$ sistem çağrısı eder.
+
+Test makinemizdeki gerçek GNU \cmd{cp} (sürüm 9.4) farklı davranır. $1$~MiB'lık bir dosya için \cmd{strace -c cp in.bin out.bin} toplam $102$ sistem çağrısı saydı; en büyük gruplar \cmd{mmap} ($26$), \cmd{close} ($13$), \cmd{openat} ($11$), \cmd{fstat} ($10$) ve \cmd{read} ($9$) idi --- \cmd{copy\_file\_range} ise yalnızca $2$ kez çağrıldı.
+$102$ çağrıdan yalnızca $2$'si veri taşır: \cmd{copy\_file\_range}, çekirdekten bütün dosyayı baytları programın belleğinden geçirmeden \emph{çekirdeğin içinde} kopyalamasını ister. Geri kalan çağrıların çoğu programı ve paylaşımlı kütüphanelerini yükler (\cmd{mmap}, \cmd{openat}, kütüphane başlıklarının \cmd{read} ile okunması). Sistem çağrısından tasarruf etmek için işi çekirdeğe taşımak, işletim sistemi tasarımında sık rastlanan bir temadır.
+\end{example}
+
+\subsection{Sistem programları}
+
+\term{Sistem programları} (system programs; sistem araçları da denir) işletim sistemiyle birlikte gelir ve program geliştirme ile yürütme için elverişli bir ortam sağlar. Kullanıcı modunda çalışırlar ve sizin adınıza sistem çağrısı yaparlar. Kullanıcıların çoğu işletim sistemini sistem çağrıları üzerinden değil, bu programlar üzerinden görür. Başlıca kategoriler şunlardır: \textbf{dosya yönetimi} (\cmd{ls}, \cmd{cp}, \cmd{rm}, Dosya Gezgini); \textbf{durum bilgisi} (\cmd{date}, \cmd{df}, \cmd{ps}, \cmd{top}, Görev Yöneticisi, sistem günlükleri); \textbf{dosya düzenleme} (\cmd{nano} ve Not Defteri gibi düzenleyiciler, \cmd{grep} gibi arama araçları); \textbf{programlama dili desteği} (derleyiciler, hata ayıklayıcılar, yorumlayıcılar: \cmd{gcc}, \cmd{gdb}, \cmd{python}); \textbf{program yükleme ve yürütme} (yükleyiciler ve bağlayıcılar); \textbf{iletişim} (\cmd{ssh}, web tarayıcıları, e-posta); ve açılışta başlayıp sürekli çalışan \textbf{arka plan hizmetleri}: UNIX'te \term{daemon}, Windows'ta \emph{service} denir (\cmd{sshd}, \cmd{cron}, yazdırma kuyruğu).
+
+Bu programların çoğunu 9--14.~haftalarda uygulamalı olarak kullanacağız.
+
+% =====================================================================
+\section{Süreç Kavramı}
+\label{sec:process}
+
+\subsection{Program ve süreç}
+
+\term{Program} \emph{edilgen} bir varlıktır: diskte bir komut listesi içeren bir dosya, örneğin \texttt{/usr/bin/bash}. \term{Süreç} (process) ise \emph{etkin} bir varlıktır: yürütülmekte olan bir program. Bir sürecin program kodunun yanı sıra şunları vardır:
+\begin{itemize}
+  \item bir \emph{o anki etkinlik}: \term{program sayacının} (program counter; bir sonraki komutun adresi) ve diğer işlemci yazmaçlarının değeri;
+  \item kendine ait \emph{bellek}: bir yığıt, bir öbek ve global veriler (Kısım~\ref{sec:layout});
+  \item işletim sisteminin ona verdiği kaynaklar: açık dosyalar, ağ bağlantıları vb.
+\end{itemize}
+
+Bir program belleğe yüklendiğinde sürece dönüşür; örneğin bir simgeye çift tıkladığınızda ya da adını bir kabukta yazdığınızda. Tek bir program birçok sürecin temeli olabilir: iki terminal penceresi açarsanız aynı program dosyasından, her biri kendi belleği ve kendi ilerlemesiyle iki \texttt{bash} süreci çalışır. Eski kitaplar aynı fikir için \emph{iş} (job) sözcüğünü kullanır (toplu işlem sistemlerinden kalma).
+
+\textbf{Benzetme:} yemek tarifi bir programdır; onu pişirmek bir süreçtir. İki aşçı aynı tarifi aynı anda, her biri kendi malzemesi ve tarifte kendi bulunduğu yerle uygulayabilir.
+
+\subsection{Bellekteki bir süreç}
+\label{sec:layout}
+
+Bir sürecin belleği bölgelere (segment ya da kesim de denir) ayrılır:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[s/.style={rectangle,minimum width=4.2cm,align=center,font=\small,draw=white}]
+\node[s,fill=charcoal,text=white,minimum height=1.0cm] (st) at (0,4.6) {\textbf{stack} (yığıt)\\{\scriptsize yerel değişkenler, dönüş adresleri}};
+\node[s,draw=slate,dashed,minimum height=1.2cm,font=\footnotesize\itshape,text=muted] (fr) at (0,3.5) {boş alan};
+\node[s,fill=slate,text=white,minimum height=0.85cm] (hp) at (0,2.47) {\textbf{heap} (öbek)\\{\scriptsize \texttt{malloc()} / \texttt{new}}};
+\node[s,fill=mint!25,minimum height=0.6cm] (bs) at (0,1.74) {\textbf{bss} {\scriptsize ilk değersiz globaller}};
+\node[s,fill=mint!25,minimum height=0.6cm] (da) at (0,1.14) {\textbf{data} {\scriptsize ilk değerli globaller}};
+\node[s,fill=mint,minimum height=0.8cm] (tx) at (0,0.44) {\textbf{text}\\{\scriptsize makine kodu}};
+\draw[-{Stealth},thick,mintdeep] (2.4,4.4) -- node[right,font=\scriptsize\bfseries]{aşağı büyür} (2.4,3.6);
+\draw[-{Stealth},thick,mintdeep] (2.4,2.6) -- node[right,font=\scriptsize\bfseries]{yukarı büyür} (2.4,3.4);
+\node[font=\scriptsize\itshape,text=muted,anchor=east] at (-2.2,5.0) {yüksek adresler};
+\node[font=\scriptsize\itshape,text=muted,anchor=east] at (-2.2,0.1) {adres 0};
+\end{tikzpicture}
+\caption{Bir sürecin bellekteki düzeni.}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Text:} programın derlenmiş makine kodu. Bir hata kodun üzerine yazamasın diye salt okunurdur; aynı programı çalıştıran birden çok süreç onu paylaşabilir.
+  \item \textbf{Data:} ilk değeri olan global (ve \texttt{static}) değişkenler, ör.\ \texttt{int initialised = 42;}. Değerler çalıştırılabilir dosyada saklanır.
+  \item \textbf{BSS:} ilk değeri \emph{olmayan} global değişkenler, ör.\ \texttt{int uninitialised;}. İşletim sistemi program yüklenirken bu bölgeyi sıfırlarla doldurur; bu yüzden çalıştırılabilir dosyanın yalnızca boyutunu saklaması yeterlidir. (Ad tarihseldir: eski bir assembler'dan kalma ``block started by symbol''.)
+  \item \textbf{Heap (öbek):} program çalışırken istenen bellek; C'de \cmd{malloc()}, C++ ve Java'da \texttt{new} ile. Açıkça serbest bırakılana kadar yaşar.
+  \item \textbf{Stack (yığıt):} her etkin fonksiyon çağrısı için bir \emph{çerçeve} (frame); yerel değişkenleri, parametreleri ve dönüş adresini tutar. Fonksiyon döndüğünde çerçeve kaldırılır.
+\end{itemize}
+
+Text, data ve bss program yüklendikten sonra sabit boyutludur; öbek ve yığıt ise program çalışırken büyüyüp küçülür, aralarındaki boş alanda birbirlerine doğru ilerler. Çok fazla büyüyen bir yığıt, örneğin sonsuz özyineleme yüzünden, bir \emph{yığıt taşmasına} (stack overflow) yol açar ve program sonlandırılır.
+
+\subsection{Örnek 2: her bölgenin adresini yazdırmak}
+
+\lstinputlisting[caption={}]{../code/mem_layout.c}
+
+\begin{lstlisting}[style=term]
+$ ./mem_layout
+text  main()        0x555d9ba160c0
+data  initialised   0x555d9ba19010
+bss   uninitialised 0x555d9ba19018
+heap  *dynamic      0x555db649d2a0
+stack local         0x7ffe2b4f6ab4
+\end{lstlisting}
+
+Adreslerin sırası şekle uyar: text $<$ data $<$ bss $<$ heap, yığıt ise çok daha yukarıda. İlk çalıştırmada data değişkeni \texttt{main}'in $\texttt{0x555d9ba19010} - \texttt{0x555d9ba160c0} = \texttt{0x2f50} = 12\,112$ bayt yukarısındadır; bss değişkeni ise data değişkeninin yalnızca $8$ bayt yukarısındadır: yan yana dururlar. Öbek ile yığıt arasındaki boşluk $\texttt{0x7ffe2b4f6ab4} - \texttt{0x555db649d2a0} \approx 4.7\times10^{13}$ bayt, yaklaşık $43\ \text{TiB}$'tır; bu, herhangi bir kişisel bilgisayarın RAM'inden çok daha fazladır. Bu mümkündür, çünkü bunlar \emph{sanal} adreslerdir; yalnızca gerçekten kullanılan kısımların arkasında fiziksel bellek bulunur (7.~hafta).
+
+Programı yeniden çalıştırın; her adres farklı çıkar: örneğin ikinci çalıştırmamızda \texttt{main} \texttt{0x55a4811220c0}, \texttt{local} ise \texttt{0x7ffec440c1f4} adresindeydi. Linux, bir program her başladığında bölgeleri rastgele konumlara yerleştirir; bu tekniğe \term{adres alanı düzeninin rastgeleleştirilmesi} (address space layout randomisation, ASLR) denir. Böylece bir programda hata bulan bir saldırgan, programın kodunun ve verisinin nerede olduğunu önceden bilemez.
+
+\begin{histnote}[ASLR]
+ASLR, Linux için PaX güvenlik projesi tarafından 2001'de tanıtıldı ve 2005'te standart Linux çekirdeğine girdi; Windows onu Windows Vista ile (2007) benimsedi. Bugün masaüstü ve mobil sistemlerde standarttır.
+\end{histnote}
+
+% =====================================================================
+\section{Süreç Durumları}
+\label{sec:states}
+
+Bir süreç yürütülürken \term{durumu} (state) değişir. Her süreç beş durumdan birindedir:
+
+\begin{itemize}
+  \item \textbf{Yeni} (new): süreç oluşturulmaktadır.
+  \item \textbf{Hazır} (ready): süreç bir işlemciye atanmayı beklemektedir.
+  \item \textbf{Çalışıyor} (running): komutları yürütülmektedir.
+  \item \textbf{Bekliyor} (waiting; \emph{engellenmiş}, blocked da denir): süreç bir G/Ç işleminin tamamlanması ya da bir çocuk sürecin bitmesi gibi bir olayı beklemektedir.
+  \item \textbf{Sonlandı} (terminated): süreç yürütmesini bitirmiştir.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  st/.style={rectangle,rounded corners=9pt,minimum width=2.3cm,minimum height=0.85cm,font=\headfont\bfseries},
+  arr/.style={-{Stealth[length=2.5mm]},thick,charcoal},
+  lab/.style={font=\footnotesize\bfseries,text=mintdeep}]
+\node[st,fill=light] (new) at (0,3) {yeni};
+\node[st,fill=mint!25] (rdy) at (2,0.8) {hazır};
+\node[st,fill=mint] (run) at (8,0.8) {çalışıyor};
+\node[st,fill=light] (trm) at (10,3) {sonlandı};
+\node[st,fill=slate,text=white] (wt) at (5,-1.6) {bekliyor};
+\draw[arr] (new) -- node[left,lab]{kabul edildi} (rdy);
+\draw[arr] ([yshift=5pt]rdy.east) -- node[above,lab]{zamanlayıcı görevlendirir} ([yshift=5pt]run.west);
+\draw[arr] ([yshift=-5pt]run.west) -- node[below,lab]{kesme (zaman dilimi bitti)} ([yshift=-5pt]rdy.west -| rdy.east);
+\draw[arr] (run) -- node[right,lab]{çıkış} (trm);
+\draw[arr] (run) -- node[right,lab,xshift=2pt]{G/Ç ya da olay bekleme} (wt);
+\draw[arr] (wt) -- node[left,lab,xshift=-2pt]{G/Ç ya da olay tamamlandı} (rdy);
+\end{tikzpicture}
+\caption{Beş durumlu süreç modeli.}
+\end{figure}
+
+Bir işlemci çekirdeğinde herhangi bir anda yalnızca bir süreç \emph{çalışıyor} olabilir; birçok süreç \emph{hazır} ya da \emph{bekliyor} durumunda olabilir. İşletim sistemi hazır süreçleri bir \term{hazır kuyruğunda} (ready queue), bekleyen süreçleri ise \term{bekleme kuyruklarında} (wait queues; her aygıt ya da olay için bir tane) tutar; her kuyruk süreç denetim bloklarından oluşan bir bağlı listedir (Kısım~\ref{sec:pcb}).
+
+\subsection{Her geçişi ne tetikler?}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{4.6cm}}
+\toprule
+\textbf{Geçiş} & \textbf{Tetikleyen} & \textbf{Gündelik örnek} \\
+\midrule
+yeni $\to$ hazır & işletim sistemi PCB'yi oluşturdu ve programı yükledi & \cmd{./mem\_layout} yazıp Enter'a basarsınız \\
+hazır $\to$ çalışıyor & zamanlayıcı süreci \emph{görevlendirir} (dispatch) & bir işlemci çekirdeği boşalır ve zamanlayıcı onu seçer \\
+çalışıyor $\to$ hazır & bir kesme, genellikle zamanlayıcı saat (zaman dilimi doldu) & başkaları çalışabilsin diye uzun bir hesap duraklatılır \\
+çalışıyor $\to$ bekliyor & beklemesi gereken bir sistem çağrısı (G/Ç, çocuk, sleep) & diskten \cmd{read()}; bir çocuk için \cmd{wait()} \\
+bekliyor $\to$ hazır & beklenen olay gerçekleşir; çoğunlukla bir kesmeyle bildirilir & disk kesmesi verinin geldiğini bildirir \\
+çalışıyor $\to$ sonlandı & \cmd{exit()} ya da ölümcül bir hata & \cmd{main()} döner; program sıfıra böler \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+İki not. Birincisi, bir süreç asla \emph{bekliyor} durumundan doğrudan \emph{çalışıyor} durumuna geçemez: olayı gerçekleştiğinde hazır kuyruğuna katılır ve zamanlayıcı onu görevlendirene kadar bekler. Sırada hangi hazır sürecin çalışacağı \emph{işlemci zamanlamasının} (CPU scheduling) konusudur (4--5.~haftalar). İkincisi, geçişlere kimin yol açtığına bakın: bir süreç çalışıyor durumundan ya bir sistem çağrısı yaparak (Kısım~\ref{sec:syscalls}) ya da bir kesme (2.~hafta) işlemciyi elinden aldığı için çıkar. İşletim sistemi kesme güdümlüdür.
+
+Linux'ta \cmd{ps} komutu durumu \texttt{STAT} sütununda gösterir: çalışıyor \emph{ya da} hazır için \texttt{R} (Linux burada ikisini ayırmaz), uyuyor (kesilebilir bekleme) için \texttt{S}, kesilemez bekleme (genellikle disk G/Ç'si) için \texttt{D}, durdurulmuş için \texttt{T} ve zombi için \texttt{Z} (Kısım~\ref{sec:zombie}).
+
+\begin{example}[İki süreç, tek işlemci]
+A süreci $3$~ms hesap yapar, diskten okur ($4$~ms), sonra $2$~ms daha hesap yapar. B süreci $7$~ms işlemci zamanına ihtiyaç duyar. İşletim sistemi her sürece en çok $5$~ms'lik bir zaman dilimi verir. İkisi de $t = 0$'da hazırdır ve önce A görevlendirilir.
+
+\begin{center}
+\begin{tikzpicture}[x=0.85cm,y=1cm,g/.style={rectangle,minimum height=0.55cm,font=\scriptsize,anchor=west,inner sep=0pt}]
+\foreach \a/\b/\t/\c/\tc in {0/3/çalışıyor/mint/black, 3/7/{bekliyor (disk)}/slate/white, 7/8/hazır/mint!25/black, 8/10/çalışıyor/mint/black}
+  \node[g,fill=\c,text=\tc,minimum width={(\b-\a)*0.85cm-1pt}] at (\a,1) {\t};
+\foreach \a/\b/\t/\c/\tc in {0/3/hazır/mint!25/black, 3/8/çalışıyor/mint/black, 8/10/hazır/mint!25/black, 10/12/çalışıyor/mint/black}
+  \node[g,fill=\c,text=\tc,minimum width={(\b-\a)*0.85cm-1pt}] at (\a,0.2) {\t};
+\node[anchor=east,font=\small\bfseries] at (-0.1,1) {A};
+\node[anchor=east,font=\small\bfseries] at (-0.1,0.2) {B};
+\foreach \t in {0,...,12} \node[font=\scriptsize,text=muted] at (\t,-0.35) {\t};
+\node[font=\scriptsize,text=muted,anchor=west] at (12.2,-0.35) {ms};
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+  \item $t = 3$: A \cmd{read()} çağırır ve \emph{bekliyor} durumuna geçer; B görevlendirilir.
+  \item $t = 7$: disk kesmesi A'yı \emph{hazır} durumuna taşır; işlemci B'de kalır.
+  \item $t = 8$: zamanlayıcı kesmesi B'nin $5$~ms'lik dilimini bitirir; B hazır olur ve A görevlendirilir.
+  \item $t = 10$: A çıkar; B kalan $2$~ms'sini çalışır ve $t = 12$'de çıkar.
+\end{itemize}
+Gereken işlemci işi A için $3 + 2 = 5$~ms, B için $7$~ms, toplam $12$~ms'dir. Art arda çalıştırılsalar A $3 + 4 + 2 = 9$~ms sürer (işlemci $4$~ms boşta kalır), B de $7$~ms daha: toplam $16$~ms; işlemci zamanın $12/16 = 75\%$'inde meşguldür. Yukarıdaki gibi iç içe çalıştırıldıklarında ikisi de $12$~ms sonra biter ve işlemci zamanın $12/12 = 100\%$'ünde meşguldür. Bu, 1.~haftadaki çoklu programlama fikrinin süreç durumlarıyla anlatılmış hâlidir.
+\end{example}
+
+% =====================================================================
+\section{Süreç Denetim Bloğu}
+\label{sec:pcb}
+
+Her süreç işletim sisteminde bir \term{süreç denetim bloğu} (process control block, PCB) ile temsil edilir; buna \emph{görev denetim bloğu} (task control block) da denir. PCB, çekirdek belleğinde bulunan ve işletim sisteminin süreç hakkında bilmesi gereken her şeyi tutan bir veri yapısıdır.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[f/.style={rectangle,minimum width=6.2cm,minimum height=0.55cm,font=\small,draw=white}]
+\foreach \i/\t/\c in {0/süreç durumu/mint, 1/{süreç kimliği (PID), ebeveyn PID}/light, 2/program sayacı/mint!25, 3/işlemci yazmaçları/light, 4/işlemci zamanlama bilgisi/mint!25, 5/bellek yönetimi bilgisi/light, 6/hesap bilgisi/mint!25, 7/{G/Ç durumu: açık dosyaların listesi, aygıtlar}/light}
+  \node[f,fill=\c] at (0,-\i*0.55) {\t};
+\end{tikzpicture}
+\caption{Bir süreç denetim bloğunun tipik içeriği.}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Süreç durumu:} yeni, hazır, çalışıyor, bekliyor ya da sonlandı.
+  \item \textbf{Kimlik:} süreç kimliği (PID), ebeveynin PID'si, sahip (kullanıcı kimliği).
+  \item \textbf{Program sayacı:} yürütülecek bir sonraki komutun adresi.
+  \item \textbf{İşlemci yazmaçları:} süreç çalışmayı bıraktığında değerleri kaydedilmelidir ki daha sonra doğru biçimde devam edebilsin.
+  \item \textbf{İşlemci zamanlama bilgisi:} öncelik, zamanlama kuyruklarına işaretçiler.
+  \item \textbf{Bellek yönetimi bilgisi:} sürecin bölgelerinin nerede olduğu, ör.\ taban ve sınır yazmaçları ya da sayfa tabloları (6--7.~haftalar).
+  \item \textbf{Hesap bilgisi:} kullanılan işlemci zamanı, zaman sınırları, bağlam değişimi sayısı.
+  \item \textbf{G/Ç durum bilgisi:} açık dosyaların ve ayrılmış aygıtların listesi.
+\end{itemize}
+
+Bir süreç çalışmıyorken, işlemci açısından süreç PCB'sinin \emph{ta kendisidir}: onu sürdürmek için gereken her şeyi içerir. Linux'ta PCB, çekirdek kaynak dosyası \texttt{include/linux/sched.h} içinde tanımlanan \texttt{struct task\_struct} adlı bir C yapısıdır; yüzlerce alanı vardır.
+
+\subsection{Bir PCB'ye göz atmak: \texttt{/proc/<pid>/status}}
+
+Linux her PCB'nin bazı kısımlarını \texttt{/proc} dizininde metin dosyaları olarak görünür kılar. \texttt{/proc} diskte gerçek bir dizin değildir: siz okudukça çekirdek metni anında üretir. Test makinemizdeki bir \cmd{sleep} süreci için (\cmd{grep} deseni burada iki satıra bölündü; tek satırda yazın):
+
+\begin{lstlisting}[style=term]
+$ sleep 30 &
+$ grep -E "^(Name|State|Pid|PPid|Uid|VmSize|VmRSS|Threads|voluntary)" \
+       /proc/$!/status
+Name:   sleep
+State:  S (sleeping)
+Pid:    27271
+PPid:   27265
+Uid:    0       0       0       0
+VmSize:     2724 kB
+VmRSS:      1696 kB
+Threads:        1
+voluntary_ctxt_switches:        2
+nonvoluntary_ctxt_switches:     0
+\end{lstlisting}
+
+\verb|$!| en son arka plan komutunun PID'sidir. Alanlar doğrudan PCB'ye karşılık gelir: \texttt{State} süreç durumudur (\cmd{sleep} bir zamanlayıcıyı beklediği için \texttt{S}); \texttt{Pid} ve \texttt{PPid} süreci ve ebeveynini tanımlar; \texttt{Uid} sahiptir (burada kullanıcı~$0$, yani yönetici \texttt{root}); \texttt{VmSize} (sanal bellek boyutu) ve \texttt{VmRSS} (gerçekten RAM'de olan kısım) bellek yönetimi bilgisidir; iki bağlam değişimi sayacı da hesap bilgisidir. \emph{Gönüllü} (voluntary) geçişler süreç bekleyerek işlemciyi bıraktığında, \emph{gönülsüz} (non-voluntary) geçişler ise işletim sistemi işlemciyi elinden aldığında olur. \texttt{Threads} satırı gelecek haftanın konusudur.
+
+% =====================================================================
+\section{Bağlam Değişimi}
+\label{sec:ctx}
+
+Bir kesme ya da bir sistem çağrısı işletim sistemini işlemciyi bir süreçten alıp başka birine vermeye yönelttiğinde, işletim sistemi bir \term{bağlam değişimi} (context switch) yapar. Bir sürecin \emph{bağlamı} PCB'sinde temsil edilir: program sayacı, işlemci yazmaçları, yığıt işaretçisi, süreç durumu ve bellek yönetimi bilgisi (hangi sayfa tablosunun etkin olduğu). Bağlam değişimi iki adımdan oluşur:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Durumu kaydetme} (state save): o anki sürecin bağlamını PCB'sine yazmak.
+  \item \textbf{Durumu geri yükleme} (state restore): bir sonraki sürecin bağlamını PCB'sinden yüklemek.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.9cm,y=1cm,g/.style={rectangle,minimum height=0.6cm,font=\scriptsize,anchor=west,inner sep=1pt,align=center}]
+\node[anchor=east,font=\small\bfseries] at (-0.2,2) {P0};
+\node[anchor=east,font=\small\bfseries] at (-0.2,1) {Çekirdek};
+\node[anchor=east,font=\small\bfseries] at (-0.2,0) {P1};
+\node[g,fill=mint,minimum width=2.6cm] at (0,2) {P0 yürütülüyor};
+\node[g,fill=charcoal,text=white,minimum width=2.1cm] at (3,1) {P0 $\to$ PCB0 kaydet\\PCB1 yükle};
+\node[g,fill=mint,minimum width=2.6cm] at (5.2,0) {P1 yürütülüyor};
+\node[g,fill=charcoal,text=white,minimum width=2.1cm] at (8.2,1) {P1 $\to$ PCB1 kaydet\\PCB0 yükle};
+\node[g,fill=mint,minimum width=2.2cm] at (10.4,2) {P0 yürütülüyor};
+\draw[dashed,slate] (3.1,2) -- node[above,font=\scriptsize\itshape,text=muted]{hazır (boşta)} (10.3,2);
+\draw[dashed,slate] (0.1,0) -- node[above,font=\scriptsize\itshape,text=muted]{hazır (boşta)} (5.1,0);
+\draw[dashed,slate] (8.2,0) -- (12.9,0);
+\draw[-{Stealth},thick,red!60!black] (3,1.68) -- (3,1.32);
+\draw[-{Stealth},thick,red!60!black] (8.2,0.32) -- (8.2,0.68);
+\node[font=\scriptsize\itshape,text=red!60!black,anchor=west] at (3.05,1.5) {kesme ya da sistem çağrısı};
+\end{tikzpicture}
+\caption{P0'dan P1'e ve geri bağlam değişimi (Silberschatz vd., Şekil~3.6'dan uyarlanmıştır; zaman soldan sağa akacak biçimde çizildi).}
+\end{figure}
+
+Geçiş sırasında (koyu kutular) \emph{hiçbir süreç yararlı iş yapmaz}: bağlam değişimi saf \term{ek yüktür} (overhead). Modern donanımda doğrudan maliyeti birkaç mikrosaniyedir; işlemci hızına, kopyalanacak yazmaç sayısına ve bellek yönetimi işine bağlıdır. Gizli, dolaylı bir maliyet de vardır: bir geçişten sonra işlemci önbellekleri ve TLB (6.~hafta) önceki sürecin verileriyle doludur; bu yüzden yeni süreç bir süre daha yavaş çalışır.
+
+\begin{example}[Bağlam değişimi ne kadara mal olur?]
+Her sürecin, işletim sistemi geçiş yapmadan önce $q$ zaman dilimi kadar çalıştığını ve her geçişin $s$ kadar sürdüğünü varsayalım. Her $q + s$ dönemin yalnızca $q$ kadarı yararlıdır; dolayısıyla kaybedilen işlemci zamanı oranı
+\[
+\text{ek yük} = \frac{s}{q + s}
+\]
+olur. $s = 5\ \mu\text{s}$ alalım (temsilî bir değer):
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}rrr@{}}
+\toprule
+\textbf{Zaman dilimi $q$} & \textbf{Ek yük $s/(q+s)$} & \textbf{Yararlı iş} \\
+\midrule
+$100$ ms & $0.005\%$ & $99.995\%$ \\
+$10$ ms & $0.05\%$ & $99.95\%$ \\
+$1$ ms & $0.50\%$ & $99.50\%$ \\
+$0.1$ ms & $4.76\%$ & $95.24\%$ \\
+$0.01$ ms & $33.3\%$ & $66.7\%$ \\
+$0.005$ ms ($q = s$) & $50\%$ & $50\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Örneğin $q = 1\ \text{ms} = 1000\ \mu\text{s}$ ile: $5/(1000+5) = 0.004975 \approx 0.50\%$. Aynı şeyi başka biçimde söylersek, saniyede $1000$ geçiş her saniyenin $1000 \times 5\ \mu\text{s} = 5\ \text{ms}$'sine, yani \%0,5'ine mal olur.
+
+Ders: kısa zaman dilimleri sistemin hızlı tepki veriyormuş gibi hissettirmesini sağlar ama işlemci zamanını geçişlerle harcar; uzun zaman dilimleri az harcar ama etkileşimli programları hantal hissettirir. $q$'yu seçmek, 5.~haftadaki Round-Robin zamanlamasının temel sorusudur.
+\end{example}
+
+% =====================================================================
+\section{Süreç Oluşturma ve Sonlandırma}
+\label{sec:creation}
+
+\subsection{fork(), exec() ve wait()}
+
+Bir süreç yeni süreçler oluşturabilir. Oluşturan sürece \term{ebeveyn süreç} (parent process), yeni süreçlere de onun \term{çocuk süreçleri} (child processes) denir. UNIX ve Linux'ta işi üç sistem çağrısı yapar:
+
+\begin{itemize}
+  \item \cmd{fork()}, çağıranın neredeyse tıpatıp bir \emph{kopyası} olan yeni bir süreç oluşturur: aynı program, aynı bellek içeriği, aynı açık dosyalar. Tek fark dönüş değeridir: \cmd{fork()} çocukta $0$, ebeveynde çocuğun PID'sini döndürür (hiçbir süreç oluşturulamadıysa $-1$). Bir kez çağrılır, iki kez döner.
+  \item \cmd{exec()} (Linux'ta \cmd{execve()} sistem çağrısı; \cmd{execlp()} gibi kütüphane çeşitleri de vardır), çağıran süreçte çalışan programı yeni bir programla \emph{değiştirir}. PID aynı kalır; eski kod, veri, öbek ve yığıt atılır. Başarılı olursa \cmd{exec()} asla geri dönmez.
+  \item \cmd{wait()} (ya da \cmd{waitpid()}), ebeveyni bir çocuk sonlanana kadar \emph{bekliyor} durumuna sokar ve sonra çocuğun çıkış durumunu toplar.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  b/.style={rectangle,rounded corners=2pt,minimum height=0.7cm,font=\footnotesize,align=center},
+  arr/.style={-{Stealth[length=2.2mm]},thick,slate}]
+\node[b,fill=charcoal,text=white] (p) at (0,0) {ebeveyn\\PID 32268};
+\node[b,fill=mint,font=\footnotesize\ttfamily] (f) at (2.3,0) {fork()};
+\node[b,fill=mint,font=\footnotesize\ttfamily] (w) at (4.6,1.2) {wait()};
+\node[b,fill=charcoal,text=white] (r) at (10.8,1.2) {devam eder};
+\node[b,fill=mint,font=\footnotesize\ttfamily] (e) at (4.6,-1.2) {exec("ps")};
+\node[b,fill=light] (ps) at (7.2,-1.2) {ps çalışır\\aynı PID 32269};
+\node[b,fill=mint,font=\footnotesize\ttfamily] (x) at (9.6,-1.2) {exit()};
+\draw[arr] (p) -- (f); \draw[arr] (f) -- (w); \draw[arr] (f) -- (e);
+\draw[arr] (e) -- (ps); \draw[arr] (ps) -- (x);
+\draw[dashed,slate] (w) -- node[above,font=\scriptsize\itshape,text=muted]{ebeveyn bekler (durum: bekliyor)} (r);
+\draw[arr,red!60!black] (x) -- node[right,font=\scriptsize\bfseries]{çıkış durumu} (r);
+\node[font=\scriptsize\itshape,text=muted] at (3.3,-1.85) {çocuk (PID 32269)};
+\end{tikzpicture}
+\caption{\cmd{fork()}, \cmd{exec()} ve \cmd{wait()} ile süreç oluşturma. PID'ler aşağıdaki gerçek çalıştırmadan alındı.}
+\end{figure}
+
+Kabuğun yazdığınız her komut için yaptığı tam olarak budur: kendisinin bir kopyasını fork eder, kopya (çocuk) komutu exec eder ve kabuk bir sonraki komut istemini yazdırmadan önce onun bitmesini bekler. Neden iki ayrı adım? \cmd{fork()} ile \cmd{exec()} arasında çocuk kendi ortamını hazırlayabilir, örneğin çıktısını bir dosyaya yönlendirebilir. Bunu 12.~haftada (borular ve yönlendirme) kullanacağız. Windows iki adımı tek bir çağrıda, çalıştırılacak programın adını parametre olarak alan \cmd{CreateProcess()} çağrısında birleştirir.
+
+\subsection{Örnek 3: C ile fork, exec ve wait}
+
+Listeleme \texttt{code/fork\_exec\_wait.c} dosyasının özünü gösteriyor; tam dosya buna \texttt{\#include} satırlarını ve başarısız bir \cmd{fork()} (bu durumda $-1$ döner) için bir hata denetimini ekler.
+
+\lstinputlisting[caption={}]{../code/fork_exec_wait_excerpt.c}
+
+\begin{lstlisting}[style=term]
+$ ./fork_exec_wait
+parent: my PID is 32268
+child : PID 32269, my parent is 32268
+  PID  PPID STAT COMMAND
+32268 32251 S    fork_exec_wait
+32269 32268 R    ps
+parent: child 32269 finished, exit status 0
+\end{lstlisting}
+
+Aynı \texttt{if} testi iki farklı yanıt verir: çocuk \texttt{pid == 0} görür, ebeveyn çocuğun PID'sini. \cmd{exec()}'ten sonra çocuğun yazdırdığı \cmd{ps} çıktısı PID $32269$'u \texttt{ps} olarak listeler: süreç PID'sini korudu, ama artık farklı bir program çalıştırıyor. Durumu \texttt{R}'dir (çalışıyor: listelemeyi yapan süreç odur); ebeveyn ise \cmd{waitpid()} içinde beklediği için \texttt{S}'dir.
+
+\cmd{strace -f} altında üç çağrı \cmd{clone(\dots) = 6411}, \cmd{execve("/usr/bin/ps", \dots) = 0} ve \cmd{wait4(6411, \dots) = 6411} olarak görünür (başka bir çalıştırmadan): C kütüphanesi \cmd{fork()}'u daha genel Linux sistem çağrısı \cmd{clone()} ile gerçekler.
+
+\begin{tryit}[\texttt{fork()}'tan önce neden \texttt{fflush(stdout)}?]
+\cmd{printf()} metni sürecin belleğindeki bir tamponda toplar. \cmd{fork()} bu belleği, henüz yazılmamış metin dahil, kopyalar. İlk \cmd{fflush(stdout)} satırını silin, \cmd{./fork\_exec\_wait > out.txt} çalıştırın (dosyaya giden çıktı tamamen tamponlanır) ve \texttt{out.txt}'ye bakın: ``parent: my PID is \dots'' satırı her süreç tarafından birer kez olmak üzere iki kez görünür.
+\end{tryit}
+
+
+\subsection{Süreç ağacı ve süreç kimlikleri}
+
+Her sürecin benzersiz bir tamsayı \term{süreç kimliği} (process identifier, PID) vardır ve süreç ebeveyninin PID'sini (PPID) bilir. İlki dışındaki her süreç başka bir süreç tarafından oluşturulduğu için süreçler bir \term{süreç ağacı} (process tree) oluşturur. Linux'ta kullanıcı alanı ağacının kökü PID~$1$'dir; adı \cmd{systemd}'dir (eski ve küçük sistemlerde \cmd{init}) ve çekirdek onu açılışın sonunda başlatır; çekirdek iş parçacıkları ayrı bir kökün, \cmd{kthreadd}'nin (PID~$2$) altında durur.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  n/.style={rectangle,rounded corners=2pt,minimum width=2.3cm,minimum height=0.6cm,font=\footnotesize\ttfamily,fill=light},
+  arr/.style={-{Stealth[length=2mm]},slate,thick}, level distance=1.15cm,
+  level 1/.style={sibling distance=3.3cm}, level 2/.style={sibling distance=2.8cm}, edge from parent/.style={draw,arr}]
+\node[n,fill=charcoal,text=white] {systemd (1)}
+  child {node[n] {cron (640)}}
+  child {node[n] {sshd (812)}
+    child {node[n] {sshd (2201)}
+      child {node[n,fill=mint!25] {bash (2210)}
+        child {node[n,fill=mint] {vim (2275)}}
+        child {node[n,fill=mint] {ps (2290)}}}}}
+  child {node[n] {login (900)}};
+\end{tikzpicture}
+\caption{Tipik bir Linux süreç ağacının bir parçası (PID'ler temsilî). SSH ile oturum açmış bir kullanıcı bir \cmd{bash} kabuğundan \cmd{vim} ve \cmd{ps} çalıştırıyor.}
+\end{figure}
+
+\cmd{pstree -p} komutu gerçek ağacı çizer. Test makinemizde:
+\begin{lstlisting}[style=term]
+$ bash -c 'sleep 5 & sleep 5 & pstree -p $$'
+bash(6297)-+-pstree(6300)
+           |-sleep(6298)
+           `-sleep(6299)
+\end{lstlisting}
+\verb|$$| kabuğun kendi PID'sidir. Yeni \cmd{bash} üç çocuk oluşturdu; hepsi ondan fork edildi. PID'ler artan sırayla atanır ve bir süreç bittikten sonra yeniden kullanılır; en büyük PID \nolinkurl{/proc/sys/kernel/pid_max} dosyasında ayarlanır (test makinemizde $32768$).
+
+\subsection{Süreç sonlandırma, zombiler ve yetimler}
+\label{sec:zombie}
+
+Bir süreç \cmd{exit()} çağırdığında (\cmd{main()}'den dönmek bunu örtük olarak yapar) ya da işletim sistemi onu ölümcül bir hatadan sonra öldürdüğünde sonlanır. İşletim sistemi bunun üzerine belleğini serbest bırakır ve dosyalarını kapatır. Ama PID'yi ve \emph{çıkış durumunu} tutan PCB girdisi, ebeveyn onu \cmd{wait()} ile toplayana kadar yaşamalıdır.
+
+\begin{itemize}
+  \item \term{Zombi} (zombie), sonlanmış ama ebeveyni henüz \cmd{wait()} çağırmamış bir süreçtir. Bellek ya da işlemci kullanmaz, ama süreç tablosunda bir girdi işgal eder ve PID'sini tutar. Çok sayıda çocuk oluşturup hiçbirini beklemeyen bir ebeveyn süreç tablosunu doldurabilir; o zaman yeni süreç oluşturulamaz.
+  \item \term{Yetim} (orphan), ebeveyni ondan önce sonlanmış bir süreçtir. Linux yetimleri PID~$1$'e (ya da belirlenmiş bir ``subreaper'' sürecine) \emph{yeniden bağlar}; bu süreç düzenli olarak \cmd{wait()} çağırır, böylece yetimler uzun süre zombi kalmaz. Bazı sistemler ise bir ebeveyn bittiğinde tüm çocuklarını sonlandırır (\emph{zincirleme sonlandırma}, cascading termination).
+\end{itemize}
+
+Bir kabuk numarasıyla zombi üretmek kolaydır: \cmd{sh -c 'sleep 1 \& exec sleep 4'}, \cmd{sleep 1}'i arka planda başlatır ve sonra kabuğun \emph{yerine} hiç \cmd{wait()} çağırmayan bir program olan \cmd{sleep 4}'ü koyar. İki saniye sonra test makinemizde:
+
+\begin{lstlisting}[style=term]
+$ ps -o pid,ppid,stat,cmd -p 6385 --ppid 6385
+  PID  PPID STAT CMD
+ 6385  6384 S    sleep 4
+ 6387  6385 Z    [sleep] <defunct>
+\end{lstlisting}
+
+Biten \cmd{sleep 1}, \texttt{Z} durumunda gösterilir ve \texttt{<defunct>} olarak işaretlenir. İki saniye sonra \cmd{sleep 4} bittiğinde zombi yetim kalır, yeni ebeveyni tarafından evlat edinilir ve toplanır.
+
+\subsection{Örnek 4: $n$ kez fork() çağrısından sonra kaç süreç olur?}
+
+\texttt{code/fork\_count.c} programı $n$'yi komut satırından okur ve sonra şunu yürütür:
+\begin{lstlisting}
+for (int i = 0; i < n; i++)
+    fork();                   /* ebeveyn DE çocuk DA devam eder */
+printf("PID %6d  parent %6d\n", getpid(), getppid());
+while (wait(NULL) > 0)        /* tüm çocukları topla: zombi yok */
+    ;
+\end{lstlisting}
+
+\emph{Var olan} her süreç sonraki her \cmd{fork()}'u yürütür. İlk fork'tan önce $1$ süreç vardır; ondan sonra $2$; ikinciden sonra $4$; $n$'incisinden sonra $2^{n}$. Bunların $2^{n} - 1$'ini \cmd{fork()} yaratmıştır (asıl süreç dışında hepsi) ve \cmd{printf} $2^{n}$ kez çalışır. $n = 3$ ile gerçek bir çalıştırma:
+
+\begin{lstlisting}[style=term]
+$ ./fork_count 3
+PID   1939  parent   1937
+PID   1938  parent   1937
+PID   1940  parent   1937
+PID   1941  parent   1938
+PID   1942  parent   1939
+PID   1943  parent   1938
+PID   1937  parent   1903
+PID   1944  parent   1941
+\end{lstlisting}
+
+Sekiz farklı süreçten sekiz satır. Ebeveyn sütunu ağacı ortaya çıkarır: asıl süreç $1937$, 1., 2. ve 3.~fork'larda $1938$, $1939$ ve $1940$'ı yarattı; $1938$ (1.~fork'ta doğdu) kendisi de 2. ve 3.~fork'ları yürüterek $1941$ ve $1943$'ü yarattı; ve böyle devam eder. Satırların sırası çalıştırmadan çalıştırmaya değişir, çünkü hangi sürecin önce çalışacağına zamanlayıcı karar verir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  n/.style={rectangle,rounded corners=2pt,minimum width=1.4cm,minimum height=0.55cm,font=\footnotesize\ttfamily,fill=light},
+  e1/.style={-{Stealth[length=2mm]},thick,charcoal}, e2/.style={-{Stealth[length=2mm]},thick,mintdeep}, e3/.style={-{Stealth[length=2mm]},thick,orange!80!black}]
+\node[n,fill=charcoal,text=white] (r) at (0,0) {1937};
+\node[n] (a) at (-3,-1.2) {1938}; \node[n] (b) at (0,-1.2) {1939}; \node[n] (c) at (3,-1.2) {1940};
+\node[n] (d) at (-4,-2.4) {1941}; \node[n] (e) at (-2,-2.4) {1943}; \node[n] (f) at (0,-2.4) {1942};
+\node[n] (g) at (-4,-3.6) {1944};
+\draw[e1] (r) -- (a); \draw[e2] (r) -- (b); \draw[e3] (r) -- (c);
+\draw[e2] (a) -- (d); \draw[e3] (a) -- (e); \draw[e3] (b) -- (f); \draw[e3] (d) -- (g);
+\node[font=\scriptsize,anchor=west,align=left] at (1.5,-3.0) {ok rengi = çocuğu hangi fork yarattı:\\{\color{charcoal}\textbf{1.}}\quad{\color{mintdeep}\textbf{2.}}\quad{\color{orange!80!black}\textbf{3.}}};
+\end{tikzpicture}
+\caption{\cmd{./fork\_count 3}'ün gerçek PID'lerle süreç ağacı.}
+\end{figure}
+
+Formül, çıktı satırları sayılarak doğrulanabilir:
+\begin{lstlisting}[style=term]
+$ for n in 0 1 2 3 4 5 6 7 8 9 10; do ./fork_count $n | wc -l; done | tr '\n' ' '
+1 2 4 8 16 32 64 128 256 512 1024
+\end{lstlisting}
+
+Programın $n > 10$'u reddetmesinin iyi bir nedeni var: sınırsız fork eden bir döngü (bir ``fork bombası'') süreç tablosunu saniyeler içinde doldurur. Linux kullanıcı başına süreç sayısını sınırlar (\cmd{ulimit -u}); bu, Kısım~\ref{sec:services}'deki kaynak tahsisi hizmetinin bir örneğidir.
+
+% =====================================================================
+\section{Özet}
+
+\begin{keyidea}[Yedi cümlede 3. hafta]
+\begin{enumerate}[leftmargin=1.4em]
+  \item İşletim sistemi kullanıcı için (kullanıcı arayüzü, program yürütme, G/Ç, dosya sistemleri, iletişim, hata algılama) ve kendisi için (kaynak tahsisi, hesap tutma, koruma ve güvenlik) hizmetler sunar.
+  \item Programlar bu hizmetlere sistem çağrılarıyla, normalde bir API ve ince bir kütüphane sarmalayıcısı üzerinden ulaşır; kabuk ve diğer sistem programları sıradan kullanıcı modu programlarıdır.
+  \item Her sistem çağrısının bir numarası vardır; tuzak komutu çekirdeğe tek bir sabit noktadan girer ve çekirdek numarayı sistem çağrısı tablosunda indeks olarak kullanır.
+  \item Parametreler yazmaçlarda, adresi bir yazmaçta duran bir bellek bloğunda ya da yığıtta aktarılır; x86-64 Linux numara için \texttt{rax}'i, parametreler için en çok altı yazmacı kullanır.
+  \item Süreç, text, data, bss, heap ve stack bölgeleri olan, yürütülmekte olan bir programdır ve süreç denetim bloğuyla tanımlanır.
+  \item Bir süreç yeni, hazır, çalışıyor, bekliyor ve sonlandı durumları arasında hareket eder; geçişlere sistem çağrıları ve kesmeler yol açar.
+  \item Bağlam değişimi bir PCB'yi kaydedip başka birini yükler ve saf ek yüktür, $s/(q+s)$; süreçler \cmd{fork()}, \cmd{exec()} ve \cmd{wait()} ile oluşturulur ve bir döngüdeki $n$ fork $2^{n}$ süreç verir.
+\end{enumerate}
+\end{keyidea}
+
+% =====================================================================
+\Needspace{6\baselineskip}
+\section{Sözlük}
+
+\begin{description}[leftmargin=1em,itemsep=0.1em]
+  \item[API (application programming interface)] Uygulama programlama arayüzü: programların çağırabileceği belgelenmiş fonksiyonlar kümesi, ör.\ POSIX ya da Windows API.
+  \item[ASLR (address space layout randomisation)] Adres alanı düzeninin rastgeleleştirilmesi: bir sürecin bölgelerini her başlangıçta rastgele adreslere yerleştirmek.
+  \item[Bağlam değişimi (context switch)] Çalışan sürecin durumunu PCB'sine kaydedip başka bir sürecin durumunu onun PCB'sinden yüklemek.
+  \item[BSS] İlk değeri olmayan global değişkenleri tutan bölge; yükleme sırasında sıfırlarla doldurulur.
+  \item[Daemon] Açılışta başlayan ve kullanıcı arayüzü olmadan çalışan bir arka plan sistem programı (Windows'ta ``service'').
+  \item[Hazır kuyruğu (ready queue)] Çalışmaya hazır olup bir işlemci bekleyen süreçlerin listesi.
+  \item[Kabuk (shell)] Komut yorumlayıcısı; komutları okuyup çalıştıran bir sistem programı.
+  \item[PCB (process control block)] Süreç denetim bloğu: tek bir süreci temsil eden çekirdek veri yapısı.
+  \item[PID (process identifier)] Süreç kimliği: bir sürecin benzersiz numarası.
+  \item[Sarmalayıcı (wrapper)] Tek bir sistem çağrısı için yazmaçları dolduran ve tuzağı yürüten küçük kütüphane fonksiyonu.
+  \item[Sistem çağrısı (system call)] Bir programın çekirdeğe yaptığı, bir tuzak komutuyla girilen denetimli istek.
+  \item[Sistem çağrısı tablosu (system-call table)] Çekirdeğin sistem çağrısı numarasıyla indekslenen işleyici adresleri dizisi.
+  \item[Sistem programı (system program)] İşletim sistemiyle gelen kullanıcı modu programı (dosya yöneticisi, derleyici, \cmd{ls}, \cmd{ps}).
+  \item[Süreç (process)] Yürütülmekte olan bir program.
+  \item[Yetim (orphan)] Ebeveyni sonlanmış süreç; Linux'ta PID~1 ya da bir subreaper tarafından evlat edinilir.
+  \item[Zombi (zombie)] Çıkış durumu ebeveyni tarafından henüz toplanmamış, sonlanmış süreç.
+\end{description}
+
+% =====================================================================
+\section{Kendiniz Deneyin}
+
+\begin{tryit}[Kendi makinenizdeki süreçlere bakın]
+\textbf{Linux} (laboratuvar bilgisayarları, WSL ya da bir sanal makine):
+\begin{lstlisting}[style=term]
+$ ps -ef | head            # tüm süreçler, PPID'leriyle
+$ ps -o pid,ppid,stat,cmd  # süreçleriniz ve durumları
+$ pstree -p | less         # süreç ağacı
+$ cat /proc/$$/status      # kendi kabuğunuzun PCB'si
+$ strace -c ls             # ls'in sistem çağrıları, türe göre
+$ make && ./fork_count 4   # 3. hafta kod klasöründe
+\end{lstlisting}
+\textbf{Windows:} Komut İstemi'nde \cmd{tasklist} çalıştırın; Görev Yöneticisi'nde \emph{Ayrıntılar} sekmesini açıp PID sütununu gösterin.
+\begin{enumerate}[leftmargin=1.4em]
+  \item Kabuğunuzun PID'si nedir ve ebeveyni hangi süreçtir?
+  \item Şu anda \texttt{R} durumunda kaç süreç var? Neden bu kadar az?
+  \item Kabuğunuz şimdiye kadar kaç gönüllü bağlam değişimi yaptı? Birkaç komut çalıştırıp yeniden bakın.
+\end{enumerate}
+\end{tryit}
+
+% =====================================================================
+\section{Tekrar Soruları}
+
+\subsection*{Kavramsal}
+\begin{enumerate}[leftmargin=1.6em]
+  \item \cmd{printf()} ve \cmd{write()} örnekleriyle bir API fonksiyonu, bir sarmalayıcı ve bir sistem çağrısı arasındaki farkı açıklayın. \cmd{strlen()} bir sistem çağrısı yapar mı?
+  \item İşletim sistemine parametre aktarmanın üç yöntemini anlatın. x86-64 üzerindeki Linux hangisini kullanır ve neden ikisine birden ihtiyaç duyar?
+  \item Her sistem çağrısını altı kategoriden birine yerleştirin: \cmd{fork()}, \cmd{chmod()}, \cmd{ioctl()}, \cmd{getpid()}, \cmd{socket()}, \cmd{close()}.
+  \item Şunların her biri hangi bellek bölgesinde durur: global bir \texttt{int count;}, global bir \texttt{int max = 100;}, \cmd{main()}'in yerel bir değişkeni, \cmd{malloc()}'un döndürdüğü bellek, \cmd{main()}'in kodu?
+  \item Beş durumlu diyagramı çizin. Her geçiş için ona yol açan bir olay söyleyin. Bekliyor durumundan çalışıyor durumuna neden ok yoktur?
+  \item \cmd{fork()} ile \cmd{exec()} arasındaki fark nedir? \cmd{fork()} ne döndürür ve kime?
+  \item Zombi süreç nedir? Yetim nedir? Linux yetimlerin zombi olarak kalmamasını nasıl sağlar?
+\end{enumerate}
+
+\subsection*{Sayısal}
+\begin{enumerate}[leftmargin=1.6em,resume]
+  \item Bir bağlam değişimi $10\ \mu$s sürüyor. Zaman dilimi (a) $1$~ms, (b) $50\ \mu$s ise işlemci zamanının yüzde kaçı ek yüktür?
+  \item Bir sistem saniyede $2000$ bağlam değişimi yapıyor; her biri $4\ \mu$s sürüyor. İşlemcinin ne kadarı kaybedilir? Bu, saatte kaç işlemci-saniyesi eder?
+  \item Şu kod çalıştıktan sonra kaç süreç vardır ve \texttt{"hi"} kaç kez yazdırılır?\\ \texttt{fork(); fork(); fork(); fork(); printf("hi\textbackslash n");}
+  \item A süreci $2$~ms hesap yapar, $6$~ms diski bekler, sonra $2$~ms hesap yapar. B süreci $4$~ms hesap yapar. İkisi de $t = 0$'da hazırdır, önce A çalışır, tek bir işlemci vardır ve zaman dilimi sınırı yoktur. Toplam süreyi ve işlemci kullanımını hesaplayın: (a) B ancak A bittikten sonra başlarsa, (b) B, A beklerken çalışırsa.
+  \item x86-64 Linux'ta bir program \cmd{write(2, "Error\textbackslash n", 6)} çağırıyor. \texttt{syscall} komutundan hemen önce \texttt{rax}, \texttt{rdi} ve \texttt{rdx}'te hangi değerler vardır ve bütün baytlar yazılırsa sonrasında \texttt{rax}'te ne olur?
+\end{enumerate}
+
+\subsection*{Sayısal soruların yanıtları}
+\begin{enumerate}[leftmargin=1.6em,start=8]
+  \item (a) $10/(1000 + 10) \approx 0.0099 = 0.99\%$, yaklaşık \%1. (b) $10/(50 + 10) \approx 0.167 = 16.7\%$: işlemcinin altıda biri boşa gider.
+  \item $2000\ \text{s}^{-1} \times 4\times10^{-6}\ \text{s} = 8\times10^{-3} = 0.8\%$. Saatte: $0.008 \times 3600\ \text{s} = 28.8$ işlemci-saniyesi.
+  \item Dört fork: $2^{4} = 16$ süreç ($15$'i yeni yaratılmış) ve \texttt{"hi"} $16$ kez yazdırılır.
+  \item (a) A $2 + 6 + 2 = 10$~ms sürer, sonra B $4$~ms: toplam $14$~ms; işlemci $2 + 2 + 4 = 8$~ms meşguldür, dolayısıyla kullanım $8/14 \approx 57\%$'dir. (b) A $0$--$2$ arasında çalışır, B $2$--$6$ arasında çalışır, işlemci $6$--$8$ arasında boştadır, A $8$--$10$ arasında çalışır: toplam $10$~ms, kullanım $8/10 = 80\%$.
+  \item Önce: $\texttt{rax} = 1$ (\cmd{write}), $\texttt{rdi} = 2$ (standart hata), $\texttt{rsi} =$ dizginin adresi, $\texttt{rdx} = 6$. Sonra: $\texttt{rax} = 6$, yani yazılan bayt sayısı.
+\end{enumerate}
+
+% =====================================================================
+\section{İleriye Bakış: 4. Hafta}
+
+\begin{itemize}
+  \item İş parçacıkları (threads): aynı belleği paylaşan, tek süreç içindeki birden çok yürütme akışı.
+  \item Kullanıcı iş parçacıkları ve çekirdek iş parçacıkları; çoklu iş parçacığı modelleri (çoka-bir, bire-bir, çoka-çok).
+  \item İşlemci zamanlamasının temelleri: işlemci--G/Ç patlama döngüsü (CPU--I/O burst cycle), kısa vadeli zamanlayıcı ve dağıtıcı (dispatcher).
+  \item Zamanlama ölçütleri: işlemci kullanımı, iş hacmi (throughput), tamamlanma süresi (turnaround time), bekleme süresi ve yanıt süresi.
+\end{itemize}
+
+\subsection*{İleri okuma (isteğe bağlı)}
+\begin{itemize}
+  \item A.\ Silberschatz, P.\,B.\ Galvin ve G.\ Gagne, \emph{Operating System Concepts}, 10.\ baskı, Wiley: Bölüm~2 (Kısım~2.1--2.5: hizmetler, kullanıcı arayüzleri, sistem çağrıları, sistem programları) ve Bölüm~3 (Kısım~3.1--3.3: süreç kavramı, zamanlama kuyrukları ve bağlam değişimi, süreçler üzerindeki işlemler).
+  \item R.\,H.\ ve A.\,C.\ Arpaci-Dusseau, \emph{Operating Systems: Three Easy Pieces}:
+    \begin{itemize}
+      \item Bölüm~4, ``The Abstraction: The Process'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf}
+      \item Bölüm~5, ``Interlude: Process API'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-api.pdf}
+      \item Bölüm~6, ``Mechanism: Limited Direct Execution'': \url{https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf}
+    \end{itemize}
+\end{itemize}

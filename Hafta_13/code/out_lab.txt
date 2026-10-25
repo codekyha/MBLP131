@@ -1,0 +1,51 @@
+student@okan-lab:~/lab$ sleep 1000 &
+[1] 3263
+student@okan-lab:~/lab$ grep -E '^(State|PPid)' /proc/$!/status
+State:	S (sleeping)
+PPid:	3207
+student@okan-lab:~/lab$ echo $$
+3207
+student@okan-lab:~/lab$ yes > /dev/null &
+[2] 3265
+student@okan-lab:~/lab$ ps -o pid,stat,cmd
+  PID STAT CMD
+ 3207 Ss   -bash
+ 3263 S    sleep 1000
+ 3265 R    yes
+ 3266 R+   ps -o pid,stat,cmd
+student@okan-lab:~/lab$ kill 1
+-bash: kill: (1) - Operation not permitted
+student@okan-lab:~/lab$ kill %1
+student@okan-lab:~/lab$ sleep 901 &
+[3] 3267
+[1]   Terminated              sleep 1000
+student@okan-lab:~/lab$ sleep 902 &
+[4] 3268
+student@okan-lab:~/lab$ sleep 903 &
+[5] 3269
+student@okan-lab:~/lab$ pgrep -c -u student sleep
+3
+student@okan-lab:~/lab$ pkill -u student sleep
+[3]   Terminated              sleep 901
+[4]-  Terminated              sleep 902
+[5]+  Terminated              sleep 903
+student@okan-lab:~/lab$ pgrep -c -u student sleep
+0
+student@okan-lab:~/lab$ nice -n 15 sleep 600 &
+[3] 3273
+student@okan-lab:~/lab$ ps -o pid,ni,stat,cmd -p $!
+  PID  NI STAT CMD
+ 3273  15 SN   sleep 600
+student@okan-lab:~/lab$ renice -n 19 -p $!
+3273 (process ID) old priority 15, new priority 19
+student@okan-lab:~/lab$ renice -n 0 -p $!
+renice: failed to set priority for 3273 (process ID): Permission denied
+student@okan-lab:~/lab$ ps -u student -o pid,stat,%cpu,cmd --sort=-%cpu | head -4
+  PID STAT %CPU CMD
+ 3265 R    98.7 yes
+ 3207 Ss    0.3 -bash
+ 3273 SN    0.0 sleep 600
+student@okan-lab:~/lab$ ps -u student -o stat= | cut -c1 | sort | uniq -c
+      2 R
+      5 S
+student@okan-lab:~/lab$ kill %2 %3

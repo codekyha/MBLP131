@@ -1,0 +1,195 @@
+==============================================================================
+PART D -- worked problems on the Week 15 slides
+==============================================================================
+--- D1: SRTF
+    Gantt: [0-1 P1] [1-2 P2] [2-3 P3] [3-5 P2] [5-9 P1] [9-13 P4]
+          arr burst prio first  done  TAT wait resp
+    P1      0     5    3     0     9    9    4    0
+    P2      1     3    1     1     5    4    1    0
+    P3      2     1    4     2     3    1    0    0
+    P4      3     4    2     9    13   10    6    6
+    sums: TAT 24, wait 11, resp 6  -> avg wait 2.75, avg TAT 6.00, avg resp 1.50, switches 5
+--- D1: RR2
+    Gantt: [0-2 P1] [2-4 P2] [4-5 P3] [5-7 P1] [7-9 P4] [9-10 P2] [10-11 P1] [11-13 P4]
+          arr burst prio first  done  TAT wait resp
+    P1      0     5    3     0    11   11    6    0
+    P2      1     3    1     2    10    9    6    1
+    P3      2     1    4     4     5    3    2    2
+    P4      3     4    2     7    13   10    6    4
+    sums: TAT 33, wait 20, resp 7  -> avg wait 5.00, avg TAT 8.25, avg resp 1.75, switches 7
+--- D2: paging, page size 1 KB = 2^10, page table [5, 2, 7, 1]
+    D2: a = 2500 (0x9C4), page size 1024: p = 2, d = 452 (0x1C4), frame 7, a_phys = 7*1024+452 = 7620 (0x1DC4)
+    D2 EAT = t_TLB + (2-alpha) t_m = 10 + (2-0.9)*100 = 120.0 ns
+    D2 hit 0.9*(10+100), miss 0.1*(10+200) = 99.0 + 21.0
+    D2 alpha needed for EAT = 115 ns = 0.95
+--- D3: reference string [3, 5, 1, 0, 3, 1, 0, 3, 1, 4, 1, 0], 3 frames
+    FIFO:  8 faults, hits 4
+      ref    3  5  1  0  3  1  0  3  1  4  1  0
+      fr0    3  3  3  0  0  0  0  0  0  0  1  1
+      fr1    .  5  5  5  3  3  3  3  3  3  3  0
+      fr2    .  .  1  1  1  1  1  1  1  4  4  4
+      fault  F  F  F  F  F              F  F  F
+    OPT :  5 faults, hits 7
+      ref    3  5  1  0  3  1  0  3  1  4  1  0
+      fr0    3  3  3  3  3  3  3  3  3  4  4  4
+      fr1    .  5  5  0  0  0  0  0  0  0  0  0
+      fr2    .  .  1  1  1  1  1  1  1  1  1  1
+      fault  F  F  F  F                 F      
+    LRU :  7 faults, hits 5
+      ref    3  5  1  0  3  1  0  3  1  4  1  0
+      fr0    3  3  3  0  0  0  0  0  0  4  4  4
+      fr1    .  5  5  5  3  3  3  3  3  3  3  0
+      fr2    .  .  1  1  1  1  1  1  1  1  1  1
+      fault  F  F  F  F  F              F     F
+--- D4: page-fault EAT and block arithmetic
+    D4 EAT(p=0.0002), t_m=100 ns, t_fault=10 ms = 2099.98 ns  (slowdown x21.00)
+    D4 p for slowdown < 10%  p < = 1.0000e-06 (1 fault per 999,990 accesses)
+    D4b: record 75 x 128 B = byte 9600; block 9600//4096 = 2, offset 1408; last byte 9727 in block 2 -> fits in one block
+--- D5: quick formulas (W1, W3, W4)
+    D5 U(3) = 1 - 0.6^3 = 0.784
+    D5 U = t_run/(t_run+t_setup), 2 min / 3 min = 0.4
+    D5 Amdahl S=0.2 N=4 = 2.5 (limit 1/S = 5)
+    D5 overhead s/(q+s), s=0.1 ms, q=4 ms = 2.44 %
+    D5 forks in a loop, n = 3 -> processes 2^3 = 8 (created by fork: 7)
+
+==============================================================================
+PART N -- Practice Final in the study guide (notes)
+==============================================================================
+--- N1: SJF
+    Gantt: [0-8 P1] [8-12 P2] [12-17 P4] [17-26 P3]
+          arr burst prio first  done  TAT wait resp
+    P1      0     8    2     0     8    8    0    0
+    P2      1     4    1     8    12   11    7    7
+    P3      2     9    4    17    26   24   15   15
+    P4      3     5    3    12    17   14    9    9
+    sums: TAT 57, wait 31, resp 31  -> avg wait 7.75, avg TAT 14.25, avg resp 7.75, switches 3
+--- N1: SRTF
+    Gantt: [0-1 P1] [1-5 P2] [5-10 P4] [10-17 P1] [17-26 P3]
+          arr burst prio first  done  TAT wait resp
+    P1      0     8    2     0    17   17    9    0
+    P2      1     4    1     1     5    4    0    0
+    P3      2     9    4    17    26   24   15   15
+    P4      3     5    3     5    10    7    2    2
+    sums: TAT 52, wait 26, resp 17  -> avg wait 6.50, avg TAT 13.00, avg resp 4.25, switches 4
+--- N1: RR3
+    Gantt: [0-3 P1] [3-6 P2] [6-9 P3] [9-12 P4] [12-15 P1] [15-16 P2] [16-19 P3] [19-21 P4] [21-23 P1] [23-26 P3]
+          arr burst prio first  done  TAT wait resp
+    P1      0     8    2     0    23   23   15    0
+    P2      1     4    1     3    16   15   11    2
+    P3      2     9    4     6    26   24   15    4
+    P4      3     5    3     9    21   18   13    6
+    sums: TAT 80, wait 54, resp 12  -> avg wait 13.50, avg TAT 20.00, avg resp 3.00, switches 9
+--- N2: placement, holes 300, 600, 350, 200, 750, 125 KB; requests 115, 500, 358, 200, 375
+    first-fit: 115->hole#1(300), 500->hole#2(600), 358->hole#5(750), 200->hole#3(350), 375->hole#5(392) | holes after [185, 100, 150, 200, 17, 125]
+    best -fit: 115->hole#6(125), 500->hole#2(600), 358->hole#5(750), 200->hole#4(200), 375->hole#5(392) | holes after [300, 100, 350, 0, 17, 10]
+    worst-fit: 115->hole#5(750), 500->hole#5(635), 358->hole#2(600), 200->hole#3(350), 375->MUST WAIT | holes after [300, 242, 150, 200, 135, 125]
+--- N3: paging, 4 KB pages, table {5: 9}
+    N3: a = 23585 (0x5C21), page size 4096: p = 5, d = 3105 (0xC21), frame 9, a_phys = 9*4096+3105 = 39969 (0x9C21)
+    N3 page table size, 32-bit, 8 KB pages, 4-byte PTE: entries 2^19 = 524288 x 4 B = 2097152 B = 2 MB
+    N3 internal fragmentation, process 30,000 B, 8 KB pages = pages 4, last page holds 5424 B, lost 2768 B
+    N4 EAT t_TLB=20, t_m=80, alpha=0.95 = 104.0 ns
+    N4 alpha for EAT = 110 ns = 0.875
+--- N5: reference string [2, 3, 2, 1, 5, 2, 4, 5, 3, 2, 5, 2], 3 frames
+    FIFO:  9 faults, hits 3
+      ref    2  3  2  1  5  2  4  5  3  2  5  2
+      fr0    2  2  2  2  5  5  5  5  3  3  3  3
+      fr1    .  3  3  3  3  2  2  2  2  2  5  5
+      fr2    .  .  .  1  1  1  4  4  4  4  4  2
+      fault  F  F     F  F  F  F     F     F  F
+    OPT :  6 faults, hits 6
+      ref    2  3  2  1  5  2  4  5  3  2  5  2
+      fr0    2  2  2  2  2  2  4  4  4  2  2  2
+      fr1    .  3  3  3  3  3  3  3  3  3  3  3
+      fr2    .  .  .  1  5  5  5  5  5  5  5  5
+      fault  F  F     F  F     F        F      
+    LRU :  7 faults, hits 5
+      ref    2  3  2  1  5  2  4  5  3  2  5  2
+      fr0    2  2  2  2  2  2  2  2  3  3  3  3
+      fr1    .  3  3  3  5  5  5  5  5  5  5  5
+      fr2    .  .  .  1  1  1  4  4  4  2  2  2
+      fault  F  F     F  F     F     F  F      
+    N6 EAT t_m=150, t_fault=6 ms, p=0.0001 = 749.985 ns (slowdown x5.000)
+    N6 slowdown < 5%: p < = 1.2500e-06 (1 fault per 799,980 accesses)
+    N7: record 30 x 200 B = byte 6000; block 6000//1024 = 5, offset 880; last byte 6199 in block 6 -> CROSSES a block boundary
+    N8 fork loop n = 4 -> processes = 16 (created by fork 15)
+    N9 Amdahl S=0.1 N=8 = 4.7059 (limit 10)
+    N9 U(n)=1-0.75^n  n=2,4 = 0.4375, 0.6836
+    N9 smallest n with U >= 90 % = 9 (U = 0.9249)
+    N10 counting semaphore S=2, 5 threads wait(): 2 pass, 3 block; S = 0
+    N11 exp. averaging alpha=0.5 tau0=12 bursts 8,4,10 -> tau1..3 = [10.0, 7.0, 8.5]
+
+==============================================================================
+PART S -- Sample Final paper (exam/) and its answer key
+==============================================================================
+--- S1: FCFS
+    Gantt: [0-6 P1] [6-8 P2] [8-15 P3] [15-18 P4]
+          arr burst prio first  done  TAT wait resp
+    P1      0     6    3     0     6    6    0    0
+    P2      2     2    1     6     8    6    4    4
+    P3      3     7    4     8    15   12    5    5
+    P4      5     3    2    15    18   13   10   10
+    sums: TAT 37, wait 19, resp 19  -> avg wait 4.75, avg TAT 9.25, avg resp 4.75, switches 3
+--- S1: PRIO_P
+    Gantt: [0-2 P1] [2-4 P2] [4-5 P1] [5-8 P4] [8-11 P1] [11-18 P3]
+          arr burst prio first  done  TAT wait resp
+    P1      0     6    3     0    11   11    5    0
+    P2      2     2    1     2     4    2    0    0
+    P3      3     7    4    11    18   15    8    8
+    P4      5     3    2     5     8    3    0    0
+    sums: TAT 31, wait 13, resp 8  -> avg wait 3.25, avg TAT 7.75, avg resp 2.00, switches 5
+--- S1: RR2
+    Gantt: [0-2 P1] [2-4 P2] [4-6 P1] [6-8 P3] [8-10 P4] [10-12 P1] [12-14 P3] [14-15 P4] [15-18 P3]
+          arr burst prio first  done  TAT wait resp
+    P1      0     6    3     0    12   12    6    0
+    P2      2     2    1     2     4    2    0    0
+    P3      3     7    4     6    18   15    8    3
+    P4      5     3    2     8    15   10    7    3
+    sums: TAT 39, wait 21, resp 6  -> avg wait 5.25, avg TAT 9.75, avg resp 1.50, switches 8
+--- S2: paging, page size 2 KB = 2^11, page table [3, 8, 6, 1]
+    S2: a = 5000 (0x1388), page size 2048: p = 2, d = 904 (0x388), frame 6, a_phys = 6*2048+904 = 13192 (0x3388)
+    S2 logical address 9000 -> page = 4 (page table has 4 entries -> invalid, trap)
+    S2 EAT t_TLB=10, t_m=90, alpha=0.8 = 118.0 ns
+--- S3: placement, holes 200, 450, 100, 300, 500 KB; request 280 KB
+    first-fit: 280->hole#2(450) | holes after [200, 170, 100, 300, 500]
+    best -fit: 280->hole#4(300) | holes after [200, 450, 100, 20, 500]
+    worst-fit: 280->hole#5(500) | holes after [200, 450, 100, 300, 220]
+--- S4: reference string [5, 4, 1, 5, 0, 5, 4, 0, 2, 1, 0, 1], 3 frames
+    FIFO:  9 faults, hits 3
+      ref    5  4  1  5  0  5  4  0  2  1  0  1
+      fr0    5  5  5  5  0  0  0  0  2  2  2  2
+      fr1    .  4  4  4  4  5  5  5  5  1  1  1
+      fr2    .  .  1  1  1  1  4  4  4  4  0  0
+      fault  F  F  F     F  F  F     F  F  F   
+    OPT :  6 faults, hits 6
+      ref    5  4  1  5  0  5  4  0  2  1  0  1
+      fr0    5  5  5  5  5  5  5  5  2  1  1  1
+      fr1    .  4  4  4  4  4  4  4  4  4  4  4
+      fr2    .  .  1  1  0  0  0  0  0  0  0  0
+      fault  F  F  F     F           F  F      
+    LRU :  7 faults, hits 5
+      ref    5  4  1  5  0  5  4  0  2  1  0  1
+      fr0    5  5  5  5  5  5  5  5  2  2  2  2
+      fr1    .  4  4  4  0  0  0  0  0  0  0  0
+      fr2    .  .  1  1  1  1  4  4  4  1  1  1
+      fault  F  F  F     F     F     F  F      
+    S5 EAT t_m=100, t_fault=5 ms, p=0.0005 = 2599.95 ns (slowdown x26.00)
+    S6: record 100 x 50 B = byte 5000; block 5000//512 = 9, offset 392; last byte 5049 in block 9 -> fits in one block
+    S7 U(4) with p = 0.5 = 0.9375
+    S7 Amdahl S=0.25 N=3 = 2.0 (limit 4)
+    S7 forks: n = 3 -> printf runs = 8
+    S7 overhead s=0.2 ms q=10 ms = 1.96 %
+
+==============================================================================
+PART Q -- quiz on the Week 15 slides
+==============================================================================
+--- Q1: SRTF
+    Gantt: [0-1 P1] [1-3 P2] [3-4 P3] [4-7 P1]
+          arr burst prio first  done  TAT wait resp
+    P1      0     4    0     0     7    7    3    0
+    P2      1     2    0     1     3    2    0    0
+    P3      2     1    0     3     4    2    1    1
+    sums: TAT 11, wait 4, resp 1  -> avg wait 1.33, avg TAT 3.67, avg resp 0.33, switches 3
+    Q2 0x3A7F, 4 KB pages: p, d = 0x3, 0xA7F
+    Q3 umask 027: file 666 & ~027, dir 777 & ~027 = 640, 750
+
+wrote theory_results.json

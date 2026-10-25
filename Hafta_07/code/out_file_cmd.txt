@@ -1,0 +1,8 @@
+$ file file_access.c
+file_access.c: C source, ASCII text
+$ file file_access
+file_access: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=9069cb8d648a38af9fd157481abb35d4e5d60506, for GNU/Linux 3.2.0, not stripped
+$ file photo.txt
+photo.txt: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, progressive, precision 8, 786x786, components 3
+$ file students.dat
+students.dat: data

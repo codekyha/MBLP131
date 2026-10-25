@@ -1,0 +1,8 @@
+student@okan-lab:~/lab$ cut -d' ' -f1 logs/access.log | sort | uniq -c | sort -rn | head -3
+     58 10.0.2.17
+     56 10.0.4.31
+     52 10.0.6.45
+student@okan-lab:~/lab$ cut -d' ' -f9 logs/access.log | grep -c '^404$'
+57
+student@okan-lab:~/lab$ grep ' 404 ' logs/access.log | cut -d' ' -f7 | sort | uniq -c | sort -rn | head -1
+      9 /images/logo.png

@@ -1,0 +1,25 @@
+student@okan-lab:~/lab$ sleep 300 &
+[1] 2118
+student@okan-lab:~/lab$ echo $!
+2118
+student@okan-lab:~/lab$ grep -E '^(Name|State|Pid|PPid|Uid|Threads|VmRSS)' /proc/$!/status
+Name:	sleep
+State:	S (sleeping)
+Pid:	2118
+PPid:	2061
+Uid:	1013	1013	1013	1013
+VmRSS:	    2004 kB
+Threads:	1
+student@okan-lab:~/lab$ grep ctxt /proc/$!/status
+voluntary_ctxt_switches:	1
+nonvoluntary_ctxt_switches:	2
+student@okan-lab:~/lab$ cat /proc/$!/cmdline | tr '\0' ' '; echo
+sleep 300 
+student@okan-lab:~/lab$ ls -l /proc/$!/cwd /proc/$!/exe
+lrwxrwxrwx 1 student student 0 Oct 12 16:58 /proc/2118/cwd -> /home/student/lab
+lrwxrwxrwx 1 student student 0 Oct 12 16:58 /proc/2118/exe -> /usr/bin/sleep
+student@okan-lab:~/lab$ grep -E '^(Name|State|PPid)' /proc/$$/status
+Name:	bash
+State:	S (sleeping)
+PPid:	2060
+student@okan-lab:~/lab$ kill $!

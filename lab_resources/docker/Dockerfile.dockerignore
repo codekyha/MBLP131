@@ -1,0 +1,7 @@
+# Docker sends the whole build context (the kit folder) to the builder. The kit folder holds multi-gigabyte
+# disk images, so everything is excluded except the files the Dockerfile copies.
+*
+!lab_install.sh
+!verify_lab.sh
+!courses
+!docker

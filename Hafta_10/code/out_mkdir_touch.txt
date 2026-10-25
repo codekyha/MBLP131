@@ -1,0 +1,35 @@
+student@okan-lab:~/lab$ mkdir test
+student@okan-lab:~/lab$ ls -ld test
+drwxrwxr-x 2 student student 4096 Oct 12 08:47 test
+student@okan-lab:~/lab$ mkdir test
+mkdir: cannot create directory ‘test’: File exists
+student@okan-lab:~/lab$ mkdir trip/day1
+mkdir: cannot create directory ‘trip/day1’: No such file or directory
+student@okan-lab:~/lab$ mkdir -p trip/day1
+student@okan-lab:~/lab$ mkdir -p work/2026/october
+student@okan-lab:~/lab$ tree work trip
+work
+└── 2026
+    └── october
+trip
+└── day1
+
+5 directories, 0 files
+student@okan-lab:~/lab$ touch todo.txt
+student@okan-lab:~/lab$ ls -l todo.txt
+-rw-rw-r-- 1 student student 0 Oct 12 08:47 todo.txt
+student@okan-lab:~/lab$ touch -d "2026-01-15 09:30" todo.txt
+student@okan-lab:~/lab$ ls -l todo.txt
+-rw-rw-r-- 1 student student 0 Jan 15  2026 todo.txt
+student@okan-lab:~/lab$ stat todo.txt
+  File: todo.txt
+  Size: 0               Blocks: 0          IO Block: 4096   regular empty file
+Device: 254,0   Inode: 804708      Links: 1
+Access: (0664/-rw-rw-r--)  Uid: ( 1010/ student)   Gid: ( 1012/ student)
+Access: 2026-01-15 09:30:00.000000000 +0000
+Modify: 2026-01-15 09:30:00.000000000 +0000
+Change: 2026-10-12 08:47:56.442757013 +0000
+ Birth: 2026-10-12 08:47:56.430757013 +0000
+student@okan-lab:~/lab$ touch todo.txt
+student@okan-lab:~/lab$ ls -l todo.txt
+-rw-rw-r-- 1 student student 0 Oct 12 08:47 todo.txt

@@ -1,0 +1,24 @@
+student@okan-lab:~/lab$ cd src
+student@okan-lab:~/lab/src$ gcc -Wall -O2 -o catch catch.c
+student@okan-lab:~/lab/src$ ./catch
+catch: sigaction(SIGKILL): Invalid argument
+catch: PID 2694, waiting for signals
+^Ccatch: got SIGINT (2) -- ignoring it, still running
+^Ccatch: got SIGINT (2) -- ignoring it, still running
+^Z
+[1]+  Stopped                 ./catch
+student@okan-lab:~/lab/src$ bg
+[1]+ ./catch &
+student@okan-lab:~/lab/src$ kill -INT %1
+student@okan-lab:~/lab/src$ catch: got SIGINT (2) -- ignoring it, still running
+kill -TERM %1
+student@okan-lab:~/lab/src$ catch: got SIGTERM (15) -- cleaning up, bye
+jobs
+[1]+  Done                    ./catch
+student@okan-lab:~/lab/src$ ./catch &
+[1] 2695
+student@okan-lab:~/lab/src$ catch: sigaction(SIGKILL): Invalid argument
+catch: PID 2695, waiting for signals
+kill -9 %1
+student@okan-lab:~/lab/src$ jobs
+[1]+  Killed                  ./catch

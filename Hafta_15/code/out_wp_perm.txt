@@ -1,0 +1,11 @@
+student@okan-lab:~/lab$ touch report.sh
+student@okan-lab:~/lab$ ls -l report.sh
+-rw-rw-r-- 1 student student 0 Oct 12 08:50 report.sh
+student@okan-lab:~/lab$ chmod 750 report.sh
+student@okan-lab:~/lab$ ls -l report.sh
+-rwxr-x--- 1 student student 0 Oct 12 08:50 report.sh
+student@okan-lab:~/lab$ umask 027
+student@okan-lab:~/lab$ touch new.txt; mkdir newdir
+student@okan-lab:~/lab$ ls -ld new.txt newdir
+-rw-r----- 1 student student    0 Oct 12 08:50 new.txt
+drwxr-x--- 2 student student 4096 Oct 12 08:50 newdir

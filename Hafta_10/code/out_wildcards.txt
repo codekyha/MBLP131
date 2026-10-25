@@ -1,0 +1,50 @@
+student@okan-lab:~/lab$ cd photos
+student@okan-lab:~/lab/photos$ ls
+IMG_014.JPG   img002.jpg  img005.jpg  img008.jpg  img011.jpg
+holiday.jpeg  img003.jpg  img006.jpg  img009.jpg  img012.jpg
+img001.jpg    img004.jpg  img007.jpg  img010.jpg  img013.png
+student@okan-lab:~/lab/photos$ ls *.jpg
+img001.jpg  img003.jpg  img005.jpg  img007.jpg  img009.jpg  img011.jpg
+img002.jpg  img004.jpg  img006.jpg  img008.jpg  img010.jpg  img012.jpg
+student@okan-lab:~/lab/photos$ echo *.png
+img013.png
+student@okan-lab:~/lab/photos$ ls img00?.jpg
+img001.jpg  img003.jpg  img005.jpg  img007.jpg  img009.jpg
+img002.jpg  img004.jpg  img006.jpg  img008.jpg
+student@okan-lab:~/lab/photos$ ls img01[0-2].jpg
+img010.jpg  img011.jpg  img012.jpg
+student@okan-lab:~/lab/photos$ ls img00[135].jpg
+img001.jpg  img003.jpg  img005.jpg
+student@okan-lab:~/lab/photos$ ls *.[jJ][pP]*
+IMG_014.JPG   img002.jpg  img005.jpg  img008.jpg  img011.jpg
+holiday.jpeg  img003.jpg  img006.jpg  img009.jpg  img012.jpg
+img001.jpg    img004.jpg  img007.jpg  img010.jpg
+student@okan-lab:~/lab/photos$ echo *.gif
+*.gif
+student@okan-lab:~/lab/photos$ echo "*.jpg"
+*.jpg
+student@okan-lab:~/lab/photos$ echo {1..5}
+1 2 3 4 5
+student@okan-lab:~/lab/photos$ echo img{01..03}.jpg
+img01.jpg img02.jpg img03.jpg
+student@okan-lab:~/lab/photos$ echo report_{draft,final}.txt
+report_draft.txt report_final.txt
+student@okan-lab:~/lab/photos$ mkdir -p ../trip/{day1,day2,day3}/{photos,notes}
+student@okan-lab:~/lab/photos$ tree ../trip
+../trip
+├── day1
+│   ├── notes
+│   └── photos
+├── day2
+│   ├── notes
+│   └── photos
+└── day3
+    ├── notes
+    └── photos
+
+10 directories, 0 files
+student@okan-lab:~/lab/photos$ cd ../docs
+student@okan-lab:~/lab/docs$ echo *
+final report.txt linux_quotes.txt notes_01.txt notes_02.txt notes_03.txt syllabus.txt
+student@okan-lab:~/lab/docs$ echo .*
+.settings

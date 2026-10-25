@@ -1,0 +1,5 @@
+student@okan-lab:~/lab$ tail -n +2 data/students.csv | cut -d, -f3 | sort | uniq -c | sort -rn
+     17 ECT
+     11 ME
+     10 CS
+      2 EE

@@ -1,0 +1,3 @@
+student@okan-lab:~/lab$ find projects -name "*.c"
+projects/beta/src/main.c
+projects/alpha/src/main.c

@@ -1,0 +1,4 @@
+student@okan-lab:~/lab$ touch scripts/backup.sh
+student@okan-lab:~/lab$ chmod u+x scripts/backup.sh
+student@okan-lab:~/lab$ ls -l scripts/backup.sh
+-rwxrw-r-- 1 student student 0 Oct 12 08:50 scripts/backup.sh
