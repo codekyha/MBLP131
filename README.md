@@ -50,8 +50,4 @@ Slayt oluşturma betikleri `_build/` ve `Hafta_08` ... `Hafta_15/_src/` altında
 
 ## Lisans
 
-[MIT](LICENSE). Yazılım ve belgeler **hiçbir garanti verilmeden**, "olduğu gibi" sunulur; yazar, kullanımdan doğan zararlardan sorumlu tutulamaz.
-
----
-
-**English summary.** Turkish-language materials for the MBLP131 operating systems course (15 weeks): slides, LaTeX notes, C/shell/Python examples, sample exams and lab setup scripts. Released under the MIT licence, provided as is, without warranty of any kind. Contact details were removed on purpose.
+Ders materyali olarak MIT lisansıyla paylaşılır; öğrenciler kendi projelerinde serbestçe kullanabilir. Bu materyaller, her ne şekilde olursa olsun hiçbir garanti verilmeksizin "olduğu gibi" sunulmaktadır; yazar, bunların kullanımından doğabilecek hiçbir sorumluluğu kabul etmez.
