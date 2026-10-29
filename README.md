@@ -2,7 +2,7 @@
 
 *Fundamentals of Operating Systems (Turkish edition) — lecture slides, course notes, code examples and lab material.*
 
-Elektronik Haberleşme Teknolojisi Programı, Meslek Yüksekokulu, İstanbul Okan Üniversitesi. Dil: Türkçe.
+Bilgisayar Programcılığı Programı, Meslek Yüksekokulu, İstanbul Okan Üniversitesi. Dil: Türkçe.
 
 ## İçerik / Contents
 
